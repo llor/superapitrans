@@ -1,0 +1,1167 @@
+{
+	"info": {
+		"_postman_id": "d2b2b6cf-aded-439c-8824-d4d5a781650c",
+		"name": "Satelles API ERP SYNC (Ecotrans)",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "2559763"
+	},
+	"item": [
+		{
+			"name": "Get Clientes",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept-Language",
+						"value": "es",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base-url}}/operators",
+					"host": [
+						"{{base-url}}"
+					],
+					"path": [
+						"operators"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Cliente",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept-Language",
+						"value": "es",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base-url}}/api/erpsync/operators/C013870",
+					"host": [
+						"{{base-url}}"
+					],
+					"path": [
+						"api",
+						"erpsync",
+						"operators",
+						"C013870"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Put Cliente",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Accept-Language",
+						"value": "es",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"name\": \"CLIENTE FICTICIO 1\",\r\n    \"taxCode\": \" J62855358\"\r\n  }\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base-url}}/operators/CL001",
+					"host": [
+						"{{base-url}}"
+					],
+					"path": [
+						"operators",
+						"CL001"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Unidades medida",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept-Language",
+						"value": "es",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base-url}}/measure-units",
+					"host": [
+						"{{base-url}}"
+					],
+					"path": [
+						"measure-units"
+					],
+					"query": [
+						{
+							"key": "textFilter",
+							"value": "LIT",
+							"disabled": true
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Unidad medida",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept-Language",
+						"value": "es",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base-url}}/measure-units/t",
+					"host": [
+						"{{base-url}}"
+					],
+					"path": [
+						"measure-units",
+						"t"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Put Unidad medida",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Accept-Language",
+						"value": "pt",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"name\": \"LITROS\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base-url}}/measure-units/l",
+					"host": [
+						"{{base-url}}"
+					],
+					"path": [
+						"measure-units",
+						"l"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Conductores",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept-Language",
+						"value": "es",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base-url}}/drivers",
+					"host": [
+						"{{base-url}}"
+					],
+					"path": [
+						"drivers"
+					],
+					"query": [
+						{
+							"key": "textFilter",
+							"value": "javier",
+							"disabled": true
+						},
+						{
+							"key": "code",
+							"value": "5087",
+							"disabled": true
+						},
+						{
+							"key": "code",
+							"value": "5730",
+							"disabled": true
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Conductor",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept-Language",
+						"value": "es",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base-url}}/drivers/1090",
+					"host": [
+						"{{base-url}}"
+					],
+					"path": [
+						"drivers",
+						"1090"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Put Conductor",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Accept-Language",
+						"value": "es",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"name\": \"LOPEZ VILLEGAS, SEBASTIAN\",\r\n    \"email\": \"sebaslopezville@hotmail.com\",\r\n    \"idCard\": \"53233417D\",\r\n    \"disabled\": false\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base-url}}/drivers/2578",
+					"host": [
+						"{{base-url}}"
+					],
+					"path": [
+						"drivers",
+						"2578"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Vehículos",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept-Language",
+						"value": "es",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base-url}}/vehicles",
+					"host": [
+						"{{base-url}}"
+					],
+					"path": [
+						"vehicles"
+					],
+					"query": [
+						{
+							"key": "textFilter",
+							"value": "HZT",
+							"disabled": true
+						},
+						{
+							"key": "code",
+							"value": "9168",
+							"disabled": true
+						},
+						{
+							"key": "code",
+							"value": "9170",
+							"disabled": true
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Vehículo",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept-Language",
+						"value": "es",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base-url}}/vehicles/4625KDN",
+					"host": [
+						"{{base-url}}"
+					],
+					"path": [
+						"vehicles",
+						"4625KDN"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Put Vehículo",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Accept-Language",
+						"value": "es",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"licensePlate\": \"1223-FFB\",\r\n    \"type\": \"StraightTruck\",\r\n    \"transportTypeCode\": \"1\",\r\n    \"disabled\": false,\r\n    \"compartments\": [\r\n        {\r\n            \"capacity\": 20000.00,\r\n            \"measureUnitCode\": \"KG\"\r\n        }\r\n    ]\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base-url}}/vehicles/5022",
+					"host": [
+						"{{base-url}}"
+					],
+					"path": [
+						"vehicles",
+						"5022"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Lugares",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept-Language",
+						"value": "es",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base-url}}/places",
+					"host": [
+						"{{base-url}}"
+					],
+					"path": [
+						"places"
+					],
+					"query": [
+						{
+							"key": "textFilter",
+							"value": "novos",
+							"disabled": true
+						},
+						{
+							"key": "code",
+							"value": "",
+							"disabled": true
+						},
+						{
+							"key": "code",
+							"value": "",
+							"disabled": true
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Lugar",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept-Language",
+						"value": "es",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base-url}}/places/NANTA DH",
+					"host": [
+						"{{base-url}}"
+					],
+					"path": [
+						"places",
+						"NANTA DH"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Put Lugar",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Accept-Language",
+						"value": "es",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n   \"name\": \"ÑOVOS SISTEMAS\",\r\n   \"postalAddress\": \" Rúa Teixugueiñas 11 Navia – Portal 5 Ofic. 1, 36212 Vigo\",\r\n   \"pois\": [\r\n     {\r\n       \"latitude\": 42.21239,\r\n       \"longitude\": -8.75475,\r\n       \"radius\": 103\r\n     }\r\n   ],\r\n   \"equivalences\": []\r\n}\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base-url}}/places/PLNOVOS001",
+					"host": [
+						"{{base-url}}"
+					],
+					"path": [
+						"places",
+						"PLNOVOS001"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Productos",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept-Language",
+						"value": "es",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base-url}}/materials",
+					"host": [
+						"{{base-url}}"
+					],
+					"path": [
+						"materials"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Producto",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept-Language",
+						"value": "es",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base-url}}/materials/0606400",
+					"host": [
+						"{{base-url}}"
+					],
+					"path": [
+						"materials",
+						"0606400"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Put Producto",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Accept-Language",
+						"value": "es",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"name\": \"PIENSO PERSONAS\",\r\n    \"disabled\": false,\r\n    \"equivalences\": [\r\n        {\r\n            \"operatorCode\": \"CL00077\",\r\n            \"code\": \"PS001\",\r\n            \"name\": \"Pipas Facundo\",\r\n            \"handleWithCare\": true\r\n        }\r\n    ]\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base-url}}/materials/ES-47320000",
+					"host": [
+						"{{base-url}}"
+					],
+					"path": [
+						"materials",
+						"ES-47320000"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Delegaciones",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept-Language",
+						"value": "es",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base-url}}/delegations",
+					"host": [
+						"{{base-url}}"
+					],
+					"path": [
+						"delegations"
+					],
+					"query": [
+						{
+							"key": "textFilter",
+							"value": "sacos",
+							"disabled": true
+						},
+						{
+							"key": "code",
+							"value": "4",
+							"disabled": true
+						},
+						{
+							"key": "code",
+							"value": "5",
+							"disabled": true
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Delegacion",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept-Language",
+						"value": "es",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base-url}}/delegations/5",
+					"host": [
+						"{{base-url}}"
+					],
+					"path": [
+						"delegations",
+						"5"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Put Delegacion",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Accept-Language",
+						"value": "es",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"name\": \"CATALUÑA\",\r\n    \"areaCode\": \"1\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base-url}}/delegations/5",
+					"host": [
+						"{{base-url}}"
+					],
+					"path": [
+						"delegations",
+						"5"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Areas",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept-Language",
+						"value": "es",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base-url}}/areas",
+					"host": [
+						"{{base-url}}"
+					],
+					"path": [
+						"areas"
+					],
+					"query": [
+						{
+							"key": "textFilter",
+							"value": "PUEBLANUEVA",
+							"disabled": true
+						},
+						{
+							"key": "code",
+							"value": "4",
+							"disabled": true
+						},
+						{
+							"key": "code",
+							"value": "5",
+							"disabled": true
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Area",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept-Language",
+						"value": "es",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base-url}}/areas/1",
+					"host": [
+						"{{base-url}}"
+					],
+					"path": [
+						"areas",
+						"1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Put Area",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Accept-Language",
+						"value": "es",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"name\": \"Piña\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base-url}}/areas/1",
+					"host": [
+						"{{base-url}}"
+					],
+					"path": [
+						"areas",
+						"1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Tipos de transporte",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept-Language",
+						"value": "es",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base-url}}/transport-types",
+					"host": [
+						"{{base-url}}"
+					],
+					"path": [
+						"transport-types"
+					],
+					"query": [
+						{
+							"key": "textFilter",
+							"value": "",
+							"disabled": true
+						},
+						{
+							"key": "code",
+							"value": "",
+							"disabled": true
+						},
+						{
+							"key": "code",
+							"value": "",
+							"disabled": true
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Tipo de transporte",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept-Language",
+						"value": "es",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base-url}}/transport-types/1",
+					"host": [
+						"{{base-url}}"
+					],
+					"path": [
+						"transport-types",
+						"1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Put Tipos de transporte",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Accept-Language",
+						"value": "es",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"name\": \"aaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base-url}}/transport-types/1",
+					"host": [
+						"{{base-url}}"
+					],
+					"path": [
+						"transport-types",
+						"1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Combinaciones",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept-Language",
+						"value": "es",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base-url}}/driving-combinations",
+					"host": [
+						"{{base-url}}"
+					],
+					"path": [
+						"driving-combinations"
+					],
+					"query": [
+						{
+							"key": "vehicleCode",
+							"value": "",
+							"disabled": true
+						},
+						{
+							"key": "driverCode",
+							"value": "",
+							"disabled": true
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Combinacion",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept-Language",
+						"value": "es",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base-url}}/driving-combinations/678",
+					"host": [
+						"{{base-url}}"
+					],
+					"path": [
+						"driving-combinations",
+						"678"
+					],
+					"query": [
+						{
+							"key": "vehicleCode",
+							"value": "37006",
+							"disabled": true
+						},
+						{
+							"key": "vehicleCode",
+							"value": "38004",
+							"disabled": true
+						},
+						{
+							"key": "driverCode",
+							"value": "44909325P",
+							"disabled": true
+						},
+						{
+							"key": "driverCode",
+							"value": "03449562E",
+							"disabled": true
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create Combinacion",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Accept-Language",
+						"value": "es",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "    {\r\n        \"delegationCode\": \"2\",\r\n        \"tractorCode\": \"37006\",\r\n        \"trailerCode\": \"38004\",\r\n        \"driverCode\": \"44909325P\",\r\n        \"maximumWeight\": 27280.00,\r\n        \"weightUnitCode\": \"L\",\r\n        \"startingPlaceCode\": \"ES-47320000\",\r\n        \"endingPlaceCode\": \"ES-47320000\",\r\n        \"disabled\": false\r\n    }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base-url}}/driving-combinations",
+					"host": [
+						"{{base-url}}"
+					],
+					"path": [
+						"driving-combinations"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Update Combinacion",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Accept-Language",
+						"value": "es",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "    {\r\n        \"delegationCode\": \"2\",\r\n        \"tractorCode\": \"37025\",\r\n        \"trailerCode\": null,\r\n        \"driverCode\": \"09338064H\",\r\n        \"maximumWeight\": 25740.00,\r\n        \"weightUnitCode\": \"KG\",\r\n        \"startingPlaceCode\": null,\r\n        \"endingPlaceCode\": null,\r\n        \"disabled\": false\r\n    }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base-url}}/driving-combinations/678",
+					"host": [
+						"{{base-url}}"
+					],
+					"path": [
+						"driving-combinations",
+						"678"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Puba Rutas finalizadas",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base-finished-routes-url}}/routes/finished",
+					"host": [
+						"{{base-finished-routes-url}}"
+					],
+					"path": [
+						"routes",
+						"finished"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Puba Confirmar rutas finalizadas",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"publicationIds\": [1, 2]\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base-finished-routes-url}}/routes/finished/commit",
+					"host": [
+						"{{base-finished-routes-url}}"
+					],
+					"path": [
+						"routes",
+						"finished",
+						"commit"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Documentos Ruta",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept-Language",
+						"value": "es",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base-url}}/routes/30491/destinations/documents",
+					"host": [
+						"{{base-url}}"
+					],
+					"path": [
+						"routes",
+						"30491",
+						"destinations",
+						"documents"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"auth": {
+		"type": "oauth2",
+		"oauth2": [
+			{
+				"key": "scope",
+				"value": "{{scope}}",
+				"type": "string"
+			},
+			{
+				"key": "clientSecret",
+				"value": "{{client-secret}}",
+				"type": "string"
+			},
+			{
+				"key": "clientId",
+				"value": "{{client-id}}",
+				"type": "string"
+			},
+			{
+				"key": "accessTokenUrl",
+				"value": "{{access-token-url}}",
+				"type": "string"
+			},
+			{
+				"key": "tokenName",
+				"value": "Satelles",
+				"type": "string"
+			},
+			{
+				"key": "challengeAlgorithm",
+				"value": "S256",
+				"type": "string"
+			},
+			{
+				"key": "username",
+				"value": "mpereiro@novossistemas.com",
+				"type": "string"
+			},
+			{
+				"key": "password",
+				"value": "perp1996",
+				"type": "string"
+			},
+			{
+				"key": "grant_type",
+				"value": "client_credentials",
+				"type": "string"
+			},
+			{
+				"key": "addTokenTo",
+				"value": "header",
+				"type": "string"
+			},
+			{
+				"key": "client_authentication",
+				"value": "body",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "access-token-url",
+			"value": "https://ecotrans.satelles.es/identity/connect/token"
+		},
+		{
+			"key": "client-id",
+			"value": "fe8c21878563445bbf731d3a80fb865b"
+		},
+		{
+			"key": "client-secret",
+			"value": "Jhc6tJFBxEfsVs"
+		},
+		{
+			"key": "scope",
+			"value": "satelles-publications:finished-routes"
+		},
+		{
+			"key": "base-url",
+			"value": "https://ecotrans.satelles.es"
+		},
+		{
+			"key": "base-finished-routes-url",
+			"value": "https://ecotrans.satelles.es/puba"
+		}
+	]
+}

@@ -1,0 +1,9 @@
+# Builds y dependencias
+api/node_modules/
+
+# .env reales (los .example sí van al repo).
+# .env-dev y .env-prod viven en el servidor correspondiente; el bootstrap
+# copia el adecuado a .env según /etc/hosts (marca DESARROLLO).
+.env
+.env-dev
+.env-prod

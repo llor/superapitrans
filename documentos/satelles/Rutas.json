@@ -1,0 +1,1933 @@
+[
+    {
+        "id": 13597,
+        "route": {
+            "id": 24198,
+            "planDate": "2024-10-24",
+            "delegation": {
+                "id": 5,
+                "name": "CENTRO"
+            },
+            "companyId": 5,
+            "startedOn": "2024-10-24T03:17:00Z",
+            "startedAtPosition": {
+                "type": "Point",
+                "coordinates": [
+                    -4.0691027,
+                    39.9323523
+                ]
+            },
+            "finishedOn": "2024-10-25T06:11:00Z",
+            "finishedAtPosition": {
+                "type": "Point",
+                "coordinates": [
+                    -4.3903228,
+                    40.0743308
+                ]
+            },
+            "driver": {
+                "id": 443,
+                "code": "1000",
+                "name": "PATRICIO JAVIER MEDINA GORDILLO",
+                "idCard": "X3996986T"
+            },
+            "tractor": {
+                "id": 951,
+                "code": "9000LRN",
+                "licensePlate": "9000-LRN",
+                "type": {
+                    "id": 1,
+                    "name": "TRACTORA",
+                    "archetype": 0
+                }
+            },
+            "trailer": {
+                "id": 485,
+                "code": "R3561BCX",
+                "licensePlate": "R-3561-BCX",
+                "type": {
+                    "id": 2,
+                    "name": "SEMIRREMOLQUE",
+                    "archetype": 1
+                }
+            },
+            "destinations": [
+                {
+                    "id": 123066,
+                    "place": {
+                        "id": 7524,
+                        "name": "Martin Imedio Juan Antonio",
+                        "area": {
+                            "id": 5,
+                            "code": "ZONACENTRO",
+                            "name": "ZONA CENTRO"
+                        }
+                    },
+                    "trip": 1,
+                    "sequence": 1,
+                    "position": {
+                        "type": "Point",
+                        "coordinates": [
+                            -3.6399517,
+                            39.4411083
+                        ]
+                    },
+                    "plannedArrival": "2024-10-24T08:25:23",
+                    "plannedDeparture": "2024-10-24T10:12:18Z",
+                    "actualArrival": "2024-10-24T07:46:00Z",
+                    "actualDeparture": "2024-10-24T08:19:00Z",
+                    "actions": [
+                        {
+                            "id": 257645,
+                            "type": 1,
+                            "delivery": {
+                                "id": 131227,
+                                "deliveryDate": "2024-10-24",
+                                "deliverySequence": 0,
+                                "mode": {
+                                    "id": 1,
+                                    "name": "300 GRANEL MIS MEDIOS"
+                                },
+                                "order": {
+                                    "id": 132014,
+                                    "orderDate": "2024-10-24",
+                                    "reference": "0032347385",
+                                    "customer": {
+                                        "id": 23
+                                    },
+                                    "placeOfOrigin": {
+                                        "id": 4359,
+                                        "name": "NANTA (FABRICA EN GRIÑON)",
+                                        "area": {
+                                            "id": 5,
+                                            "code": "ZONACENTRO",
+                                            "name": "ZONA CENTRO"
+                                        }
+                                    },
+                                    "placeOfDestination": {
+                                        "id": 7524,
+                                        "name": "Martin Imedio Juan Antonio",
+                                        "area": {
+                                            "id": 5,
+                                            "code": "ZONACENTRO",
+                                            "name": "ZONA CENTRO"
+                                        }
+                                    },
+                                    "placeEquivalenceOfOrigin": {
+                                        "id": 6487,
+                                        "code": "294"
+                                    },
+                                    "placeEquivalenceOfDestination": {
+                                        "id": 9381,
+                                        "code": "264993/272001"
+                                    },
+                                    "requirements": []
+                                },
+                                "cargo": [
+                                    {
+                                        "id": 268491,
+                                        "material": {
+                                            "id": 32
+                                        },
+                                        "equivalence": {
+                                            "id": 11862,
+                                            "code": "12563765"
+                                        },
+                                        "measureUnit": {
+                                            "id": 2,
+                                            "symbol": "KG"
+                                        },
+                                        "shippingManifestItem": {
+                                            "id": 257115,
+                                            "shippingManifest": {
+                                                "id": 132707,
+                                                "loadingPlace": {
+                                                    "id": 4359,
+                                                    "name": "NANTA (FABRICA EN GRIÑON)",
+                                                    "area": {
+                                                        "id": 5,
+                                                        "code": "ZONACENTRO",
+                                                        "name": "ZONA CENTRO"
+                                                    }
+                                                },
+                                                "manifestDate": "2024-10-24",
+                                                "documentNumber": "53786697"
+                                            }
+                                        },
+                                        "quantity": 20000.00,
+                                        "operatorData": "{\"LoadCenter\":\"294\",\"Customer\":\"264993/272001\",\"Material\":\"12563765\",\"Shipment\":\"8301321\",\"DeliveryMode\":\"300\",\"Note\":\"53786697\"}"
+                                    }
+                                ]
+                            },
+                            "shippingActions": [
+                                {
+                                    "shippingManifestItemId": 257115,
+                                    "routeDestinationId": 123066,
+                                    "vehicleId": 485,
+                                    "compartmentIdx": 1,
+                                    "sequence": 1,
+                                    "actionType": 1,
+                                    "quantity": 4000.00,
+                                    "mechanized": false
+                                },
+                                {
+                                    "shippingManifestItemId": 257115,
+                                    "routeDestinationId": 123066,
+                                    "vehicleId": 485,
+                                    "compartmentIdx": 2,
+                                    "sequence": 1,
+                                    "actionType": 1,
+                                    "quantity": 4000.00,
+                                    "mechanized": false
+                                },
+                                {
+                                    "shippingManifestItemId": 257115,
+                                    "routeDestinationId": 123066,
+                                    "vehicleId": 485,
+                                    "compartmentIdx": 3,
+                                    "sequence": 1,
+                                    "actionType": 1,
+                                    "quantity": 4000.00,
+                                    "mechanized": false
+                                },
+                                {
+                                    "shippingManifestItemId": 257115,
+                                    "routeDestinationId": 123066,
+                                    "vehicleId": 485,
+                                    "compartmentIdx": 4,
+                                    "sequence": 1,
+                                    "actionType": 1,
+                                    "quantity": 4000.00,
+                                    "mechanized": false
+                                },
+                                {
+                                    "shippingManifestItemId": 257115,
+                                    "routeDestinationId": 123066,
+                                    "vehicleId": 485,
+                                    "compartmentIdx": 5,
+                                    "sequence": 1,
+                                    "actionType": 1,
+                                    "quantity": 5540.00,
+                                    "mechanized": false
+                                }
+                            ]
+                        }
+                    ],
+                    "events": [
+                        {
+                            "id": 235970,
+                            "type": 0,
+                            "hour": "2024-10-24T05:42:00Z",
+                            "position": {
+                                "type": "Point",
+                                "coordinates": [
+                                    -3.8550948,
+                                    40.2056098
+                                ]
+                            },
+                            "odometer": 0.0
+                        },
+                        {
+                            "id": 236092,
+                            "type": 12,
+                            "hour": "2024-10-24T08:19:00Z",
+                            "position": {
+                                "type": "Point",
+                                "coordinates": [
+                                    -3.6397967,
+                                    39.440547
+                                ]
+                            },
+                            "odometer": 0.0
+                        },
+                        {
+                            "id": 236093,
+                            "type": 2,
+                            "hour": "2024-10-24T08:19:00Z",
+                            "position": {
+                                "type": "Point",
+                                "coordinates": [
+                                    -3.6400157,
+                                    39.4409763
+                                ]
+                            },
+                            "odometer": 0.0
+                        },
+                        {
+                            "id": 236074,
+                            "type": 1,
+                            "hour": "2024-10-24T07:46:00Z",
+                            "position": {
+                                "type": "Point",
+                                "coordinates": [
+                                    -3.6400157,
+                                    39.4409763
+                                ]
+                            },
+                            "odometer": 742548.0
+                        },
+                        {
+                            "id": 236075,
+                            "type": 11,
+                            "hour": "2024-10-24T07:47:00Z",
+                            "position": {
+                                "type": "Point",
+                                "coordinates": [
+                                    -3.6400157,
+                                    39.4409762
+                                ]
+                            },
+                            "odometer": 0.0
+                        }
+                    ],
+                    "incidences": [],
+                    "documents": []
+                },
+                {
+                    "id": 123067,
+                    "place": {
+                        "id": 4359,
+                        "name": "NANTA (FABRICA EN GRIÑON)",
+                        "area": {
+                            "id": 5,
+                            "code": "ZONACENTRO",
+                            "name": "ZONA CENTRO"
+                        }
+                    },
+                    "trip": 1,
+                    "sequence": 0,
+                    "position": {
+                        "type": "Point",
+                        "coordinates": [
+                            -3.8551443815231328,
+                            40.205681041909216
+                        ]
+                    },
+                    "plannedArrival": "2024-10-24T05:00:00",
+                    "plannedDeparture": "2024-10-24T06:50:00Z",
+                    "actualArrival": "2024-10-24T04:30:00Z",
+                    "actualDeparture": "2024-10-24T05:42:00Z",
+                    "actions": [
+                        {
+                            "id": 257646,
+                            "type": 0,
+                            "delivery": {
+                                "id": 131227,
+                                "deliveryDate": "2024-10-24",
+                                "deliverySequence": 0,
+                                "mode": {
+                                    "id": 1,
+                                    "name": "300 GRANEL MIS MEDIOS"
+                                },
+                                "order": {
+                                    "id": 132014,
+                                    "orderDate": "2024-10-24",
+                                    "reference": "0032347385",
+                                    "customer": {
+                                        "id": 23
+                                    },
+                                    "placeOfOrigin": {
+                                        "id": 4359,
+                                        "name": "NANTA (FABRICA EN GRIÑON)",
+                                        "area": {
+                                            "id": 5,
+                                            "code": "ZONACENTRO",
+                                            "name": "ZONA CENTRO"
+                                        }
+                                    },
+                                    "placeOfDestination": {
+                                        "id": 7524,
+                                        "name": "Martin Imedio Juan Antonio",
+                                        "area": {
+                                            "id": 5,
+                                            "code": "ZONACENTRO",
+                                            "name": "ZONA CENTRO"
+                                        }
+                                    },
+                                    "placeEquivalenceOfOrigin": {
+                                        "id": 6487,
+                                        "code": "294"
+                                    },
+                                    "placeEquivalenceOfDestination": {
+                                        "id": 9381,
+                                        "code": "264993/272001"
+                                    },
+                                    "requirements": []
+                                },
+                                "cargo": [
+                                    {
+                                        "id": 268491,
+                                        "material": {
+                                            "id": 32
+                                        },
+                                        "equivalence": {
+                                            "id": 11862,
+                                            "code": "12563765"
+                                        },
+                                        "measureUnit": {
+                                            "id": 2,
+                                            "symbol": "KG"
+                                        },
+                                        "shippingManifestItem": {
+                                            "id": 257115,
+                                            "shippingManifest": {
+                                                "id": 132707,
+                                                "loadingPlace": {
+                                                    "id": 4359,
+                                                    "name": "NANTA (FABRICA EN GRIÑON)",
+                                                    "area": {
+                                                        "id": 5,
+                                                        "code": "ZONACENTRO",
+                                                        "name": "ZONA CENTRO"
+                                                    }
+                                                },
+                                                "manifestDate": "2024-10-24",
+                                                "documentNumber": "53786697"
+                                            }
+                                        },
+                                        "quantity": 20000.00,
+                                        "operatorData": "{\"LoadCenter\":\"294\",\"Customer\":\"264993/272001\",\"Material\":\"12563765\",\"Shipment\":\"8301321\",\"DeliveryMode\":\"300\",\"Note\":\"53786697\"}"
+                                    }
+                                ]
+                            },
+                            "shippingActions": [
+                                {
+                                    "shippingManifestItemId": 257115,
+                                    "routeDestinationId": 123067,
+                                    "vehicleId": 485,
+                                    "compartmentIdx": 3,
+                                    "sequence": 1,
+                                    "actionType": 0,
+                                    "quantity": 4000.00
+                                },
+                                {
+                                    "shippingManifestItemId": 257115,
+                                    "routeDestinationId": 123067,
+                                    "vehicleId": 485,
+                                    "compartmentIdx": 4,
+                                    "sequence": 1,
+                                    "actionType": 0,
+                                    "quantity": 4000.00
+                                },
+                                {
+                                    "shippingManifestItemId": 257115,
+                                    "routeDestinationId": 123067,
+                                    "vehicleId": 485,
+                                    "compartmentIdx": 5,
+                                    "sequence": 1,
+                                    "actionType": 0,
+                                    "quantity": 5540.00
+                                },
+                                {
+                                    "shippingManifestItemId": 257115,
+                                    "routeDestinationId": 123067,
+                                    "vehicleId": 485,
+                                    "compartmentIdx": 1,
+                                    "sequence": 1,
+                                    "actionType": 0,
+                                    "quantity": 4000.00
+                                },
+                                {
+                                    "shippingManifestItemId": 257115,
+                                    "routeDestinationId": 123067,
+                                    "vehicleId": 485,
+                                    "compartmentIdx": 2,
+                                    "sequence": 1,
+                                    "actionType": 0,
+                                    "quantity": 4000.00
+                                }
+                            ]
+                        }
+                    ],
+                    "events": [
+                        {
+                            "id": 235950,
+                            "type": 1,
+                            "hour": "2024-10-24T04:30:00Z",
+                            "position": {
+                                "type": "Point",
+                                "coordinates": [
+                                    -3.8550948,
+                                    40.2056098
+                                ]
+                            },
+                            "odometer": 742416.0
+                        },
+                        {
+                            "id": 235951,
+                            "type": 3,
+                            "hour": "2024-10-24T04:37:00Z",
+                            "position": {
+                                "type": "Point",
+                                "coordinates": [
+                                    -3.8550948,
+                                    40.2056098
+                                ]
+                            },
+                            "odometer": 0.0
+                        },
+                        {
+                            "id": 235968,
+                            "type": 4,
+                            "hour": "2024-10-24T05:42:00Z",
+                            "position": {
+                                "type": "Point",
+                                "coordinates": [
+                                    -3.8546088,
+                                    40.2055976
+                                ]
+                            },
+                            "odometer": 0.0
+                        },
+                        {
+                            "id": 235969,
+                            "type": 2,
+                            "hour": "2024-10-24T05:42:00Z",
+                            "position": {
+                                "type": "Point",
+                                "coordinates": [
+                                    -3.8550948,
+                                    40.2056098
+                                ]
+                            },
+                            "odometer": 0.0
+                        }
+                    ],
+                    "incidences": [],
+                    "documents": []
+                },
+                {
+                    "id": 123069,
+                    "place": {
+                        "id": 4359,
+                        "name": "NANTA (FABRICA EN GRIÑON)",
+                        "area": {
+                            "id": 5,
+                            "code": "ZONACENTRO",
+                            "name": "ZONA CENTRO"
+                        }
+                    },
+                    "trip": 2,
+                    "sequence": 0,
+                    "position": {
+                        "type": "Point",
+                        "coordinates": [
+                            -3.8551443815231328,
+                            40.205681041909216
+                        ]
+                    },
+                    "plannedArrival": "2024-10-24T11:00:00",
+                    "plannedDeparture": "2024-10-24T11:30:00Z",
+                    "actualArrival": "2024-10-24T11:03:00Z",
+                    "actualDeparture": "2024-10-24T11:22:00Z",
+                    "actions": [
+                        {
+                            "id": 255939,
+                            "type": 0,
+                            "delivery": {
+                                "id": 130265,
+                                "deliveryDate": "2024-10-24",
+                                "deliverySequence": 0,
+                                "mode": {
+                                    "id": 1,
+                                    "name": "300 GRANEL MIS MEDIOS"
+                                },
+                                "order": {
+                                    "id": 130704,
+                                    "orderDate": "2024-10-24",
+                                    "reference": "0032331588",
+                                    "customer": {
+                                        "id": 23
+                                    },
+                                    "placeOfOrigin": {
+                                        "id": 4359,
+                                        "name": "NANTA (FABRICA EN GRIÑON)",
+                                        "area": {
+                                            "id": 5,
+                                            "code": "ZONACENTRO",
+                                            "name": "ZONA CENTRO"
+                                        }
+                                    },
+                                    "placeOfDestination": {
+                                        "id": 4590,
+                                        "name": "Granja Avicola San Antonio  NAVE 3",
+                                        "area": {
+                                            "id": 5,
+                                            "code": "ZONACENTRO",
+                                            "name": "ZONA CENTRO"
+                                        }
+                                    },
+                                    "placeEquivalenceOfOrigin": {
+                                        "id": 6487,
+                                        "code": "294"
+                                    },
+                                    "placeEquivalenceOfDestination": {
+                                        "id": 6723,
+                                        "code": "177879/272003"
+                                    },
+                                    "requirements": []
+                                },
+                                "cargo": [
+                                    {
+                                        "id": 265984,
+                                        "material": {
+                                            "id": 19
+                                        },
+                                        "equivalence": {
+                                            "id": 9951,
+                                            "code": "14398505"
+                                        },
+                                        "measureUnit": {
+                                            "id": 2,
+                                            "symbol": "KG"
+                                        },
+                                        "shippingManifestItem": {
+                                            "id": 255352,
+                                            "shippingManifest": {
+                                                "id": 131189,
+                                                "loadingPlace": {
+                                                    "id": 4359,
+                                                    "name": "NANTA (FABRICA EN GRIÑON)",
+                                                    "area": {
+                                                        "id": 5,
+                                                        "code": "ZONACENTRO",
+                                                        "name": "ZONA CENTRO"
+                                                    }
+                                                },
+                                                "manifestDate": "2024-10-24",
+                                                "documentNumber": "53762858"
+                                            }
+                                        },
+                                        "quantity": 24500.00,
+                                        "operatorData": "{\"LoadCenter\":\"294\",\"Customer\":\"177879/272003\",\"Material\":\"14398505\",\"Shipment\":\"8301272\",\"DeliveryMode\":\"300\",\"Note\":\"53762858\"}"
+                                    }
+                                ]
+                            },
+                            "shippingActions": [
+                                {
+                                    "shippingManifestItemId": 255352,
+                                    "routeDestinationId": 123069,
+                                    "vehicleId": 485,
+                                    "compartmentIdx": 1,
+                                    "sequence": 1,
+                                    "actionType": 0,
+                                    "quantity": 4000.00
+                                },
+                                {
+                                    "shippingManifestItemId": 255352,
+                                    "routeDestinationId": 123069,
+                                    "vehicleId": 485,
+                                    "compartmentIdx": 2,
+                                    "sequence": 1,
+                                    "actionType": 0,
+                                    "quantity": 4000.00
+                                },
+                                {
+                                    "shippingManifestItemId": 255352,
+                                    "routeDestinationId": 123069,
+                                    "vehicleId": 485,
+                                    "compartmentIdx": 3,
+                                    "sequence": 1,
+                                    "actionType": 0,
+                                    "quantity": 4000.00
+                                },
+                                {
+                                    "shippingManifestItemId": 255352,
+                                    "routeDestinationId": 123069,
+                                    "vehicleId": 485,
+                                    "compartmentIdx": 4,
+                                    "sequence": 1,
+                                    "actionType": 0,
+                                    "quantity": 4000.00
+                                },
+                                {
+                                    "shippingManifestItemId": 255352,
+                                    "routeDestinationId": 123069,
+                                    "vehicleId": 485,
+                                    "compartmentIdx": 5,
+                                    "sequence": 1,
+                                    "actionType": 0,
+                                    "quantity": 4000.00
+                                },
+                                {
+                                    "shippingManifestItemId": 255352,
+                                    "routeDestinationId": 123069,
+                                    "vehicleId": 485,
+                                    "compartmentIdx": 6,
+                                    "sequence": 1,
+                                    "actionType": 0,
+                                    "quantity": 4200.00
+                                }
+                            ]
+                        }
+                    ],
+                    "events": [
+                        {
+                            "id": 236094,
+                            "type": 0,
+                            "hour": "2024-10-24T08:19:00Z",
+                            "position": {
+                                "type": "Point",
+                                "coordinates": [
+                                    -3.6400157,
+                                    39.4409763
+                                ]
+                            },
+                            "odometer": 0.0
+                        },
+                        {
+                            "id": 236177,
+                            "type": 1,
+                            "hour": "2024-10-24T11:03:00Z",
+                            "position": {
+                                "type": "Point",
+                                "coordinates": [
+                                    -3.8551007,
+                                    40.2053908
+                                ]
+                            },
+                            "odometer": 742645.0
+                        },
+                        {
+                            "id": 236185,
+                            "type": 3,
+                            "hour": "2024-10-24T11:21:00Z",
+                            "position": {
+                                "type": "Point",
+                                "coordinates": [
+                                    -3.7999807,
+                                    40.200702
+                                ]
+                            },
+                            "odometer": 0.0
+                        },
+                        {
+                            "id": 236186,
+                            "type": 4,
+                            "hour": "2024-10-24T11:22:00Z",
+                            "position": {
+                                "type": "Point",
+                                "coordinates": [
+                                    -3.8003125,
+                                    40.1992837
+                                ]
+                            },
+                            "odometer": 0.0
+                        },
+                        {
+                            "id": 236187,
+                            "type": 2,
+                            "hour": "2024-10-24T11:22:00Z",
+                            "position": {
+                                "type": "Point",
+                                "coordinates": [
+                                    -3.8551007,
+                                    40.2053908
+                                ]
+                            },
+                            "odometer": 0.0
+                        }
+                    ],
+                    "incidences": [],
+                    "documents": []
+                },
+                {
+                    "id": 123182,
+                    "place": {
+                        "id": 4590,
+                        "name": "Granja Avicola San Antonio  NAVE 3",
+                        "area": {
+                            "id": 5,
+                            "code": "ZONACENTRO",
+                            "name": "ZONA CENTRO"
+                        }
+                    },
+                    "trip": 2,
+                    "sequence": 1,
+                    "position": {
+                        "type": "Point",
+                        "coordinates": [
+                            -3.6647129029407037,
+                            39.60182794581651
+                        ]
+                    },
+                    "plannedArrival": "2024-10-24T12:46:27",
+                    "plannedDeparture": "2024-10-24T14:50:40Z",
+                    "actualArrival": "2024-10-24T13:02:00Z",
+                    "actualDeparture": "2024-10-24T13:35:00Z",
+                    "actions": [
+                        {
+                            "id": 255938,
+                            "type": 1,
+                            "delivery": {
+                                "id": 130265,
+                                "deliveryDate": "2024-10-24",
+                                "deliverySequence": 0,
+                                "mode": {
+                                    "id": 1,
+                                    "name": "300 GRANEL MIS MEDIOS"
+                                },
+                                "order": {
+                                    "id": 130704,
+                                    "orderDate": "2024-10-24",
+                                    "reference": "0032331588",
+                                    "customer": {
+                                        "id": 23
+                                    },
+                                    "placeOfOrigin": {
+                                        "id": 4359,
+                                        "name": "NANTA (FABRICA EN GRIÑON)",
+                                        "area": {
+                                            "id": 5,
+                                            "code": "ZONACENTRO",
+                                            "name": "ZONA CENTRO"
+                                        }
+                                    },
+                                    "placeOfDestination": {
+                                        "id": 4590,
+                                        "name": "Granja Avicola San Antonio  NAVE 3",
+                                        "area": {
+                                            "id": 5,
+                                            "code": "ZONACENTRO",
+                                            "name": "ZONA CENTRO"
+                                        }
+                                    },
+                                    "placeEquivalenceOfOrigin": {
+                                        "id": 6487,
+                                        "code": "294"
+                                    },
+                                    "placeEquivalenceOfDestination": {
+                                        "id": 6723,
+                                        "code": "177879/272003"
+                                    },
+                                    "requirements": []
+                                },
+                                "cargo": [
+                                    {
+                                        "id": 265984,
+                                        "material": {
+                                            "id": 19
+                                        },
+                                        "equivalence": {
+                                            "id": 9951,
+                                            "code": "14398505"
+                                        },
+                                        "measureUnit": {
+                                            "id": 2,
+                                            "symbol": "KG"
+                                        },
+                                        "shippingManifestItem": {
+                                            "id": 255352,
+                                            "shippingManifest": {
+                                                "id": 131189,
+                                                "loadingPlace": {
+                                                    "id": 4359,
+                                                    "name": "NANTA (FABRICA EN GRIÑON)",
+                                                    "area": {
+                                                        "id": 5,
+                                                        "code": "ZONACENTRO",
+                                                        "name": "ZONA CENTRO"
+                                                    }
+                                                },
+                                                "manifestDate": "2024-10-24",
+                                                "documentNumber": "53762858"
+                                            }
+                                        },
+                                        "quantity": 24500.00,
+                                        "operatorData": "{\"LoadCenter\":\"294\",\"Customer\":\"177879/272003\",\"Material\":\"14398505\",\"Shipment\":\"8301272\",\"DeliveryMode\":\"300\",\"Note\":\"53762858\"}"
+                                    }
+                                ]
+                            },
+                            "shippingActions": [
+                                {
+                                    "shippingManifestItemId": 255352,
+                                    "routeDestinationId": 123182,
+                                    "vehicleId": 485,
+                                    "compartmentIdx": 1,
+                                    "sequence": 1,
+                                    "actionType": 1,
+                                    "quantity": 4000.00,
+                                    "mechanized": false
+                                },
+                                {
+                                    "shippingManifestItemId": 255352,
+                                    "routeDestinationId": 123182,
+                                    "vehicleId": 485,
+                                    "compartmentIdx": 2,
+                                    "sequence": 1,
+                                    "actionType": 1,
+                                    "quantity": 4000.00,
+                                    "mechanized": false
+                                },
+                                {
+                                    "shippingManifestItemId": 255352,
+                                    "routeDestinationId": 123182,
+                                    "vehicleId": 485,
+                                    "compartmentIdx": 3,
+                                    "sequence": 1,
+                                    "actionType": 1,
+                                    "quantity": 4000.00,
+                                    "mechanized": false
+                                },
+                                {
+                                    "shippingManifestItemId": 255352,
+                                    "routeDestinationId": 123182,
+                                    "vehicleId": 485,
+                                    "compartmentIdx": 4,
+                                    "sequence": 1,
+                                    "actionType": 1,
+                                    "quantity": 4000.00,
+                                    "mechanized": false
+                                },
+                                {
+                                    "shippingManifestItemId": 255352,
+                                    "routeDestinationId": 123182,
+                                    "vehicleId": 485,
+                                    "compartmentIdx": 5,
+                                    "sequence": 1,
+                                    "actionType": 1,
+                                    "quantity": 4000.00,
+                                    "mechanized": false
+                                },
+                                {
+                                    "shippingManifestItemId": 255352,
+                                    "routeDestinationId": 123182,
+                                    "vehicleId": 485,
+                                    "compartmentIdx": 6,
+                                    "sequence": 1,
+                                    "actionType": 1,
+                                    "quantity": 4200.00,
+                                    "mechanized": false
+                                }
+                            ]
+                        }
+                    ],
+                    "events": [
+                        {
+                            "id": 236188,
+                            "type": 0,
+                            "hour": "2024-10-24T11:22:00Z",
+                            "position": {
+                                "type": "Point",
+                                "coordinates": [
+                                    -3.8551007,
+                                    40.2053908
+                                ]
+                            },
+                            "odometer": 0.0
+                        },
+                        {
+                            "id": 236230,
+                            "type": 1,
+                            "hour": "2024-10-24T13:02:00Z",
+                            "position": {
+                                "type": "Point",
+                                "coordinates": [
+                                    -3.6646966,
+                                    39.6015551
+                                ]
+                            },
+                            "odometer": 742752.0
+                        },
+                        {
+                            "id": 236231,
+                            "type": 11,
+                            "hour": "2024-10-24T13:02:00Z",
+                            "position": {
+                                "type": "Point",
+                                "coordinates": [
+                                    -3.6646966,
+                                    39.6015551
+                                ]
+                            },
+                            "odometer": 0.0
+                        },
+                        {
+                            "id": 236249,
+                            "type": 12,
+                            "hour": "2024-10-24T13:35:00Z",
+                            "position": {
+                                "type": "Point",
+                                "coordinates": [
+                                    -3.664824,
+                                    39.601699
+                                ]
+                            },
+                            "odometer": 0.0
+                        },
+                        {
+                            "id": 236250,
+                            "type": 2,
+                            "hour": "2024-10-24T13:35:00Z",
+                            "position": {
+                                "type": "Point",
+                                "coordinates": [
+                                    -3.6646966,
+                                    39.6015551
+                                ]
+                            },
+                            "odometer": 0.0
+                        }
+                    ],
+                    "incidences": [],
+                    "documents": []
+                },
+                {
+                    "id": 123273,
+                    "place": {
+                        "id": 22579,
+                        "name": "Altamira - ALT4124"
+                    },
+                    "trip": 3,
+                    "sequence": 1,
+                    "position": {
+                        "type": "Point",
+                        "coordinates": [
+                            -4.3914047115812513,
+                            40.073815936555562
+                        ]
+                    },
+                    "plannedArrival": "2024-10-24T12:04:23",
+                    "plannedDeparture": "2024-10-24T13:35:55Z",
+                    "actualArrival": "2024-10-25T06:08:00Z",
+                    "actualDeparture": "2024-10-25T06:11:00Z",
+                    "actions": [
+                        {
+                            "id": 256692,
+                            "type": 1,
+                            "delivery": {
+                                "id": 130640,
+                                "deliveryDate": "2024-10-24",
+                                "deliverySequence": 0,
+                                "mode": {
+                                    "id": 1,
+                                    "name": "300 GRANEL MIS MEDIOS"
+                                },
+                                "order": {
+                                    "id": 131299,
+                                    "orderDate": "2024-10-24",
+                                    "reference": "0032347553",
+                                    "customer": {
+                                        "id": 23
+                                    },
+                                    "placeOfOrigin": {
+                                        "id": 4359,
+                                        "name": "NANTA (FABRICA EN GRIÑON)",
+                                        "area": {
+                                            "id": 5,
+                                            "code": "ZONACENTRO",
+                                            "name": "ZONA CENTRO"
+                                        }
+                                    },
+                                    "placeOfDestination": {
+                                        "id": 22579,
+                                        "name": "Altamira - ALT4124"
+                                    },
+                                    "placeEquivalenceOfOrigin": {
+                                        "id": 6487,
+                                        "code": "294"
+                                    },
+                                    "placeEquivalenceOfDestination": {
+                                        "id": 24399,
+                                        "code": "204065/272281"
+                                    },
+                                    "requirements": []
+                                },
+                                "cargo": [
+                                    {
+                                        "id": 267796,
+                                        "material": {
+                                            "id": 39
+                                        },
+                                        "equivalence": {
+                                            "id": 16116,
+                                            "code": "17259985"
+                                        },
+                                        "measureUnit": {
+                                            "id": 2,
+                                            "symbol": "KG"
+                                        },
+                                        "shippingManifestItem": {
+                                            "id": 256494,
+                                            "shippingManifest": {
+                                                "id": 132300,
+                                                "loadingPlace": {
+                                                    "id": 4359,
+                                                    "name": "NANTA (FABRICA EN GRIÑON)",
+                                                    "area": {
+                                                        "id": 5,
+                                                        "code": "ZONACENTRO",
+                                                        "name": "ZONA CENTRO"
+                                                    }
+                                                },
+                                                "manifestDate": "2024-10-24",
+                                                "documentNumber": "53786968"
+                                            }
+                                        },
+                                        "quantity": 16000.00,
+                                        "operatorData": "{\"LoadCenter\":\"294\",\"Customer\":\"204065/272281\",\"Material\":\"17259985\",\"Shipment\":\"8303136\",\"DeliveryMode\":\"300\",\"Note\":\"53786968\"}"
+                                    }
+                                ]
+                            },
+                            "shippingActions": [
+                                {
+                                    "shippingManifestItemId": 256494,
+                                    "routeDestinationId": 123273,
+                                    "vehicleId": 485,
+                                    "compartmentIdx": 1,
+                                    "sequence": 1,
+                                    "actionType": 1,
+                                    "quantity": 4000.00,
+                                    "mechanized": false
+                                },
+                                {
+                                    "shippingManifestItemId": 256494,
+                                    "routeDestinationId": 123273,
+                                    "vehicleId": 485,
+                                    "compartmentIdx": 2,
+                                    "sequence": 1,
+                                    "actionType": 1,
+                                    "quantity": 4000.00,
+                                    "mechanized": false
+                                },
+                                {
+                                    "shippingManifestItemId": 256494,
+                                    "routeDestinationId": 123273,
+                                    "vehicleId": 485,
+                                    "compartmentIdx": 3,
+                                    "sequence": 1,
+                                    "actionType": 1,
+                                    "quantity": 4000.00,
+                                    "mechanized": false
+                                },
+                                {
+                                    "shippingManifestItemId": 256494,
+                                    "routeDestinationId": 123273,
+                                    "vehicleId": 485,
+                                    "compartmentIdx": 4,
+                                    "sequence": 1,
+                                    "actionType": 1,
+                                    "quantity": 3680.00,
+                                    "mechanized": false
+                                }
+                            ]
+                        }
+                    ],
+                    "events": [
+                        {
+                            "id": 236377,
+                            "type": 0,
+                            "hour": "2024-10-25T04:40:00Z",
+                            "position": {
+                                "type": "Point",
+                                "coordinates": [
+                                    -3.854994,
+                                    40.2055095
+                                ]
+                            },
+                            "odometer": 0.0
+                        },
+                        {
+                            "id": 236399,
+                            "type": 1,
+                            "hour": "2024-10-25T06:08:00Z",
+                            "position": {
+                                "type": "Point",
+                                "coordinates": [
+                                    -4.3914144,
+                                    40.0740824
+                                ]
+                            },
+                            "odometer": 742908.0
+                        },
+                        {
+                            "id": 236400,
+                            "type": 11,
+                            "hour": "2024-10-25T06:08:00Z",
+                            "position": {
+                                "type": "Point",
+                                "coordinates": [
+                                    -4.3914144,
+                                    40.0740824
+                                ]
+                            },
+                            "odometer": 0.0
+                        },
+                        {
+                            "id": 236401,
+                            "type": 12,
+                            "hour": "2024-10-25T06:08:00Z",
+                            "position": {
+                                "type": "Point",
+                                "coordinates": [
+                                    -4.3914342,
+                                    40.074085
+                                ]
+                            },
+                            "odometer": 0.0
+                        },
+                        {
+                            "id": 236403,
+                            "type": 2,
+                            "hour": "2024-10-25T06:11:00Z",
+                            "position": {
+                                "type": "Point",
+                                "coordinates": [
+                                    -4.3914144,
+                                    40.0740824
+                                ]
+                            },
+                            "odometer": 0.0
+                        }
+                    ],
+                    "incidences": [],
+                    "documents": []
+                },
+                {
+                    "id": 123274,
+                    "place": {
+                        "id": 4359,
+                        "name": "NANTA (FABRICA EN GRIÑON)",
+                        "area": {
+                            "id": 5,
+                            "code": "ZONACENTRO",
+                            "name": "ZONA CENTRO"
+                        }
+                    },
+                    "trip": 3,
+                    "sequence": 0,
+                    "position": {
+                        "type": "Point",
+                        "coordinates": [
+                            -3.8551443815231328,
+                            40.205681041909216
+                        ]
+                    },
+                    "plannedArrival": "2024-10-24T10:30:00",
+                    "plannedDeparture": "2024-10-24T11:00:00Z",
+                    "actualArrival": "2024-10-24T15:28:00Z",
+                    "actualDeparture": "2024-10-25T04:40:00Z",
+                    "actions": [
+                        {
+                            "id": 256695,
+                            "type": 0,
+                            "delivery": {
+                                "id": 130640,
+                                "deliveryDate": "2024-10-24",
+                                "deliverySequence": 0,
+                                "mode": {
+                                    "id": 1,
+                                    "name": "300 GRANEL MIS MEDIOS"
+                                },
+                                "order": {
+                                    "id": 131299,
+                                    "orderDate": "2024-10-24",
+                                    "reference": "0032347553",
+                                    "customer": {
+                                        "id": 23
+                                    },
+                                    "placeOfOrigin": {
+                                        "id": 4359,
+                                        "name": "NANTA (FABRICA EN GRIÑON)",
+                                        "area": {
+                                            "id": 5,
+                                            "code": "ZONACENTRO",
+                                            "name": "ZONA CENTRO"
+                                        }
+                                    },
+                                    "placeOfDestination": {
+                                        "id": 22579,
+                                        "name": "Altamira - ALT4124"
+                                    },
+                                    "placeEquivalenceOfOrigin": {
+                                        "id": 6487,
+                                        "code": "294"
+                                    },
+                                    "placeEquivalenceOfDestination": {
+                                        "id": 24399,
+                                        "code": "204065/272281"
+                                    },
+                                    "requirements": []
+                                },
+                                "cargo": [
+                                    {
+                                        "id": 267796,
+                                        "material": {
+                                            "id": 39
+                                        },
+                                        "equivalence": {
+                                            "id": 16116,
+                                            "code": "17259985"
+                                        },
+                                        "measureUnit": {
+                                            "id": 2,
+                                            "symbol": "KG"
+                                        },
+                                        "shippingManifestItem": {
+                                            "id": 256494,
+                                            "shippingManifest": {
+                                                "id": 132300,
+                                                "loadingPlace": {
+                                                    "id": 4359,
+                                                    "name": "NANTA (FABRICA EN GRIÑON)",
+                                                    "area": {
+                                                        "id": 5,
+                                                        "code": "ZONACENTRO",
+                                                        "name": "ZONA CENTRO"
+                                                    }
+                                                },
+                                                "manifestDate": "2024-10-24",
+                                                "documentNumber": "53786968"
+                                            }
+                                        },
+                                        "quantity": 16000.00,
+                                        "operatorData": "{\"LoadCenter\":\"294\",\"Customer\":\"204065/272281\",\"Material\":\"17259985\",\"Shipment\":\"8303136\",\"DeliveryMode\":\"300\",\"Note\":\"53786968\"}"
+                                    }
+                                ]
+                            },
+                            "shippingActions": [
+                                {
+                                    "shippingManifestItemId": 256494,
+                                    "routeDestinationId": 123274,
+                                    "vehicleId": 485,
+                                    "compartmentIdx": 1,
+                                    "sequence": 1,
+                                    "actionType": 0,
+                                    "quantity": 4000.00
+                                },
+                                {
+                                    "shippingManifestItemId": 256494,
+                                    "routeDestinationId": 123274,
+                                    "vehicleId": 485,
+                                    "compartmentIdx": 2,
+                                    "sequence": 1,
+                                    "actionType": 0,
+                                    "quantity": 4000.00
+                                },
+                                {
+                                    "shippingManifestItemId": 256494,
+                                    "routeDestinationId": 123274,
+                                    "vehicleId": 485,
+                                    "compartmentIdx": 3,
+                                    "sequence": 1,
+                                    "actionType": 0,
+                                    "quantity": 4000.00
+                                },
+                                {
+                                    "shippingManifestItemId": 256494,
+                                    "routeDestinationId": 123274,
+                                    "vehicleId": 485,
+                                    "compartmentIdx": 4,
+                                    "sequence": 1,
+                                    "actionType": 0,
+                                    "quantity": 3680.00
+                                }
+                            ]
+                        }
+                    ],
+                    "events": [
+                        {
+                            "id": 236251,
+                            "type": 0,
+                            "hour": "2024-10-24T13:35:00Z",
+                            "position": {
+                                "type": "Point",
+                                "coordinates": [
+                                    -3.6646966,
+                                    39.6015551
+                                ]
+                            },
+                            "odometer": 0.0
+                        },
+                        {
+                            "id": 236294,
+                            "type": 1,
+                            "hour": "2024-10-24T15:28:00Z",
+                            "position": {
+                                "type": "Point",
+                                "coordinates": [
+                                    -3.854994,
+                                    40.2055095
+                                ]
+                            },
+                            "odometer": 742842.0
+                        },
+                        {
+                            "id": 236374,
+                            "type": 3,
+                            "hour": "2024-10-25T04:38:00Z",
+                            "position": {
+                                "type": "Point",
+                                "coordinates": [
+                                    -3.8550531,
+                                    40.2050892
+                                ]
+                            },
+                            "odometer": 0.0
+                        },
+                        {
+                            "id": 236375,
+                            "type": 4,
+                            "hour": "2024-10-25T04:40:00Z",
+                            "position": {
+                                "type": "Point",
+                                "coordinates": [
+                                    -3.8550164,
+                                    40.2053024
+                                ]
+                            },
+                            "odometer": 0.0
+                        },
+                        {
+                            "id": 236376,
+                            "type": 2,
+                            "hour": "2024-10-25T04:40:00Z",
+                            "position": {
+                                "type": "Point",
+                                "coordinates": [
+                                    -3.854994,
+                                    40.2055095
+                                ]
+                            },
+                            "odometer": 0.0
+                        }
+                    ],
+                    "incidences": [],
+                    "documents": []
+                }
+            ],
+            "events": [
+                {
+                    "id": 236399,
+                    "type": 1,
+                    "hour": "2024-10-25T06:08:00Z",
+                    "position": {
+                        "type": "Point",
+                        "coordinates": [
+                            -4.3914144,
+                            40.0740824
+                        ]
+                    },
+                    "odometer": 742908.0
+                },
+                {
+                    "id": 236400,
+                    "type": 11,
+                    "hour": "2024-10-25T06:08:00Z",
+                    "position": {
+                        "type": "Point",
+                        "coordinates": [
+                            -4.3914144,
+                            40.0740824
+                        ]
+                    },
+                    "odometer": 0.0
+                },
+                {
+                    "id": 236401,
+                    "type": 12,
+                    "hour": "2024-10-25T06:08:00Z",
+                    "position": {
+                        "type": "Point",
+                        "coordinates": [
+                            -4.3914342,
+                            40.074085
+                        ]
+                    },
+                    "odometer": 0.0
+                },
+                {
+                    "id": 236403,
+                    "type": 2,
+                    "hour": "2024-10-25T06:11:00Z",
+                    "position": {
+                        "type": "Point",
+                        "coordinates": [
+                            -4.3914144,
+                            40.0740824
+                        ]
+                    },
+                    "odometer": 0.0
+                },
+                {
+                    "id": 236404,
+                    "type": 10,
+                    "hour": "2024-10-25T06:11:00Z",
+                    "position": {
+                        "type": "Point",
+                        "coordinates": [
+                            -4.3903228,
+                            40.0743308
+                        ]
+                    },
+                    "odometer": 742908.0
+                },
+                {
+                    "id": 236405,
+                    "type": 8,
+                    "hour": "2024-10-25T06:11:00Z",
+                    "position": {
+                        "type": "Point",
+                        "coordinates": [
+                            -4.3903228,
+                            40.0743308
+                        ]
+                    },
+                    "odometer": 742908.0
+                },
+                {
+                    "id": 235968,
+                    "type": 4,
+                    "hour": "2024-10-24T05:42:00Z",
+                    "position": {
+                        "type": "Point",
+                        "coordinates": [
+                            -3.8546088,
+                            40.2055976
+                        ]
+                    },
+                    "odometer": 0.0
+                },
+                {
+                    "id": 235969,
+                    "type": 2,
+                    "hour": "2024-10-24T05:42:00Z",
+                    "position": {
+                        "type": "Point",
+                        "coordinates": [
+                            -3.8550948,
+                            40.2056098
+                        ]
+                    },
+                    "odometer": 0.0
+                },
+                {
+                    "id": 235970,
+                    "type": 0,
+                    "hour": "2024-10-24T05:42:00Z",
+                    "position": {
+                        "type": "Point",
+                        "coordinates": [
+                            -3.8550948,
+                            40.2056098
+                        ]
+                    },
+                    "odometer": 0.0
+                },
+                {
+                    "id": 236092,
+                    "type": 12,
+                    "hour": "2024-10-24T08:19:00Z",
+                    "position": {
+                        "type": "Point",
+                        "coordinates": [
+                            -3.6397967,
+                            39.440547
+                        ]
+                    },
+                    "odometer": 0.0
+                },
+                {
+                    "id": 236093,
+                    "type": 2,
+                    "hour": "2024-10-24T08:19:00Z",
+                    "position": {
+                        "type": "Point",
+                        "coordinates": [
+                            -3.6400157,
+                            39.4409763
+                        ]
+                    },
+                    "odometer": 0.0
+                },
+                {
+                    "id": 236094,
+                    "type": 0,
+                    "hour": "2024-10-24T08:19:00Z",
+                    "position": {
+                        "type": "Point",
+                        "coordinates": [
+                            -3.6400157,
+                            39.4409763
+                        ]
+                    },
+                    "odometer": 0.0
+                },
+                {
+                    "id": 235927,
+                    "type": 9,
+                    "hour": "2024-10-24T03:17:00Z",
+                    "position": {
+                        "type": "Point",
+                        "coordinates": [
+                            -4.0691027,
+                            39.9323523
+                        ]
+                    },
+                    "odometer": 742368.0
+                },
+                {
+                    "id": 235928,
+                    "type": 7,
+                    "hour": "2024-10-24T03:17:01Z",
+                    "odometer": 742368.0
+                },
+                {
+                    "id": 235950,
+                    "type": 1,
+                    "hour": "2024-10-24T04:30:00Z",
+                    "position": {
+                        "type": "Point",
+                        "coordinates": [
+                            -3.8550948,
+                            40.2056098
+                        ]
+                    },
+                    "odometer": 742416.0
+                },
+                {
+                    "id": 235951,
+                    "type": 3,
+                    "hour": "2024-10-24T04:37:00Z",
+                    "position": {
+                        "type": "Point",
+                        "coordinates": [
+                            -3.8550948,
+                            40.2056098
+                        ]
+                    },
+                    "odometer": 0.0
+                },
+                {
+                    "id": 236177,
+                    "type": 1,
+                    "hour": "2024-10-24T11:03:00Z",
+                    "position": {
+                        "type": "Point",
+                        "coordinates": [
+                            -3.8551007,
+                            40.2053908
+                        ]
+                    },
+                    "odometer": 742645.0
+                },
+                {
+                    "id": 236185,
+                    "type": 3,
+                    "hour": "2024-10-24T11:21:00Z",
+                    "position": {
+                        "type": "Point",
+                        "coordinates": [
+                            -3.7999807,
+                            40.200702
+                        ]
+                    },
+                    "odometer": 0.0
+                },
+                {
+                    "id": 236186,
+                    "type": 4,
+                    "hour": "2024-10-24T11:22:00Z",
+                    "position": {
+                        "type": "Point",
+                        "coordinates": [
+                            -3.8003125,
+                            40.1992837
+                        ]
+                    },
+                    "odometer": 0.0
+                },
+                {
+                    "id": 236187,
+                    "type": 2,
+                    "hour": "2024-10-24T11:22:00Z",
+                    "position": {
+                        "type": "Point",
+                        "coordinates": [
+                            -3.8551007,
+                            40.2053908
+                        ]
+                    },
+                    "odometer": 0.0
+                },
+                {
+                    "id": 236188,
+                    "type": 0,
+                    "hour": "2024-10-24T11:22:00Z",
+                    "position": {
+                        "type": "Point",
+                        "coordinates": [
+                            -3.8551007,
+                            40.2053908
+                        ]
+                    },
+                    "odometer": 0.0
+                },
+                {
+                    "id": 236230,
+                    "type": 1,
+                    "hour": "2024-10-24T13:02:00Z",
+                    "position": {
+                        "type": "Point",
+                        "coordinates": [
+                            -3.6646966,
+                            39.6015551
+                        ]
+                    },
+                    "odometer": 742752.0
+                },
+                {
+                    "id": 236231,
+                    "type": 11,
+                    "hour": "2024-10-24T13:02:00Z",
+                    "position": {
+                        "type": "Point",
+                        "coordinates": [
+                            -3.6646966,
+                            39.6015551
+                        ]
+                    },
+                    "odometer": 0.0
+                },
+                {
+                    "id": 236249,
+                    "type": 12,
+                    "hour": "2024-10-24T13:35:00Z",
+                    "position": {
+                        "type": "Point",
+                        "coordinates": [
+                            -3.664824,
+                            39.601699
+                        ]
+                    },
+                    "odometer": 0.0
+                },
+                {
+                    "id": 236250,
+                    "type": 2,
+                    "hour": "2024-10-24T13:35:00Z",
+                    "position": {
+                        "type": "Point",
+                        "coordinates": [
+                            -3.6646966,
+                            39.6015551
+                        ]
+                    },
+                    "odometer": 0.0
+                },
+                {
+                    "id": 236251,
+                    "type": 0,
+                    "hour": "2024-10-24T13:35:00Z",
+                    "position": {
+                        "type": "Point",
+                        "coordinates": [
+                            -3.6646966,
+                            39.6015551
+                        ]
+                    },
+                    "odometer": 0.0
+                },
+                {
+                    "id": 236294,
+                    "type": 1,
+                    "hour": "2024-10-24T15:28:00Z",
+                    "position": {
+                        "type": "Point",
+                        "coordinates": [
+                            -3.854994,
+                            40.2055095
+                        ]
+                    },
+                    "odometer": 742842.0
+                },
+                {
+                    "id": 236374,
+                    "type": 3,
+                    "hour": "2024-10-25T04:38:00Z",
+                    "position": {
+                        "type": "Point",
+                        "coordinates": [
+                            -3.8550531,
+                            40.2050892
+                        ]
+                    },
+                    "odometer": 0.0
+                },
+                {
+                    "id": 236375,
+                    "type": 4,
+                    "hour": "2024-10-25T04:40:00Z",
+                    "position": {
+                        "type": "Point",
+                        "coordinates": [
+                            -3.8550164,
+                            40.2053024
+                        ]
+                    },
+                    "odometer": 0.0
+                },
+                {
+                    "id": 236376,
+                    "type": 2,
+                    "hour": "2024-10-25T04:40:00Z",
+                    "position": {
+                        "type": "Point",
+                        "coordinates": [
+                            -3.854994,
+                            40.2055095
+                        ]
+                    },
+                    "odometer": 0.0
+                },
+                {
+                    "id": 236377,
+                    "type": 0,
+                    "hour": "2024-10-25T04:40:00Z",
+                    "position": {
+                        "type": "Point",
+                        "coordinates": [
+                            -3.854994,
+                            40.2055095
+                        ]
+                    },
+                    "odometer": 0.0
+                },
+                {
+                    "id": 236074,
+                    "type": 1,
+                    "hour": "2024-10-24T07:46:00Z",
+                    "position": {
+                        "type": "Point",
+                        "coordinates": [
+                            -3.6400157,
+                            39.4409763
+                        ]
+                    },
+                    "odometer": 742548.0
+                },
+                {
+                    "id": 236075,
+                    "type": 11,
+                    "hour": "2024-10-24T07:47:00Z",
+                    "position": {
+                        "type": "Point",
+                        "coordinates": [
+                            -3.6400157,
+                            39.4409762
+                        ]
+                    },
+                    "odometer": 0.0
+                }
+            ],
+            "legs": [
+                {
+                    "id": 15511,
+                    "workingShift": {
+                        "id": 11106,
+                        "driver": {
+                            "id": 443,
+                            "code": "1000",
+                            "name": "PATRICIO JAVIER MEDINA GORDILLO",
+                            "idCard": "X3996986T"
+                        }
+                    },
+                    "startTime": "2024-10-24T03:17:00",
+                    "endTime": "2024-10-25T06:11:00",
+                    "startOdometer": 742368.0,
+                    "endOdometer": 742908.0,
+                    "startPosition": {
+                        "type": "Point",
+                        "coordinates": [
+                            -4.0691027,
+                            39.9323523
+                        ]
+                    },
+                    "endPosition": {
+                        "type": "Point",
+                        "coordinates": [
+                            -4.3903228,
+                            40.0743308
+                        ]
+                    },
+                    "endPlace": {
+                        "id": 9428,
+                        "name": "Altamira - ALT2302",
+                        "area": {
+                            "id": 5,
+                            "code": "ZONACENTRO",
+                            "name": "ZONA CENTRO"
+                        }
+                    },
+                    "vehicles": [
+                        {
+                            "id": 951,
+                            "code": "9000LRN",
+                            "licensePlate": "9000-LRN",
+                            "type": {
+                                "id": 1,
+                                "name": "TRACTORA",
+                                "archetype": 0
+                            }
+                        },
+                        {
+                            "id": 485,
+                            "code": "R3561BCX",
+                            "licensePlate": "R-3561-BCX",
+                            "type": {
+                                "id": 2,
+                                "name": "SEMIRREMOLQUE",
+                                "archetype": 1
+                            }
+                        }
+                    ]
+                }
+            ],
+            "trips": [
+                {
+                    "id": 55128,
+                    "tripNumber": 1,
+                    "plannedDistance": 115.7,
+                    "plannedOriginalDistance": 115.7,
+                    "summary": {
+                        "distance": 180.0,
+                        "distanceEmpty": 48.0,
+                        "distanceLoaded": 132.0,
+                        "duration": "05:02:00",
+                        "durationEmpty": "01:13:00",
+                        "durationLoaded": "03:49:00"
+                    }
+                },
+                {
+                    "id": 55179,
+                    "tripNumber": 2,
+                    "plannedDistance": 99.6,
+                    "plannedOriginalDistance": 99.6,
+                    "summary": {
+                        "distance": 204.0,
+                        "distanceEmpty": 97.0,
+                        "distanceLoaded": 107.0,
+                        "duration": "05:16:00",
+                        "durationEmpty": "02:44:00",
+                        "durationLoaded": "02:32:00"
+                    }
+                },
+                {
+                    "id": 55248,
+                    "tripNumber": 3,
+                    "plannedDistance": 81.5,
+                    "plannedOriginalDistance": 81.5,
+                    "summary": {
+                        "distance": 156.0,
+                        "distanceEmpty": 90.0,
+                        "distanceLoaded": 66.0,
+                        "duration": "16:36:00",
+                        "durationEmpty": "01:53:00",
+                        "durationLoaded": "14:43:00"
+                    }
+                }
+            ],
+            "jobs": []
+        }
+    }
+]

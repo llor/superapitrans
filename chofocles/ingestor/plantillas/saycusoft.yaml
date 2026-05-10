@@ -1,0 +1,73 @@
+# Plantilla: TRANSPORTES SAYCU SOFT, S.L.
+# CIF: B16185050
+#
+# Características del PDF:
+#   - Encabezado "CONFIRMACIÓN DE CARGA" + bloque "OPERADOR LOGISTICO".
+#   - Datos del cliente etiquetados (Nombre, Dirección, Municipio, Provincia,
+#     C.I.F., Contacto, Teléfono, Nº Operador) en columna izquierda.
+#   - Email se escribe en la línea "Nº Operador: ...".
+#   - CARGA y DESCARGA en columnas paralelas. La descarga es solo fecha.
+#   - Mercancía y Precio bajo "DATOS DE LA MERCANCÍA" en columna derecha.
+
+empresa: "TRANSPORTES SAYCU SOFT, S.L."
+
+match:
+  all:
+    - "TRANSPORTES SAYCU SOFT, S.L."
+    - "B16185050"
+
+fields:
+  cliente:
+    tipo: lineas
+    start_pattern: '^\s*OPERADOR LOGISTICO'
+    end_pattern: '^\s*CARGA\b'
+    column: left
+    split_col: 74
+    join: " · "
+    drop_patterns:
+      - '^TRANSPORTISTA'
+
+  carga:
+    tipo: columna
+    start_pattern: '^\s+CARGA\s+CAMBIO DE VEHÍCULO'
+    end_pattern: '^\s+DESCARGA\b'
+    column: left
+    # La columna izquierda termina alrededor de col 74; la palabra
+    # "CAMBIO DE VEHÍCULO" arranca después y daría una columna muy ancha.
+    split_col: 74
+    join: " — "
+
+  descarga:
+    tipo: columna
+    start_pattern: '^\s+DESCARGA\b'
+    end_pattern: '^CONDICIONES DEL CONTRATO'
+    column: left
+    # En este PDF, después de DESCARGA solo aparece la fecha en la columna
+    # izquierda; la columna derecha sigue con cláusulas. Cortamos a la mitad
+    # del ancho útil.
+    split_col: 75
+    join: " — "
+    drop_patterns:
+      - '^· SE RUEGA'
+      - '^FIRMA Y SELLO'
+
+  mercancia:
+    tipo: regex
+    pattern: '^\s*Mercancía:\s+(.+?)\s*$'
+    flags: [multiline]
+
+  precio:
+    tipo: regex
+    pattern: '^\s*Precio:\s+(.+?)\s*$'
+    flags: [multiline]
+
+  email:
+    tipo: regex
+    pattern: 'Nº Operador:\s*([\w.+-]+@[\w-]+\.[\w.-]+)'
+
+  telefono:
+    # En la línea siguiente al Teléfono hay más etiquetas (Chófer:); por eso
+    # capturamos hasta dos espacios consecutivos como límite.
+    tipo: regex
+    pattern: '^Teléfono:\s+([0-9][0-9 \-/]*?[0-9])\s{2,}'
+    flags: [multiline]

@@ -1,0 +1,39 @@
+# =============================================
+# pasarela — Docker Compose
+# =============================================
+# Mismo fichero para dev y prod. La detección dev/prod la hace .env
+# (copiado de .env-dev / .env-prod por el script de despliegue).
+#
+# Conexión a PostgreSQL: comparte instancia con el resto de productos
+# Saycu vía la red externa `system_postgres_net`. Las BBDDs son
+# `saycu_admin` (catálogo + keys + creds) y `saycu_pasarela_<CODIGO>`
+# (una por tenant).
+#
+# Conexión con system_caddy: red externa `superapitrans_network`.
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: api/Dockerfile
+    container_name: pasarela_api
+    env_file:
+      - .env
+    ports:
+      - "${PORT}:${PORT}"
+    networks:
+      - pasarela_net
+      - postgres_net
+      - superapitrans_net
+    restart: unless-stopped
+
+networks:
+  pasarela_net:
+    name: pasarela_network
+    driver: bridge
+  postgres_net:
+    external: true
+    name: system_postgres_net
+  superapitrans_net:
+    external: true
+    name: superapitrans_network

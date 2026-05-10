@@ -1,0 +1,57 @@
+# Plantilla: TRANSPORTES NAVARRO MONTON, S.L.
+# CIF: B02580587
+#
+# Características del PDF:
+#   - Cabecera de empresa alineada a la derecha (líneas 1-7) con CIF, email
+#     y teléfono incluidos.
+#   - Sección "CARGA" y "DESCARGA" en columnas paralelas.
+#   - Mercancía y Precio en la misma línea con la etiqueta a la izquierda.
+
+empresa: "TRANSPORTES NAVARRO MONTON, S.L."
+
+match:
+  all:
+    - "TRANSPORTES NAVARRO MONTON,S.L."
+    - "B02580587"
+
+fields:
+  cliente:
+    tipo: lineas
+    numeros: [1, 2, 3, 4, 5, 6]
+    drop_patterns:
+      - '^ORDEN DE CARGA'
+    join: " — "
+
+  carga:
+    tipo: columna
+    start_pattern: '^CARGA\s+DESCARGA'
+    end_pattern: '^Mercancía:'
+    column: left
+    split_anchor: "DESCARGA"
+    join: " — "
+
+  descarga:
+    tipo: columna
+    start_pattern: '^CARGA\s+DESCARGA'
+    end_pattern: '^Mercancía:'
+    column: right
+    split_anchor: "DESCARGA"
+    join: " — "
+
+  mercancia:
+    tipo: regex
+    pattern: '^Mercancía:\s+(.+)$'
+    flags: [multiline]
+
+  precio:
+    tipo: regex
+    pattern: '^Precio:\s+(.+)$'
+    flags: [multiline]
+
+  email:
+    tipo: regex
+    pattern: '[\w.+-]+@[\w-]+\.[\w.-]+'
+
+  telefono:
+    tipo: regex
+    pattern: 'Tel:\s*([0-9 \-/]+)'

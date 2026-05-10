@@ -1,0 +1,33 @@
+/*
+ * chofocles — estilos del panel.
+ * NORMA: solo variables y clases de saycu-theme. Cero hex directo.
+ * Si necesito un valor que no existe en el tema → PARAR y preguntar
+ * al usuario (regla COHERENCIA DE DISEÑO ★ INVIOLABLE del CLAUDE.md global).
+ */
+
+html, body, #root {
+    height: 100%;
+    margin: 0;
+}
+
+body {
+    font-family: var(--font-family-base, system-ui, sans-serif);
+    background: var(--color-bg-app, #ffffff);
+    color: var(--color-text-base, #1f2937);
+}
+
+/* Solo layout de página — colores y tipografía van por variables del tema. */
+.chofocles-app {
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.chofocles-main {
+    flex: 1;
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 24px;
+    box-sizing: border-box;
+}

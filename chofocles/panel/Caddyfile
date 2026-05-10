@@ -1,0 +1,24 @@
+:80 {
+	encode gzip
+
+	# El SPA está construido con `base: /chofocles/`, así que todas sus URLs
+	# (assets, deeplinks) empiezan por /chofocles/. system-caddy hace
+	# `handle /chofocles/*` (sin strippear). Aquí dentro hacemos
+	# `handle_path /chofocles/*` para servir el dist desde la raíz.
+	handle_path /chofocles/* {
+		root * /srv
+		try_files {path} /index.html
+		header Cache-Control "no-store"
+		file_server
+	}
+
+	# Si llega una petición a / (raíz), redirigimos a /chofocles/.
+	handle / {
+		redir /chofocles/ permanent
+	}
+
+	# Cualquier otra ruta sin prefijo es un mal mapeo de system-caddy.
+	handle {
+		respond "chofocles_panel: ruta sin prefijo /chofocles/" 404
+	}
+}

@@ -1,0 +1,103 @@
+/**
+ * /datos — endpoints inbound sobre las 4 tablas canónicas del tenant.
+ *
+ * Patrón: el tenant lo determina la API key del cliente
+ * (req.client.empresaCodigo). El cliente nunca elige tenant; va al suyo.
+ *
+ * Boceto: GET pedidos (listado paginado) y GET pedidos/:id (detalle con
+ * albaranes + paradas + facturas). POST pedidos para insertar manualmente
+ * o desde clientes externos.
+ */
+
+const { Router } = require('express');
+const { getTenantPool } = require('../db');
+const { requireKey } = require('../auth/client-key');
+
+const router = Router();
+
+router.get('/pedidos', requireKey(['datos.read']), async (req, res, next) => {
+    try {
+        const pool = getTenantPool(req.client.empresaCodigo);
+        const limit = Math.min(200, Math.max(1, Number.parseInt(req.query.limit, 10) || 50));
+        const offset = Math.max(0, Number.parseInt(req.query.offset, 10) || 0);
+        const estado = req.query.estado || null;
+        const params = [];
+        let where = '';
+        if (estado) {
+            params.push(estado);
+            where = `WHERE estado = $${params.length}`;
+        }
+        params.push(limit, offset);
+        const sql = `
+            SELECT * FROM pedidos
+            ${where}
+            ORDER BY id DESC
+            LIMIT $${params.length - 1} OFFSET $${params.length}
+        `;
+        const r = await pool.query(sql, params);
+        res.json({ ok: true, data: { pedidos: r.rows, count: r.rowCount } });
+    } catch (err) {
+        next(err);
+    }
+});
+
+router.get('/pedidos/:id', requireKey(['datos.read']), async (req, res, next) => {
+    try {
+        const pool = getTenantPool(req.client.empresaCodigo);
+        const id = Number.parseInt(req.params.id, 10);
+        if (!Number.isFinite(id)) {
+            res.locals.errorCode = 'id_invalido';
+            return res.status(400).json({ ok: false, error: 'id_invalido' });
+        }
+        const [pedido, albaranes, paradas, facturas] = await Promise.all([
+            pool.query('SELECT * FROM pedidos WHERE id = $1', [id]),
+            pool.query('SELECT * FROM albaranes WHERE pedido_id = $1 ORDER BY id', [id]),
+            pool.query('SELECT * FROM paradas WHERE pedido_id = $1 ORDER BY secuencia, id', [id]),
+            pool.query('SELECT * FROM facturas WHERE pedido_id = $1 ORDER BY id', [id]),
+        ]);
+        if (pedido.rowCount === 0) {
+            res.locals.errorCode = 'no_encontrado';
+            return res.status(404).json({ ok: false, error: 'no_encontrado' });
+        }
+        res.json({
+            ok: true,
+            data: {
+                pedido: pedido.rows[0],
+                albaranes: albaranes.rows,
+                paradas: paradas.rows,
+                facturas: facturas.rows,
+            },
+        });
+    } catch (err) {
+        next(err);
+    }
+});
+
+router.post('/pedidos/:id/marcar-procesado',
+    requireKey(['datos.write']),
+    async (req, res, next) => {
+        try {
+            const pool = getTenantPool(req.client.empresaCodigo);
+            const id = Number.parseInt(req.params.id, 10);
+            if (!Number.isFinite(id)) {
+            res.locals.errorCode = 'id_invalido';
+            return res.status(400).json({ ok: false, error: 'id_invalido' });
+        }
+            const r = await pool.query(
+                `UPDATE pedidos SET estado = 'PROCESADO', updated_at = NOW()
+                 WHERE id = $1 AND estado = 'PENDIENTE'
+                 RETURNING id, estado`,
+                [id]
+            );
+            if (r.rowCount === 0) {
+                res.locals.errorCode = 'no_encontrado_o_ya_procesado';
+                return res.status(404).json({ ok: false, error: 'no_encontrado_o_ya_procesado' });
+            }
+            res.json({ ok: true, data: r.rows[0] });
+        } catch (err) {
+            next(err);
+        }
+    }
+);
+
+module.exports = router;
