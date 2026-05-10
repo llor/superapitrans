@@ -8,7 +8,7 @@
 - [ ] **App móvil**: implementar push notifications cuando se contrate Firebase. La función `PushNotifications.register()` está comentada en `chofoclesapp/src/lib/push.ts`.
 - [ ] **Imágenes a IA**: cuando el ingestor soporte JPG/PNG/HEIC, redimensionar en cliente a máx 1080 px lado largo (JPEG ~85) antes de la llamada Claude. Memoria: `feedback_resize_imgs_ia.md`.
 
-## pasarela — Satelles (Ecotrans) ✅ OPERATIVO EN PROD (2026-05-10)
+## pasarela — Satelles ✅ OPERATIVO EN PROD (2026-05-10)
 
 - [x] Cliente OAuth2 con caché de token (`pasarela/api/src/proveedores/satelles/client.js`).
 - [x] Polling de rutas finalizadas via cron `*/5 * * * *` (`pasarela/api/src/cron.js`).
@@ -16,23 +16,23 @@
 - [x] Commit a `/puba/routes/finished/commit` solo si insert/upsert OK.
 - [x] Credenciales cifradas en BD `saycu_admin.pasarela_proveedores_credenciales` (no en .env). Se gestionan por la UI admin → ficha empresa → "Proveedores de datos".
 
-Estado: 308 publicaciones procesadas y commit en prod 2026-05-10. Cron activo `*/5` con `PASARELA_DRY_RUN=false`. Tests automatizados 17/17 OK en dev y prod.
+Estado: cron activo `*/5` con `PASARELA_DRY_RUN=false` en prod. Tests automatizados 17/17 OK en dev y prod.
 
-## pasarela — PCS valenciaportPCS (Jasaro) — BLOQUEADO POR PCS
+## pasarela — PCS valenciaportPCS — BLOQUEADO POR PROVEEDOR
 
-Lista oficial de mensajes confirmada por Arantxa Nebot (PCS, 4 may 13:34) para
-Jasaro, perfil "transportista":
+Lista oficial de mensajes confirmada por el proveedor para perfil
+"transportista":
 - **ENVÍA**: `InlandTransportDetails` (asignación datos de transporte).
 - **RECIBE**: `DUT` (instrucciones + órdenes — actualizaciones), `ReleaseOrder`,
   `AcceptanceOrder`, `Acknowledgment`, `AcceptanceConfirmation`,
   `ReleaseConfirmation`.
 
-Bloqueo externo (informe enviado a Jasaro/PCS el 2026-05-08 con las 4 pruebas
-literales SOAP+REST en TEST y PROD): el usuario `messaging.JSRO` solo entra
-al portal SOAP en PROD (`login.asmx`); el OAuth REST devuelve `invalid_client
-/ you do not have access`; ni SOAP ni REST permiten invocar el servicio de
-mensajería porque al usuario no le han asignado los roles efectivos del
-servicio MESSG. Detalle completo en `pasarela/GUION.md` sección "EN ESPERA".
+Bloqueo externo (informe enviado al proveedor PCS el 2026-05-08 con las 4
+pruebas literales SOAP+REST en TEST y PROD): el usuario solo entra al portal
+SOAP en PROD (`login.asmx`); el OAuth REST devuelve `invalid_client / you do
+not have access`; ni SOAP ni REST permiten invocar el servicio de mensajería
+porque al usuario no le han asignado los roles efectivos del servicio MESSG.
+Detalle completo en `pasarela/GUION.md` sección "EN ESPERA".
 
 Cuando PCS emita un par OAuth `client_id`/`client_secret` y le asigne los
 permisos al usuario:

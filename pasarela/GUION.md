@@ -1,14 +1,18 @@
 # pasarela
 
-Última actualización: 2026-05-10. Satelles OPERATIVO en prod: 308
-publicaciones procesadas y commit, cola vaciada, cron `*/5 * * * *`
-con `PASARELA_DRY_RUN=false`, 308 pedidos PENDIENTE en
-`saycu_pasarela_jsr` listos para que el ERP cliente los consuma. Tests
-automatizados (node:test) cubriendo los 5 endpoints, 17/17 OK en dev y
-prod. Visor de logs + manual API desplegados. PCS Valencia sigue
-pendiente externamente (par OAuth real). El ERP cliente se montará
-previsiblemente con un programa intermedio en C entre el ERP y la
-pasarela.
+Última actualización: 2026-05-10. Sub-servicio de superapitrans cuya
+función es **LEER APIs externas** (proveedor por proveedor) y persistir
+lo intercambiado en 4 tablas canónicas multi-tenant
+(`saycu_pasarela_<CODIGO>`), exponiéndolo después por una API inbound
+con bearer key. Satelles operativo en prod: cron `*/5 * * * *` con
+`PASARELA_DRY_RUN=false`, sync activo. Tests automatizados (node:test)
+cubriendo los 5 endpoints inbound, 17/17 OK en dev y prod. Visor de
+logs + manual API desplegados. PCS Valencia pendiente externamente
+(par OAuth real). El ERP del cliente se conectará previsiblemente con
+un programa intermedio en C entre el ERP y la API inbound.
+
+Este GUION describe **el framework**, no los clientes concretos. Las
+empresas y sus credenciales viven en BD y en la UI de admin, no aquí.
 
 
 TESTS AUTOMATIZADOS DEL pasarela_api
@@ -50,12 +54,11 @@ QUÉ NOS HARÁ FALTA DE VALENCIAPORTPCS (decisión SOAP vs REST)
 -------------------------------------------------------------
 
 Para arrancar la integración real con valenciaportpcs.net hay que
-elegir uno de los dos protocolos. Los dos cubren los mensajes que
-necesitamos para el perfil transportista (Jasaro): inbound DUTv2,
-ReleaseOrderv2, AcceptanceOrderv2, ReleaseConfirmationv2,
-AcceptanceConfirmationv2, Acknowledgementv2 + outbound
-InlandTransportDetailsv2. Lo que cambia es el coste de implementar y
-las cosas que hay que pedir al proveedor.
+elegir uno de los dos protocolos. Los dos cubren los mensajes
+necesarios para un perfil transportista: inbound DUTv2, ReleaseOrderv2,
+AcceptanceOrderv2, ReleaseConfirmationv2, AcceptanceConfirmationv2,
+Acknowledgementv2 + outbound InlandTransportDetailsv2. Lo que cambia
+es el coste de implementar y las cosas que hay que pedir al proveedor.
 
 REST (recomendado por el manual oficial para desarrollos nuevos):
 - Endpoint: `https://api.valenciaportpcs.net/messaging` (PROD) ·
@@ -64,12 +67,11 @@ REST (recomendado por el manual oficial para desarrollos nuevos):
   `/messages/upload/{box}` (post).
 - Auth: OAuth2 client_credentials. Token URL en swagger
   (`/oauth/connect/token` en PROD, mismo path en TEST).
-- Necesitamos que nos den: par `client_id` + `client_secret` distinto
-  del usuario del portal, y que la org JSR + el usuario tengan
-  asignados los roles efectivos del servicio MESSG en su plano de
-  autorización (no solo a nivel organización). Hoy bloqueado: el OAuth
-  PROD responde `invalid_client / you do not have access` y el TEST
-  `wrong username or password`.
+- Necesitamos que el operador titular nos dé: par `client_id` +
+  `client_secret` distinto del usuario humano del portal, y que su
+  organización + el usuario tengan asignados los roles efectivos del
+  servicio MESSG (MESSGAPISR/MESSGOAUTH) en su plano de autorización
+  (no solo a nivel organización).
 - Pros: schemas de mensajes vienen referenciados desde el swagger
   (`application/json` y `application/xml`); JSON conviene si tiramos
   por programa C intermedio porque su parsing es más manejable; el
@@ -86,29 +88,25 @@ SOAP (transportservice.asmx, plan B si la REST sigue bloqueada):
   DownloadZippedFile).
 - Auth: usuario+password en `login.asmx` → TicketGUID por sesión, que
   se pasa como `SessionTicket` en cada llamada.
-- Necesitamos: usuario y password del portal (lo tenemos) **y**
-  permisos efectivos del usuario sobre el servicio TRANS en su plano de
-  autorización. Hoy bloqueado: con TicketGUID válido, ListMessages
-  devuelve `El usuario no tiene permisos suficientes`. Es el mismo
-  diagnóstico que en REST: la org tiene los roles, el usuario no.
+- Necesitamos: usuario y password del portal **y** permisos efectivos
+  del usuario sobre el servicio TRANS en su plano de autorización (no
+  basta con que la organización los tenga).
 - Necesitamos también: los XSD de cada mensaje (DUTv2, ReleaseOrderv2,
   etc.). El WSDL describe la envolvente SOAP pero NO el schema del
   mensaje que viaja como ByteArray base64. PCS los tiene como ficheros
   aparte; hay que pedírselos junto con las credenciales.
-- Pros: ya tenemos usuario+pass para PROD funcionando contra
-  login.asmx; cliente SOAP en C es viable con cualquier lib de XML.
+- Pros: cliente SOAP en C viable con cualquier lib de XML.
 - Contras: el manual desaconseja para desarrollos nuevos; XML más
   verboso; TicketGUID con TTL no documentado (medir con CheckSession y
   re-login en bucle).
 
-Lista que pedir a Jasaro / PCS cuando contesten (en este orden):
-1. Confirmación de qué protocolo nos van a dar permisos (REST u
-   ambos). Si REST: par `client_id`/`client_secret` para PROD y para
-   TEST, y asignación de roles MESSGAPISR/MESSGOAUTH a nivel usuario
-   (no solo organización). Si SOAP: asignación de roles
-   TRANS{SNDTI,RCVTI,RVWTI,…} al usuario `messaging.JSRO` (PROD) y un
-   usuario TEST funcional (el `uatmessaging.JSRO` actual no entra ni
-   al login).
+Lista que pedir al proveedor PCS cuando contesten (en este orden):
+1. Confirmación de qué protocolo dan permisos (REST u ambos). Si REST:
+   par `client_id`/`client_secret` para PROD y para TEST, y asignación
+   de roles MESSGAPISR/MESSGOAUTH a nivel usuario (no solo
+   organización). Si SOAP: asignación de roles
+   TRANS{SNDTI,RCVTI,RVWTI,…} al usuario PROD y un usuario TEST
+   funcional.
 2. Schemas XSD de los mensajes del servicio TRANS (solo si tiramos
    SOAP). En REST vienen del swagger.
 3. Buzón a usar (`box`): el manual dice `default` salvo indicación
@@ -118,9 +116,8 @@ Lista que pedir a Jasaro / PCS cuando contesten (en este orden):
    por polling cada N minutos).
 
 Cuando lleguen los puntos 1 y 2, decidir REST si está limpio (recomendado
-por manual + JSON cómodo para C intermedio). Si Jasaro solo consigue
-desbloquear SOAP, tirar por SOAP — el cliente actual ya tiene
-`login.asmx` validado contra PROD.
+por manual + JSON cómodo para C intermedio). Si solo se desbloquea SOAP,
+tirar por SOAP.
 
 
 EN ESPERA (2026-05-10)
@@ -129,83 +126,51 @@ EN ESPERA (2026-05-10)
 Solo queda un frente abierto, **bloqueado externamente** (no depende
 de nosotros). El bloque Satelles está cerrado y operativo en prod.
 
-1. **PCS Valencia (Jasaro)** — bloqueado por par OAuth real.
+1. **PCS Valencia** — bloqueado por par OAuth real.
 
-   Estado tras verificación 2026-05-08 ~10:39 CEST:
-   - Las credenciales facilitadas por Jasaro
-     (`messaging.JSRO`/`uatmessaging.JSRO` + contraseña `@Jasaro_2026`)
-     son las del **usuario humano del portal SOAP** (`login.asmx`), NO
-     un par `client_id`/`client_secret` OAuth. Resultados de las cuatro
-     pruebas que hice y respuestas literales:
-     - SOAP PROD `https://www.valenciaportpcs.net/services/login.asmx`
-       con `messaging.JSRO`: HTTP 200, devuelve TicketGUID y datos de
-       JASARO SL (CIF B16189946, OrgCode JSRO, roles `MESSGAPISR` y
-       `MESSGOAUTH` activos). El usuario PROD del portal **funciona**.
-     - SOAP TEST `https://test.valenciaportpcs.net/services/login.asmx`
-       con `uatmessaging.JSRO`: HTTP 500 «Invalid Login. … login
-       inactive or organization is inactive». El usuario TEST del
-       portal **no entra** (mismo error con OrganizationCode `JSRO`
-       explícito).
-     - OAuth REST PROD
-       `https://www.valenciaportpcs.net/oauth/connect/token` con
-       `client_id=messaging.JSRO`: HTTP 400
-       `{"error":"invalid_client","error_description":"you do not have access"}`.
-     - OAuth REST TEST
-       `https://test.valenciaportpcs.net/oauth/connect/token` con
-       `client_id=uatmessaging.JSRO`: HTTP 400
-       `{"error":"invalid_client","error_description":"wrong username or password"}`.
-   - Diagnóstico: el `client_id` PROD existe pero no tiene acceso
-     habilitado; el `client_id` TEST directamente no existe. La
-     organización `JSRO` ya tiene los roles `MESSGAPISR` y `MESSGOAUTH`
-     según la respuesta SOAP, así que falta solo que ValenciaportPCS
-     emita o autorice el secreto OAuth correspondiente.
-   - Bonus: el swagger en PROD ahora carga sin login. URL del JSON:
-     `https://api.valenciaportpcs.net/messaging/swagger/v1/swagger.json`
-     (3 paths: `/messages/download/{box}`, `/messages/download/{box}/{id}`,
-     `/messages/upload/{box}`). El TEST equivalente en
-     `https://testapi.valenciaportpcs.net/messaging/swagger/v1/swagger.json`
-     también responde. El `tokenUrl` declarado en la spec es el que se
-     usó arriba. Ya no es necesario pedir acceso autenticado al swagger;
-     solo el par OAuth y, idealmente, un usuario TEST activo.
-   - Informe completo entregado por el usuario (llor) a Jasaro/PCS el
-     2026-05-08 con las cuatro pruebas + cuerpos de petición + respuestas
-     literales. A la espera de su contestación.
-   - Estado del código: migración `0006_admin_pcs_valencia.sql` aplicada
-     en dev y prod (alta del proveedor `pcs-valencia` con descriptor
-     `[user, pass, oauth_url, api_base]`). Stubs en
-     `api/src/proveedores/pcs-valencia/` (client/mapper/sync) marcados
-     como pendientes — no conectan con nada todavía. Cuando lleguen las
-     credenciales OAuth, sustituir descriptor del proveedor por
-     `[client_id, client_secret, token_url, api_base]` (los actuales
-     `user`/`pass` no aplican al flujo OAuth client_credentials que pide
-     la API REST). Ver `proveedores/pcs-valencia/README.md`.
+   Las credenciales facilitadas hasta ahora son las del **usuario
+   humano del portal SOAP** (`login.asmx`), NO un par
+   `client_id`/`client_secret` OAuth. Resumen del diagnóstico:
+   - SOAP PROD `login.asmx` con el usuario humano: HTTP 200, devuelve
+     TicketGUID y datos de la organización con roles `MESSGAPISR` y
+     `MESSGOAUTH` activos. El usuario PROD del portal **funciona** para
+     login pero NO para invocar el servicio de mensajería: con
+     TicketGUID válido, `transportservice.asmx ListMessages` devuelve
+     SOAP fault «El usuario no tiene permisos suficientes».
+   - SOAP TEST `login.asmx` con el usuario UAT: HTTP 500 «Invalid
+     Login. … login inactive or organization is inactive». El usuario
+     TEST del portal **no entra**.
+   - OAuth REST PROD `/oauth/connect/token` con `client_id` igual al
+     usuario humano: HTTP 400 `invalid_client / you do not have
+     access`.
+   - OAuth REST TEST equivalente: HTTP 400 `invalid_client / wrong
+     username or password`.
 
-FLUJO VERIFICADO EXTREMO A EXTREMO (2026-05-06, dev)
-----------------------------------------------------
+   Diagnóstico: el `client_id` PROD existe pero no tiene acceso
+   habilitado; el `client_id` TEST directamente no existe. La
+   organización tiene los roles MESSGAPISR/MESSGOAUTH a nivel
+   organización, pero al usuario no le han asignado los roles efectivos
+   del servicio MESSG ni en SOAP ni en REST. Falta que ValenciaportPCS
+   emita un par OAuth válido **y** asigne los roles efectivos al
+   usuario.
 
-Setup en `saycudev` para empresa JSR (Jasaro/Ecotrans):
+   Bonus: el swagger en PROD ya carga sin login.
+   `https://api.valenciaportpcs.net/messaging/swagger/v1/swagger.json`
+   (3 paths: `/messages/download/{box}`, `/messages/download/{box}/{id}`,
+   `/messages/upload/{box}`). TEST equivalente en
+   `testapi.valenciaportpcs.net` también responde. El `tokenUrl`
+   declarado en la spec coincide con el probado arriba. Ya no hace
+   falta pedir acceso autenticado al swagger; solo el par OAuth y,
+   idealmente, un usuario TEST activo.
 
-1. Crear empresa: `INSERT INTO empresas (codigo,nombre,...,servicios)
-   VALUES ('JSR','JASARO S.L.',...,ARRAY['pasarela']::servicio_tipo[])`.
-2. Crear BD tenant: `CREATE DATABASE saycu_pasarela_jsr OWNER saycutrans`.
-3. Aplicar migración: `psql -U postgres -d saycu_pasarela_jsr -f
-   db/migrations/0002_tenant.sql`. Desde la mejora del 06-may, la
-   migración garantiza owner saycutrans automáticamente (idempotente).
-4. Insertar credencial Satelles cifrada usando el script oficial:
-   `docker exec pasarela_api node /app/scripts/set-satelles-cred.js
-   --empresa JSR --client-id <X> --client-secret <Y> --entorno prod`.
-5. Asegurar `PASARELA_DRY_RUN=true` en `.env` y reiniciar con
-   `_scripts/restart-with-env-reload.sh --dev` (NO con `restart` — ver
-   gotcha más abajo).
-6. Disparar sync manual: `docker exec pasarela_api node -e
-   'require("./src/proveedores/satelles/sync").syncAll(console.log)'`.
-
-Resultado en dev (06-may): 245 publicaciones de Ecotrans procesadas →
-245 pedidos, 586 albaranes, 935 paradas en `saycu_pasarela_jsr`.
-Distribución de paradas por pedido coherente (mayoría 2-6). Confirmado
-que `delegacion_codigo` viene vacío en todos los pedidos (Satelles ya
-nos avisó: las delegaciones no tienen código rellenado en su panel —
-mapeo provisional por id/nombre hasta que rellenen códigos).
+   Estado del código: migración `0006_admin_pcs_valencia.sql` aplicada
+   en dev y prod (alta del proveedor `pcs-valencia` con descriptor
+   `[user, pass, oauth_url, api_base]`). Stubs en
+   `api/src/proveedores/pcs-valencia/` (client/mapper/sync) marcados
+   como pendientes — no conectan con nada todavía. Cuando lleguen las
+   credenciales OAuth, sustituir descriptor del proveedor por
+   `[client_id, client_secret, token_url, api_base]` con migración
+   nueva. Ver `proveedores/pcs-valencia/README.md`.
 
 
 VERSIONES DEL MANUAL SATELLES
@@ -306,8 +271,10 @@ OBJETIVO
 
 Sub-servicio de superapitrans que actúa como **pasarela entre clientes
 externos y proveedores externos**, persistiendo todo lo intercambiado en
-una tabla canónica que también consume chofocles (entrada por correo) y
-el módulo de transporte del usuario (consumo desde a3ERP).
+4 tablas canónicas multi-tenant. Esa misma tabla la puede consumir
+chofocles (entrada por correo) y, cuando el cliente final tenga un ERP
+con campos `TT*` de a3ERP, un programa intermedio que lea por la API
+inbound y vuelque a sus columnas TT*.
 
 Dos flujos:
 
@@ -321,9 +288,9 @@ Dos flujos:
    a. Obtener datos que volcamos en la tabla canónica.
    b. (Futuro) Enviar datos a terceros.
 
-Ambos flujos comparten las mismas tablas canónicas. El módulo de
-transporte del usuario lee esas tablas y se queda con los campos que
-corresponden a sus columnas `TT*` de a3ERP.
+Ambos flujos comparten las mismas tablas canónicas. El consumidor final
+(programa intermedio del cliente) toma los campos que necesita y los
+mapea a sus columnas `TT*` (esquema a3ERP).
 
 
 DOCUMENTOS DE REFERENCIA
@@ -344,7 +311,7 @@ Todos viven en `superapitrans/documentos/`:
   customers, places, materials) y cola de rutas finalizadas
   (`/puba/routes/finished` + commit por `publicationIds`).
 
-- **`Satelles API ERP SYNC (Ecotrans).postman_collection.json`** —
+- **`Satelles API ERP SYNC.postman_collection.json`** —
   colección Postman con ejemplos reales de llamadas (cuerpos JSON
   válidos para PUT, query strings de GET, etc.). Útil para validar el
   cliente HTTP que generemos.
@@ -499,7 +466,7 @@ PROVEEDOR #1 — SATELLES ERPSYNC
 --------------------------------
 
 Manual: `documentos/Satelles - ERPSYNC Api.pdf` (v1.6.0).
-Postman: `documentos/Satelles API ERP SYNC (Ecotrans).postman_collection.json`.
+Postman: `documentos/Satelles API ERP SYNC.postman_collection.json`.
 
 - **Host base:** `https://novossistemas.satelles.es`
 - **Auth:** OAuth 2.0 Client Credentials. POST a `/auth/connect/token`
@@ -653,30 +620,28 @@ ESTADO ACTUAL
 
 Desplegado y verificado en dev y prod:
 
-- ✅ Migración `0001_admin.sql` aplicada en `saycu_admin` (dev y prod):
-  ENUM `servicio_tipo` con valor `'pasarela'`, tabla `pasarela_proveedores`
+- ✅ Migración `0001_admin.sql` aplicada en `saycu_admin`: ENUM
+  `servicio_tipo` con valor `'pasarela'`, tabla `pasarela_proveedores`
   con seed Satelles, `pasarela_proveedores_credenciales`, y
   `pasarela_clientes_keys`.
-- ✅ Empresa DEMO con servicio `pasarela` activo en `empresas_servicios`.
-- ✅ Auto-provisionadas las BBDD tenant con migración `0002_tenant.sql`:
-  `saycu_pasarela_demo`, `saycu_pasarela_heip`, `saycu_pasarela_prieto`
-  (4 tablas: pedidos, albaranes, facturas, paradas) en dev y prod.
+- ✅ Auto-provisionadas las BBDD tenant con migración `0002_tenant.sql`
+  para cada empresa con servicio `pasarela` (4 tablas: pedidos,
+  albaranes, facturas, paradas).
 - ✅ `pasarela_api` corriendo en ambos entornos (puerto interno 3412),
   conectado a `system_postgres_net`, `superapitrans_network` y
   `pasarela_network`. Healthcheck OK.
 - ✅ `system-caddy` enrutando `https://api.superapi.eoden.es/pasarela/*`
   (prod) y `https://dev-api.superapi.eoden.es/pasarela/*` (dev).
 - ✅ Auth bearer (`pas_live_<32hex>`) verificada con curl real en ambos
-  entornos: `GET /pasarela/datos/pedidos?empresa=DEMO` con scope
+  entornos: `GET /pasarela/datos/pedidos?empresa=<CODIGO>` con scope
   `datos.read` devuelve 200; sin Authorization devuelve 401.
 - ✅ Script `api/scripts/generar-key.js` para emitir keys inbound
   (recibe empresa-código, aplicación, scopes CSV; imprime el secreto una
-  sola vez). Primera key DEMO/a3erp emitida en ambos entornos.
-- ⏳ Sin credenciales Satelles todavía. Cron de sync arranca, ve
-  `pasarela_proveedores_credenciales` vacía y loguea "sin credenciales
-  activas" cada 5 min. Cuando el usuario entregue
-  `client_id`/`client_secret` solo hay que insertar la fila cifrada y el
-  flujo outbound se activa solo.
+  sola vez).
+- ✅ Cron Satelles activo: cuando hay credenciales en
+  `pasarela_proveedores_credenciales` para una empresa con servicio
+  `pasarela`, el cron tira `*/5 min` y sincroniza. Sin credenciales
+  loguea "sin credenciales activas" y sale en milisegundos.
 
 
 CREDENCIALES BD (referencia operativa)
@@ -701,37 +666,28 @@ docker exec pasarela_api node scripts/generar-key.js \
 Ejemplo:
 ```bash
 docker exec pasarela_api node scripts/generar-key.js \
-    DEMO a3erp datos.read,datos.write,utilidades.chofocles,utilidades.general
+    <CODIGO_EMPRESA> a3erp datos.read,datos.write,utilidades.chofocles,utilidades.general
 ```
 
 El secreto se imprime una sola vez. Si se pierde, hay que rotarla
 (borrar fila y volver a generar).
 
 
-CÓMO INSERTAR CREDENCIAL DE SATELLES (cuando llegue)
------------------------------------------------------
+CÓMO INSERTAR CREDENCIAL DE SATELLES
+------------------------------------
 
-1. Generar el blob cifrado con `secrets.js` (AES-GCM):
-```javascript
-node -e "
-const { cifrarJson } = require('./api/src/secrets');
-process.env.PASARELA_SECRETS_KEY = '<lo del .env>';
-console.log(cifrarJson({ client_id:'...', client_secret:'...',
-                          scopes:'satelles-erpsync:write satelles-publications:finished-routes' }));
-"
+Lo normal es hacerlo desde la UI de admin.saycusoft.es: ficha de
+empresa → "Proveedores de datos" → seleccionar Satelles → rellenar
+`client_id`/`client_secret` en sandbox o prod → Guardar. La UI cifra
+y persiste en `saycu_admin.pasarela_proveedores_credenciales`.
+
+Vía script (alternativa CLI):
+```bash
+docker exec pasarela_api node /app/scripts/set-satelles-cred.js \
+    --empresa <CODIGO> --client-id <X> --client-secret <Y> --entorno prod
 ```
 
-2. Insertar en `saycu_admin`:
-```sql
-INSERT INTO pasarela_proveedores_credenciales
-    (empresa_id, proveedor_id, entorno, credencial_cifrada, activo)
-VALUES
-    ((SELECT id FROM empresas WHERE codigo='DEMO'),
-     (SELECT id FROM pasarela_proveedores WHERE codigo='satelles'),
-     'prod', '<blob_cifrado>', true);
-```
-
-3. El cron lo recoge en su próximo tick (≤5 min) sin reiniciar.
+El cron lo recoge en su próximo tick (≤5 min) sin reiniciar.
 
 
 PROBLEMAS RESUELTOS
