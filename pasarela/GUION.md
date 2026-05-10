@@ -1,13 +1,14 @@
 # pasarela
 
-Última actualización: 2026-05-08 (verificadas las credenciales que dio
-Jasaro; informe enviado pidiendo el par OAuth real; sigue todo en
-espera. Satelles en dev verificado 2026-05-06 con 245 rutas reales.
-Visor de logs y manual API desplegados en dev y prod: middleware +
-tabla saycu_admin.pasarela_logs_api + páginas /logs-pasarela y
-/api-docs-pasarela en admin.saycusoft.es. Prueba real diferida hasta
-que se monte el ERP cliente; previsiblemente con un programa
-intermedio en C entre el ERP y la pasarela).
+Última actualización: 2026-05-10. Satelles OPERATIVO en prod: 308
+publicaciones procesadas y commit, cola vaciada, cron `*/5 * * * *`
+con `PASARELA_DRY_RUN=false`, 308 pedidos PENDIENTE en
+`saycu_pasarela_jsr` listos para que el ERP cliente los consuma. Tests
+automatizados (node:test) cubriendo los 5 endpoints, 17/17 OK en dev y
+prod. Visor de logs + manual API desplegados. PCS Valencia sigue
+pendiente externamente (par OAuth real). El ERP cliente se montará
+previsiblemente con un programa intermedio en C entre el ERP y la
+pasarela.
 
 
 TESTS AUTOMATIZADOS DEL pasarela_api
@@ -122,8 +123,11 @@ desbloquear SOAP, tirar por SOAP — el cliente actual ya tiene
 `login.asmx` validado contra PROD.
 
 
-EN ESPERA (2026-05-08)
+EN ESPERA (2026-05-10)
 ----------------------
+
+Solo queda un frente abierto, **bloqueado externamente** (no depende
+de nosotros). El bloque Satelles está cerrado y operativo en prod.
 
 1. **PCS Valencia (Jasaro)** — bloqueado por par OAuth real.
 
@@ -175,14 +179,6 @@ EN ESPERA (2026-05-08)
      `[client_id, client_secret, token_url, api_base]` (los actuales
      `user`/`pass` no aplican al flujo OAuth client_credentials que pide
      la API REST). Ver `proveedores/pcs-valencia/README.md`.
-
-2. **Pasarela en prod**: BD `saycu_pasarela_jsr` con tablas y owner OK,
-   claves alineadas, formato AES compatible, `PASARELA_DRY_RUN=true`
-   activo. Falta solo que alguien pegue las credenciales de Satelles para
-   Jasaro en `https://admin.saycusoft.es` → ficha JSR → tile "Proveedores
-   de datos" → caja Producción (Client ID + Client Secret). El sync
-   (cron `*/5 * * * *`) las consumirá automáticamente sin commit.
-
 
 FLUJO VERIFICADO EXTREMO A EXTREMO (2026-05-06, dev)
 ----------------------------------------------------

@@ -8,15 +8,17 @@
 - [ ] **App móvil**: implementar push notifications cuando se contrate Firebase. La función `PushNotifications.register()` está comentada en `chofoclesapp/src/lib/push.ts`.
 - [ ] **Imágenes a IA**: cuando el ingestor soporte JPG/PNG/HEIC, redimensionar en cliente a máx 1080 px lado largo (JPEG ~85) antes de la llamada Claude. Memoria: `feedback_resize_imgs_ia.md`.
 
-## pasarela — Satelles (Ecotrans)
+## pasarela — Satelles (Ecotrans) ✅ OPERATIVO EN PROD (2026-05-10)
 
-- [ ] **Cliente OAuth2** con caché de token: POST a `https://ecotrans.satelles.es/identity/connect/token` con `client_id`, `client_secret`, `scope=satelles-erpsync:write satelles-publications:finished-routes`.
-- [ ] **Polling de rutas finalizadas**: GET `https://ecotrans.satelles.es/puba/routes/finished` cada `SATELLES_POLL_INTERVAL_SECONDS` (config).
-- [ ] **Mapeo `route → tablas canónicas`**: viajes, paradas (destinations), eventos GPS (events), jornadas (legs), trips. Estructura en `documentos/satelles/Rutas.json`.
-- [ ] **Commit** a `https://ecotrans.satelles.es/puba/routes/finished/commit` solo si el insert/upsert canónico ha sido exitoso.
-- [ ] **Credenciales en `pasarela/.env-dev` y `.env-prod`** (servidores), nunca al repo: `SATELLES_OAUTH_URL`, `SATELLES_CLIENT_ID`, `SATELLES_CLIENT_SECRET`, `SATELLES_SCOPE`, `SATELLES_API_BASE`, `SATELLES_POLL_INTERVAL_SECONDS`.
+- [x] Cliente OAuth2 con caché de token (`pasarela/api/src/proveedores/satelles/client.js`).
+- [x] Polling de rutas finalizadas via cron `*/5 * * * *` (`pasarela/api/src/cron.js`).
+- [x] Mapeo `route → tablas canónicas` pedidos/albaranes/paradas (`pasarela/api/src/proveedores/satelles/mapper.js`).
+- [x] Commit a `/puba/routes/finished/commit` solo si insert/upsert OK.
+- [x] Credenciales cifradas en BD `saycu_admin.pasarela_proveedores_credenciales` (no en .env). Se gestionan por la UI admin → ficha empresa → "Proveedores de datos".
 
-## pasarela — PCS valenciaportPCS (Jasaro)
+Estado: 308 publicaciones procesadas y commit en prod 2026-05-10. Cron activo `*/5` con `PASARELA_DRY_RUN=false`. Tests automatizados 17/17 OK en dev y prod.
+
+## pasarela — PCS valenciaportPCS (Jasaro) — BLOQUEADO POR PCS
 
 Lista oficial de mensajes confirmada por Arantxa Nebot (PCS, 4 may 13:34) para
 Jasaro, perfil "transportista":
@@ -25,11 +27,23 @@ Jasaro, perfil "transportista":
   `AcceptanceOrder`, `Acknowledgment`, `AcceptanceConfirmation`,
   `ReleaseConfirmation`.
 
-- [ ] **Cliente PCS REST** en pasarela: OAuth + módulos de mensajería. Swagger TEST: `https://testapi.valenciaportpcs.net/messaging/swagger`. PROD: `https://api.valenciaportpcs.net/messaging/swagger`.
-- [ ] **Mapeo TRANS → tablas canónicas pasarela**: `ReleaseOrder` / `AcceptanceOrder` / `DUT` llegan al sistema → generan documento + viaje + parada en terminal del puerto, asignados al chofer correspondiente. `InlandTransportDetails` lo emitimos cuando un chofer comunique matrícula/hora.
-- [ ] **Credenciales en `pasarela/.env-dev` y `.env-prod`**: `PCS_VLC_USER_TEST`, `PCS_VLC_PASS_TEST`, `PCS_VLC_USER_PROD`, `PCS_VLC_PASS_PROD`, `PCS_VLC_OAUTH_TEST`, `PCS_VLC_OAUTH_PROD`, `PCS_VLC_API_TEST`, `PCS_VLC_API_PROD`.
+Bloqueo externo (informe enviado a Jasaro/PCS el 2026-05-08 con las 4 pruebas
+literales SOAP+REST en TEST y PROD): el usuario `messaging.JSRO` solo entra
+al portal SOAP en PROD (`login.asmx`); el OAuth REST devuelve `invalid_client
+/ you do not have access`; ni SOAP ni REST permiten invocar el servicio de
+mensajería porque al usuario no le han asignado los roles efectivos del
+servicio MESSG. Detalle completo en `pasarela/GUION.md` sección "EN ESPERA".
 
-## infra
+Cuando PCS emita un par OAuth `client_id`/`client_secret` y le asigne los
+permisos al usuario:
 
-- [ ] **system-caddy bloque pasarela** dev y prod: rutas `/satelles` y `/pcs-vlc` (o estructura que decidamos) en `api.${BASE_DOMAIN_SUPERAPI}` y `dev-api.${BASE_DOMAIN_SUPERAPI}` cuando el contenedor de pasarela esté en marcha.
-- [ ] **Monitorización Saycu**: añadir entradas a `monitoring.conf.example` (REQUIRED_CONTAINERS, ACCESS_URLS, HEALTH_URLS) cuando despleguemos pasarela.
+- [ ] **Migración 0008** cambiando descriptor del proveedor `pcs-valencia` de `[user, pass, oauth_url, api_base]` a `[client_id, client_secret, token_url, api_base]`.
+- [ ] **Cliente PCS REST** completo (OAuth + 6 mensajes inbound + 1 outbound). Stub actual en `pasarela/api/src/proveedores/pcs-valencia/{client,mapper,sync}.js` lanza `Error('pcs-valencia: pendiente swagger + credenciales')`.
+- [ ] **Mapeo TRANS → tablas canónicas pasarela**: `ReleaseOrder` / `AcceptanceOrder` / `DUT` → documento + viaje + parada en terminal del puerto. `InlandTransportDetails` lo emitimos cuando un chofer comunique matrícula/hora.
+- [ ] **Credenciales** se cargan por la UI admin (mismo flujo que Satelles), una vez tengamos el par OAuth real.
+- [ ] **Tests automatizados** del cliente PCS Valencia con el mismo patrón que los de `tests/api.test.js` (regla operativa: código + test + manual `ApiDocsPasarela.jsx` se mantienen en sincronía).
+
+## infra ✅ HECHO
+
+- [x] **system-caddy bloque pasarela**: ya enrutado en dev (`https://dev-api.superapi.eoden.es/pasarela/*`) y prod (`https://api.superapi.eoden.es/pasarela/*`) con rewrite `handle_path /pasarela/* { rewrite * /api{path} }`. Las sub-rutas internas (Satelles, PCS Valencia futura) las maneja Express dentro del propio pasarela_api.
+- [x] **Monitorización Saycu**: `pasarela_api` ya en `REQUIRED_CONTAINERS` y `https://[dev-]api.superapi.eoden.es/pasarela/health` en `HEALTH_URLS` (`admin.saycusoft.es/_scripts/monitoring/monitoring.conf.example`).
