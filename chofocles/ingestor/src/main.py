@@ -82,7 +82,10 @@ def _sigterm(_signum, _frame):
 
 def empresas_chofocles() -> list[dict]:
     cn = admin_conn()
-    with dictcursor(cn) as cur:
+    # `with cn:` cierra la transacción implícita del SELECT al salir
+    # (commit si OK, rollback si excepción) — evita que la conexión
+    # cacheada quede en estado INTRANS hasta el siguiente ciclo.
+    with cn, dictcursor(cn) as cur:
         cur.execute(
             """
             SELECT codigo, nombre
@@ -98,7 +101,8 @@ def empresas_chofocles() -> list[dict]:
 
 def buzones_activos(empresa_codigo: str) -> list[dict]:
     cn = tenant_conn(empresa_codigo)
-    with dictcursor(cn) as cur:
+    # Ver comentario en empresas_chofocles().
+    with cn, dictcursor(cn) as cur:
         cur.execute(
             """
             SELECT b.id, b.usuario_id, b.email_buzon,
