@@ -49,11 +49,12 @@ router.get('/pedidos/:id', requireKey(['datos.read']), async (req, res, next) =>
             res.locals.errorCode = 'id_invalido';
             return res.status(400).json({ ok: false, error: 'id_invalido' });
         }
-        const [pedido, albaranes, paradas, facturas] = await Promise.all([
+        const [pedido, albaranes, paradas, facturas, pcsExtra] = await Promise.all([
             pool.query('SELECT * FROM pedidos WHERE id = $1', [id]),
             pool.query('SELECT * FROM albaranes WHERE pedido_id = $1 ORDER BY id', [id]),
             pool.query('SELECT * FROM paradas WHERE pedido_id = $1 ORDER BY secuencia, id', [id]),
             pool.query('SELECT * FROM facturas WHERE pedido_id = $1 ORDER BY id', [id]),
+            pool.query('SELECT * FROM pedidos_pcs_extra WHERE pedido_id = $1', [id]),
         ]);
         if (pedido.rowCount === 0) {
             res.locals.errorCode = 'no_encontrado';
@@ -66,6 +67,10 @@ router.get('/pedidos/:id', requireKey(['datos.read']), async (req, res, next) =>
                 albaranes: albaranes.rows,
                 paradas: paradas.rows,
                 facturas: facturas.rows,
+                // Detalle marítimo del PCS Valencia (1:1 con pedido). Solo
+                // se rellena cuando el pedido proviene de PCS; con Satelles
+                // u otros proveedores queda null.
+                pcs_extra: pcsExtra.rowCount > 0 ? pcsExtra.rows[0] : null,
             },
         });
     } catch (err) {

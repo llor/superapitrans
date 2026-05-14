@@ -221,6 +221,204 @@ function paradaDesde(party, opciones) {
     };
 }
 
+// ----- extractores de datos extra (transversales y específicos PCS) --------
+
+function _toNum(s) {
+    if (s === null || s === undefined || s === '') return null;
+    const n = Number(s);
+    return Number.isNaN(n) ? null : n;
+}
+function _toInt(s) {
+    if (s === null || s === undefined || s === '') return null;
+    const n = parseInt(s, 10);
+    return Number.isNaN(n) ? null : n;
+}
+function _toBool(s) {
+    if (s === null || s === undefined || s === '') return null;
+    return s === 'true' || s === '1' || s === 'TRUE';
+}
+
+// Recorre todos los <References>...</References> del XML buscando un tag
+// concreto (BLNumber, ForwarderFileNumber, …). El primero que aparezca gana.
+function _firstFromAllRefs(xml, name) {
+    for (const r of rawTagAll(xml, 'References')) {
+        const v = tag(r, name);
+        if (v) return v;
+    }
+    return null;
+}
+
+// Busca dentro de <References> primero; si no aparece, cae a `tag(xml, name)`
+// global (algunas Confirmations llevan BLNumber suelto, sin envoltorio
+// <References>).
+function _firstAnywhere(xml, name) {
+    return _firstFromAllRefs(xml, name) || tag(xml, name);
+}
+
+// Campos transversales que persistimos como columnas de `pedidos`. Estos
+// datos pueden interesar a cualquier consumidor (no solo PCS) y van junto
+// al resto de la cabecera del pedido. Defensivo: cada tag no existente
+// queda como null.
+function extractPedidoCommonPcsFields(xml) {
+    const docDetails = rawTag(xml, 'DocumentDetails');
+    const oceanCarrier = docDetails ? rawTag(docDetails, 'OceanCarrier') : null;
+    const vessel = docDetails ? rawTag(docDetails, 'UnloadingVesselDetails') : null;
+
+    // BL y expediente: aparecen en DocumentDetails/References (DUT),
+    // dentro de ReleaseDetails/AcceptanceDetails/References (Orders) o
+    // sueltos dentro de AcceptanceDetails (Confirmations).
+    const blNumero = _firstAnywhere(xml, 'BLNumber');
+    const expediente = _firstAnywhere(xml, 'ForwarderFileNumber');
+
+    // Naviera: OceanCarrier (DUT) o ContainerLine dentro de Release/Acceptance
+    // Details (Orders y a veces DUT). Cogemos la primera que tenga datos.
+    let navieraCodigo = oceanCarrier ? tag(oceanCarrier, 'SCAC') : null;
+    let navieraNombre = oceanCarrier ? tag(oceanCarrier, 'Name') : null;
+    if (!navieraCodigo || !navieraNombre) {
+        for (const c of rawTagAll(xml, 'ContainerLine')) {
+            navieraCodigo = navieraCodigo || tag(c, 'Code');
+            navieraNombre = navieraNombre || tag(c, 'Name');
+            if (navieraCodigo && navieraNombre) break;
+        }
+    }
+
+    return {
+        // Matrícula del contenedor (BOLU5600867…). En DUT/Orders viene
+        // dentro de <ContainerDetails>; en Confirmations viene
+        // directamente dentro de <ReleaseDetails>/<AcceptanceDetails>.
+        // En ambos casos un único <PlateNumber> por mensaje, distinto del
+        // <TruckPlateNumber> del camión.
+        matricula_contenedor: tag(xml, 'PlateNumber'),
+        bl_numero: blNumero,
+        expediente_transitario: expediente,
+        operacion_tipo: docDetails ? tag(docDetails, 'OperationType') : null,
+        naviera_codigo: navieraCodigo,
+        naviera_nombre: navieraNombre,
+        buque_nombre: vessel ? tag(vessel, 'VesselName') : null,
+        viaje_buque: vessel ? tag(vessel, 'VoyageNumber') : null,
+    };
+}
+
+// Detalle marítimo específico PCS. Se persiste en la tabla 1:1
+// `pedidos_pcs_extra`. Devuelve null si el mensaje no aporta ningún campo
+// (Confirmations apenas traen extras más allá de matricula/BL, que ya van
+// en `pedido`).
+function extractPcsExtra(xml) {
+    const docDetails = rawTag(xml, 'DocumentDetails');
+    const containers = rawTag(xml, 'Containers');
+    const containerDetails = containers ? rawTag(containers, 'ContainerDetails') : null;
+    const goods = containers ? rawTag(containers, 'Goods') : null;
+    const vessel = docDetails ? rawTag(docDetails, 'UnloadingVesselDetails') : null;
+
+    // Puertos por Function (LOADING, ORIGIN).
+    let puertoCargaCodigo = null, puertoCargaNombre = null;
+    let puertoOrigenCodigo = null, puertoOrigenNombre = null;
+    if (docDetails) {
+        for (const p of rawTagAll(docDetails, 'Ports')) {
+            const fn = tag(p, 'Function');
+            if (fn === 'LOADING') {
+                puertoCargaCodigo = puertoCargaCodigo || tag(p, 'UNLOCODE');
+                puertoCargaNombre = puertoCargaNombre || tag(p, 'Name');
+            } else if (fn === 'ORIGIN') {
+                puertoOrigenCodigo = puertoOrigenCodigo || tag(p, 'UNLOCODE');
+                puertoOrigenNombre = puertoOrigenNombre || tag(p, 'Name');
+            }
+        }
+    }
+
+    // LocatorCode y Seals dentro de Release/Acceptance Details.
+    let locatorRelease = null, locatorAcceptance = null;
+    let precintoNumero = null, precintoProveedor = null;
+    const releaseDet = containers ? rawTag(containers, 'ReleaseDetails') : null;
+    const acceptanceDet = containers ? rawTag(containers, 'AcceptanceDetails') : null;
+    if (releaseDet) {
+        const rr = rawTag(releaseDet, 'References');
+        locatorRelease = rr ? tag(rr, 'LocatorCode') : null;
+        const seal = rawTag(releaseDet, 'Seals');
+        if (seal) {
+            precintoNumero = precintoNumero || tag(seal, 'Value');
+            precintoProveedor = precintoProveedor || tag(seal, 'Provider');
+        }
+    }
+    if (acceptanceDet) {
+        const ar = rawTag(acceptanceDet, 'References');
+        locatorAcceptance = ar ? tag(ar, 'LocatorCode') : null;
+        const seal = rawTag(acceptanceDet, 'Seals');
+        if (seal) {
+            precintoNumero = precintoNumero || tag(seal, 'Value');
+            precintoProveedor = precintoProveedor || tag(seal, 'Provider');
+        }
+    }
+
+    // Estado lleno/vacío y pesos del contenedor.
+    let fullState = null, releaseState = null, acceptanceState = null;
+    let tara = null, pesoBruto = null;
+    if (containerDetails) {
+        const fos = rawTag(containerDetails, 'FullOrEmptyState');
+        if (fos) {
+            fullState = tag(fos, 'FullContainerDetails');
+            releaseState = tag(fos, 'Release');
+            acceptanceState = tag(fos, 'Acceptance');
+        }
+        const w = rawTag(containerDetails, 'Weights');
+        if (w) {
+            tara = tag(w, 'Tare');
+            pesoBruto = tag(w, 'Gross');
+        }
+    }
+
+    // Mercancía. Atención: <Goods> tiene un <Description> propio (descripción
+    // de la mercancía) Y otro <Description> dentro de <TypeOfPackages>
+    // (descripción del tipo de bulto). Para no confundirlos, extraemos
+    // TypeOfPackages primero y lo eliminamos del XML antes de buscar el
+    // Description de Goods.
+    let mercDesc = null, mercPesoBruto = null, mercBultosNum = null;
+    let mercTipoCod = null, mercTipoDesc = null;
+    if (goods) {
+        let goodsXml = goods;
+        const top = rawTag(goods, 'TypeOfPackages');
+        if (top) {
+            mercTipoCod = tag(top, 'Code');
+            mercTipoDesc = tag(top, 'Description');
+            goodsXml = goodsXml.replace(`<TypeOfPackages>${top}</TypeOfPackages>`, '');
+        }
+        mercDesc = tag(goodsXml, 'Description');
+        mercPesoBruto = tag(goodsXml, 'GrossWeight');
+        mercBultosNum = tag(goodsXml, 'NumberOfPackages');
+    }
+
+    const out = {
+        transporte_tipo: docDetails ? tag(docDetails, 'TransportType') : null,
+        transporte_ferroviario: docDetails ? _toBool(tag(docDetails, 'IsRailTransport')) : null,
+        locator_release: locatorRelease,
+        locator_acceptance: locatorAcceptance,
+        berth_request: vessel ? tag(vessel, 'BerthRequestNumber') : null,
+        puerto_carga_codigo: puertoCargaCodigo,
+        puerto_carga_nombre: puertoCargaNombre,
+        puerto_origen_codigo: puertoOrigenCodigo,
+        puerto_origen_nombre: puertoOrigenNombre,
+        contenedor_iso_tipo: containerDetails ? tag(containerDetails, 'ISOType') : null,
+        contenedor_iso_descripcion: containerDetails ? tag(containerDetails, 'ISODescription') : null,
+        contenedor_full_state: fullState,
+        contenedor_estado_release: releaseState,
+        contenedor_estado_acceptance: acceptanceState,
+        contenedor_descargado: containerDetails ? _toBool(tag(containerDetails, 'ContainerUnloaded')) : null,
+        contenedor_tara: _toNum(tara),
+        contenedor_peso_bruto: _toNum(pesoBruto),
+        customs_status: containerDetails ? tag(containerDetails, 'CustomsStatus') : null,
+        precinto_numero: precintoNumero,
+        precinto_proveedor: precintoProveedor,
+        mercancia_descripcion: mercDesc,
+        mercancia_peso_bruto: _toNum(mercPesoBruto),
+        mercancia_bultos_numero: _toInt(mercBultosNum),
+        mercancia_bultos_tipo_codigo: mercTipoCod,
+        mercancia_bultos_tipo_descripcion: mercTipoDesc,
+    };
+    const hasAny = Object.values(out).some((v) => v !== null && v !== undefined);
+    return hasAny ? out : null;
+}
+
+
 // ----- mappers por tipo de mensaje ------------------------------------------
 
 function mapAcceptanceConfirmation(xml, header, tenantCodigo, meta) {
@@ -543,29 +741,48 @@ function mapMessage(xml, meta) {
         throw new Error('pcs-valencia mapMessage: meta.tenantCodigo requerido');
     }
 
+    let result;
     switch (tipo) {
         case 'DUTv2':
-            return mapDUT(xml, header, tenantCodigo, meta);
+            result = mapDUT(xml, header, tenantCodigo, meta);
+            break;
         case 'ReleaseOrderv2':
-            return mapReleaseOrder(xml, header, tenantCodigo, meta);
+            result = mapReleaseOrder(xml, header, tenantCodigo, meta);
+            break;
         case 'AcceptanceOrderv2':
-            return mapAcceptanceOrder(xml, header, tenantCodigo, meta);
+            result = mapAcceptanceOrder(xml, header, tenantCodigo, meta);
+            break;
         case 'ReleaseConfirmationv2':
-            return mapReleaseConfirmation(xml, header, tenantCodigo, meta);
+            result = mapReleaseConfirmation(xml, header, tenantCodigo, meta);
+            break;
         case 'AcceptanceConfirmationv2':
-            return mapAcceptanceConfirmation(xml, header, tenantCodigo, meta);
+            result = mapAcceptanceConfirmation(xml, header, tenantCodigo, meta);
+            break;
         case 'Acknowledgementv2':
             // Estructura aún no muestreada. Persistimos sólo la cabecera
             // para conservar rastro; el sync lo marca para revisar.
-            return {
+            result = {
                 pedido: basePedido(header, tenantCodigo, 'ALBARAN', parseAllParties(xml)),
                 albaranes: [],
                 paradas: [],
                 _unhandled: true,
             };
+            break;
         default:
             throw new Error(`pcs-valencia mapMessage: tipo desconocido '${tipo}'`);
     }
+
+    // Inyectar campos transversales PCS al pedido (matrícula contenedor,
+    // BL, expediente, naviera, buque, etc.) y devolver el detalle marítimo
+    // específico como `pcsExtra` para que el sync lo persista en la tabla
+    // anexa `pedidos_pcs_extra`.
+    if (result && result.pedido) {
+        Object.assign(result.pedido, extractPedidoCommonPcsFields(xml));
+    }
+    if (result) {
+        result.pcsExtra = extractPcsExtra(xml);
+    }
+    return result;
 }
 
 module.exports = {
@@ -577,6 +794,7 @@ module.exports = {
         parseRoadTransport, parseDatesAndTimes,
         mapDUT, mapReleaseOrder, mapAcceptanceOrder,
         mapReleaseConfirmation, mapAcceptanceConfirmation,
+        extractPedidoCommonPcsFields, extractPcsExtra,
         tag, tagAll, rawTag, rawTagAll,
     },
 };

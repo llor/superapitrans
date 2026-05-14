@@ -53,6 +53,11 @@ test('pcs-valencia mapper → AcceptanceConfirmationv2', () => {
     assert.equal(r.paradas[0].lugar_codigo, 'MVAL');
     assert.equal(r.paradas[0].municipio, 'Valencia');
     assert.equal(r.paradas[0].codigo_postal, '46024');
+    // Extras del PCS persistidos directamente en `pedidos`:
+    assert.equal(r.pedido.matricula_contenedor, 'SEGU5704845');
+    assert.equal(r.pedido.bl_numero, 'HLCUBC1260458179');
+    // Confirmations no traen detalle marítimo extra (sin Goods/Seals/Vessel/…)
+    assert.equal(r.pcsExtra, null);
 });
 
 test('pcs-valencia mapper → ReleaseConfirmationv2', () => {
@@ -69,6 +74,8 @@ test('pcs-valencia mapper → ReleaseConfirmationv2', () => {
     assert.equal(r.paradas[0].tipo, 'CARGA');
     assert.equal(r.paradas[0].orden, 'ORIGEN');
     assert.equal(r.paradas[0].lugar_codigo, 'TBSP');
+    assert.equal(r.pedido.matricula_contenedor, 'CNEU4590147');
+    assert.equal(r.pcsExtra, null);
 });
 
 test('pcs-valencia mapper → AcceptanceOrderv2', () => {
@@ -87,6 +94,8 @@ test('pcs-valencia mapper → AcceptanceOrderv2', () => {
     assert.equal(r.paradas.length, 1);
     assert.equal(r.paradas[0].tipo, 'DESCARGA');
     assert.equal(r.paradas[0].lugar_codigo, 'SFSL');
+    assert.equal(r.pedido.matricula_contenedor, 'CNEU4574763');
+    assert.equal(r.pedido.operacion_tipo, 'EXPORT');
 });
 
 test('pcs-valencia mapper → ReleaseOrderv2', () => {
@@ -102,6 +111,8 @@ test('pcs-valencia mapper → ReleaseOrderv2', () => {
     assert.equal(r.paradas.length, 1);
     assert.equal(r.paradas[0].tipo, 'CARGA');
     assert.equal(r.paradas[0].lugar_codigo, 'DKCV');
+    assert.equal(r.pedido.matricula_contenedor, 'CNEU4574763');
+    assert.equal(r.pedido.operacion_tipo, 'EXPORT');
 });
 
 test('pcs-valencia mapper → DUTv2 (con LoadingUnloadingDetails)', () => {
@@ -122,6 +133,90 @@ test('pcs-valencia mapper → DUTv2 (con LoadingUnloadingDetails)', () => {
     assert.equal(r.paradas[0].lugar_nombre, 'NOATUM CONTAINER TERMINAL VALENCIA');
     assert.equal(r.paradas[1].tipo, 'DESCARGA');
     assert.equal(r.paradas[1].lugar_nombre, 'CTR MEDITERRANEO');
+    assert.equal(r.pedido.matricula_contenedor, 'BOLU5600867');
+    assert.equal(r.pedido.bl_numero, '68640704660000');
+    assert.equal(r.pedido.operacion_tipo, 'IMPORT');
+});
+
+// Detalle marítimo PCS — usa un DUT rico (OceanCarrier, Goods, Seals, Ports,
+// Vessel, ISO type, weights, customs, FullOrEmptyState) para asegurar que
+// `pcsExtra` y los campos transversales recogen TODO lo que viaja en el XML.
+const XML_DUT_RICO = `<?xml version="1.0" encoding="UTF-8"?><UnifiedInlandTransportDocument>
+  <MessageHeader><Number>VPRT-RICO-1</Number><DateAndTime>2026-05-10T10:00:00</DateAndTime><Version>1.1</Version></MessageHeader>
+  <DocumentDetails>
+    <OperationType>IMPORT</OperationType>
+    <TransportType>CARRIER_HAULAGE</TransportType>
+    <IsRailTransport>false</IsRailTransport>
+    <OceanCarrier><SCAC>NPBU</SCAC><Name>BOLUDA LINES</Name></OceanCarrier>
+    <References><PCSDocumentNumber>RICO-0001</PCSDocumentNumber><BookingNumber>BK-RICO</BookingNumber><BLNumber>BL-RICO</BLNumber><ForwarderFileNumber>EXP-RICO</ForwarderFileNumber></References>
+    <Parties><Type>CONTRACTING_PARTY</Type><PCSCode>MLYC</PCSCode><Name>MILLER</Name></Parties>
+    <UnloadingVesselDetails><VesselName>SANTUCA B</VesselName><VoyageNumber>637ESACE7046</VoyageNumber><BerthRequestNumber>1202600000</BerthRequestNumber></UnloadingVesselDetails>
+    <Ports><Function>LOADING</Function><UNLOCODE>ESACE</UNLOCODE><Name>ARRECIFE</Name></Ports>
+    <Ports><Function>ORIGIN</Function><UNLOCODE>ESACE</UNLOCODE><Name>ARRECIFE</Name></Ports>
+  </DocumentDetails>
+  <Containers>
+    <Goods><ItemNumber>1</ItemNumber><NumberOfPackages>5</NumberOfPackages><TypeOfPackages><Code>BX</Code><Description>BULTOS</Description></TypeOfPackages><Description>ENVASES</Description><GrossWeight>2074</GrossWeight></Goods>
+    <ContainerDetails>
+      <PlateNumber>BOLU5600867</PlateNumber>
+      <ISOType>LEG1</ISOType>
+      <ISODescription>45' HC General</ISODescription>
+      <FullOrEmptyState><Release>FULL</Release><Acceptance>EMPTY</Acceptance><FullContainerDetails>FCL</FullContainerDetails></FullOrEmptyState>
+      <Weights><Tare>4750</Tare><Gross>6824</Gross></Weights>
+      <CustomsStatus>UNKNOWN</CustomsStatus>
+      <ContainerUnloaded>false</ContainerUnloaded>
+    </ContainerDetails>
+    <ReleaseDetails>
+      <ReleaseCompany><PCSCode>MVAL</PCSCode><Name>NOATUM</Name></ReleaseCompany>
+      <ContainerLine><Code>NPBU</Code><Name>BOLUDA LINES</Name></ContainerLine>
+      <References><PCSDocumentNumber>RICO-REL</PCSDocumentNumber><LocatorCode>R4Y5JX</LocatorCode></References>
+      <DatesAndTimes><ProposedByContractingCompany>2026-05-11T08:00:00</ProposedByContractingCompany></DatesAndTimes>
+      <Seals><Provider>CARRIER</Provider><Value>1131046</Value></Seals>
+    </ReleaseDetails>
+    <AcceptanceDetails>
+      <AcceptanceCompany><PCSCode>DETO</PCSCode><Name>TORRES</Name></AcceptanceCompany>
+      <References><PCSDocumentNumber>RICO-ACC</PCSDocumentNumber><LocatorCode>R4Y5J3</LocatorCode></References>
+      <DatesAndTimes><ProposedByContractingCompany>2026-05-11T10:00:00</ProposedByContractingCompany></DatesAndTimes>
+    </AcceptanceDetails>
+  </Containers>
+</UnifiedInlandTransportDocument>`;
+
+test('pcs-valencia mapper → DUTv2 rico extrae TODOS los extras', () => {
+    const r = mapMessage(XML_DUT_RICO, { id: 'VPRT-RICO-1', messageType: 'DUTv2', tenantCodigo: 'JSR' });
+    // Campos transversales en `pedido`
+    assert.equal(r.pedido.matricula_contenedor, 'BOLU5600867');
+    assert.equal(r.pedido.bl_numero, 'BL-RICO');
+    assert.equal(r.pedido.expediente_transitario, 'EXP-RICO');
+    assert.equal(r.pedido.operacion_tipo, 'IMPORT');
+    assert.equal(r.pedido.naviera_codigo, 'NPBU');
+    assert.equal(r.pedido.naviera_nombre, 'BOLUDA LINES');
+    assert.equal(r.pedido.buque_nombre, 'SANTUCA B');
+    assert.equal(r.pedido.viaje_buque, '637ESACE7046');
+    // Detalle marítimo en `pcsExtra`
+    assert.ok(r.pcsExtra, 'pcsExtra debería existir');
+    assert.equal(r.pcsExtra.transporte_tipo, 'CARRIER_HAULAGE');
+    assert.equal(r.pcsExtra.transporte_ferroviario, false);
+    assert.equal(r.pcsExtra.locator_release, 'R4Y5JX');
+    assert.equal(r.pcsExtra.locator_acceptance, 'R4Y5J3');
+    assert.equal(r.pcsExtra.berth_request, '1202600000');
+    assert.equal(r.pcsExtra.puerto_carga_codigo, 'ESACE');
+    assert.equal(r.pcsExtra.puerto_carga_nombre, 'ARRECIFE');
+    assert.equal(r.pcsExtra.puerto_origen_codigo, 'ESACE');
+    assert.equal(r.pcsExtra.contenedor_iso_tipo, 'LEG1');
+    assert.equal(r.pcsExtra.contenedor_iso_descripcion, "45' HC General");
+    assert.equal(r.pcsExtra.contenedor_full_state, 'FCL');
+    assert.equal(r.pcsExtra.contenedor_estado_release, 'FULL');
+    assert.equal(r.pcsExtra.contenedor_estado_acceptance, 'EMPTY');
+    assert.equal(r.pcsExtra.contenedor_descargado, false);
+    assert.equal(r.pcsExtra.contenedor_tara, 4750);
+    assert.equal(r.pcsExtra.contenedor_peso_bruto, 6824);
+    assert.equal(r.pcsExtra.customs_status, 'UNKNOWN');
+    assert.equal(r.pcsExtra.precinto_numero, '1131046');
+    assert.equal(r.pcsExtra.precinto_proveedor, 'CARRIER');
+    assert.equal(r.pcsExtra.mercancia_descripcion, 'ENVASES');
+    assert.equal(r.pcsExtra.mercancia_peso_bruto, 2074);
+    assert.equal(r.pcsExtra.mercancia_bultos_numero, 5);
+    assert.equal(r.pcsExtra.mercancia_bultos_tipo_codigo, 'BX');
+    assert.equal(r.pcsExtra.mercancia_bultos_tipo_descripcion, 'BULTOS');
 });
 
 test('pcs-valencia mapper → tipo desconocido tira error claro', () => {

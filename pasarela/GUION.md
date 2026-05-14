@@ -706,3 +706,66 @@ PROBLEMAS RESUELTOS
   `.env` de pasarela ahora usa `DB_USER=saycutrans` por defecto.
 - **`docker compose restart` no recarga `.env`.** Tras editar
   variables, usar `docker compose up -d --force-recreate api`.
+
+
+DEUDA TÉCNICA — PENDIENTE DE COMPROBAR / MÁS INFORMACIÓN
+---------------------------------------------------------
+
+Notas tomadas el 2026-05-13. No son tareas a ejecutar todavía; son
+puntos abiertos que hay que tener en cuenta antes de hacer cambios en
+la ingesta del PCS de Valencia.
+
+1. **Consulta por fechas en el PCS REST: funciona.** Verificado en
+   vivo contra `https://api.valenciaportpcs.net/messaging` con la
+   credencial JSR de producción el 2026-05-13:
+   - `GET /messages/download/{box}?fromDate=YYYY-MM-DD&toDate=YYYY-MM-DD`
+     filtra correctamente.
+   - `toDate` se comporta como exclusivo (o se interpreta como
+     `T00:00:00`): `fromDate=X&toDate=X` devuelve `0`. Para cubrir un
+     día hay que usar `toDate=X+1` o `toDate=X T23:59:59`.
+   - Acepta también `fromDate=2026-05-04T00:00:00&toDate=...T23:59:59`.
+   - La respuesta tiene un techo de 1000 items (sin filtro, devuelve
+     exactamente 1000). No comprobado si admite `offset`/`limit` ni si
+     hay una forma de pedir "siguientes 1000".
+   Consecuencia útil: el sync se puede refactorizar para tirar por
+   ventana móvil con dedup por `(proveedor_codigo,
+   proveedor_publication_id)` y dejar de depender del ack. Antes de
+   tocarlo conviene confirmar la paginación.
+
+2. **Acknowledgementv2 al PCS: tenemos permiso, no está implementado.**
+   Verificado en vivo el 2026-05-13:
+   - `POST /messages/upload/{box}` con `Content-Type: application/xml`
+     devuelve `400 "The File field is required."` → la cuenta entra al
+     endpoint; lo que rechaza es el formato.
+   - Con `multipart/form-data` y campo `File` devuelve `400 "Unknown
+     interchange type"` → el servidor parsea el archivo y rechaza por
+     contenido, no por permisos.
+   En ningún caso devuelve `401`/`403`. La cuenta JSR puede escribir.
+   Pendiente para implementarlo:
+   - Cambiar `pcs-valencia/client.js:123-137` (`uploadMessage`) para
+     que envíe `multipart/form-data` con campo `File`, no
+     `application/xml` directo.
+   - Conseguir el sample real del `Acknowledgementv2` (no está en
+     `documentos/pcs-valencia/samples/`, solo están los otros 5; en
+     `mapper.js:557-565` se marca como `_unhandled`). Habría que
+     pedirlo a Arantxa Nebot o sacarlo de la doc del puerto.
+
+3. **Política de retención / acumulación en el PCS: desconocida.** El
+   manual `pcs11-mbase004` no regula expiración, caducidad ni cuota de
+   mensajes pendientes. El bloqueo previo de abril 2026 se resolvió el
+   2026-05-12 con un reset de perfiles de `messaging.JSRO`; no quedó
+   registrada la causa raíz. Pendiente: preguntar a Arantxa Nebot
+   "¿qué hacéis con los pendientes acumulados, los caducáis o los
+   conserváis? ¿Hay un máximo a partir del cual la cuenta se ve
+   afectada?". Según la respuesta:
+   - Si los conservan sin caducar → sync por fechas (punto 1) basta,
+     el ack queda como mejora opcional.
+   - Si los caducan → hay que priorizar el Acknowledgementv2 (punto
+     2) para no perder mensajes antiguos.
+
+4. **Texto del correo del 2026-05-13 a José Miguel.** Inicialmente
+   redacté que "queda un fleco del lado del puerto: que reconozcan que
+   ya hemos consumido cada mensaje". Es **incorrecto**: el ack lo
+   emitimos nosotros al PCS, no al revés. Si en algún momento se
+   vuelve a redactar comunicación al cliente sobre el PCS, no atribuir
+   ese fleco al puerto — es deuda nuestra.

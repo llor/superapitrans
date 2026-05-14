@@ -39,6 +39,32 @@ async function upsertPedido(pool, pedido) {
     return r.rows[0].id;
 }
 
+// 1:1 con `pedidos`. Persiste el detalle marítimo del PCS (mercancía,
+// contenedor, precinto, puertos, etc.) que llega en el XML pero no encaja
+// en el modelo canónico común con Satelles. Si `pcsExtra` es null (mensaje
+// que no aporta extras, p.ej. Confirmations cortas) se borra cualquier
+// fila previa para no quedar con datos viejos.
+async function upsertPedidoExtra(pool, pedidoId, pcsExtra) {
+    if (!pcsExtra) {
+        await pool.query('DELETE FROM pedidos_pcs_extra WHERE pedido_id = $1', [pedidoId]);
+        return;
+    }
+    const cols = ['pedido_id', ...Object.keys(pcsExtra)];
+    const values = [pedidoId, ...Object.keys(pcsExtra).map((k) => pcsExtra[k])];
+    const placeholders = cols.map((_, i) => `$${i + 1}`).join(', ');
+    const updateSet = cols
+        .filter((c) => c !== 'pedido_id')
+        .map((c) => `${c} = EXCLUDED.${c}`)
+        .join(', ');
+    const sql = `
+        INSERT INTO pedidos_pcs_extra (${cols.join(', ')})
+        VALUES (${placeholders})
+        ON CONFLICT (pedido_id)
+        DO UPDATE SET ${updateSet}, updated_at = NOW()
+    `;
+    await pool.query(sql, values);
+}
+
 async function upsertAlbaran(pool, pedidoId, alb) {
     const sql = `
         INSERT INTO albaranes
@@ -119,7 +145,7 @@ async function syncCredencial(cred, log) {
         try {
             const xml = await downloadMessage(cred, meta.id);
             const mapMeta = { ...meta, tenantCodigo: cred.empresaCodigo };
-            const { pedido, albaranes, paradas, _unhandled } = mapMessage(xml, mapMeta);
+            const { pedido, albaranes, paradas, pcsExtra, _unhandled } = mapMessage(xml, mapMeta);
 
             if (_unhandled) {
                 log(`[${PROVEEDOR}] empresa=${cred.empresaCodigo} ${meta.id} tipo=${meta.messageType} UNHANDLED (cabecera persistida sin paradas/albaranes)`);
@@ -131,6 +157,7 @@ async function syncCredencial(cred, log) {
 
             await tenantPool.query('BEGIN');
             const pedidoId = await upsertPedido(tenantPool, pedido);
+            await upsertPedidoExtra(tenantPool, pedidoId, pcsExtra);
             await tenantPool.query('DELETE FROM paradas WHERE pedido_id = $1', [pedidoId]);
             const idsAlbaranPorPcsId = new Map();
             for (const alb of albaranes) {
