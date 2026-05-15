@@ -34,6 +34,8 @@ function buildApp() {
     app.use(logRequest);
 
     app.use('/api/datos', require('./routes/datos'));
+    app.use('/api/auth', require('./routes/auth'));
+    app.use('/api/me', require('./routes/me'));
 
     async function healthHandler(_req, res) {
         try {
