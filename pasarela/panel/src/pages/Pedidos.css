@@ -1,141 +1,462 @@
-/* Placeholder mínimo coherente con saycu-theme. La vista completa con
-   cards + modal de paradas + pcs_extra se clona aquí en el siguiente
-   paso, usando DatosPasarela.{jsx,css} del admin como fuente. */
+/* DatosPasarela: estilos del modal de detalle.
+ * Copiados 1:1 de saycutrans/panel-empresa/src/pages/styles.css (sección
+ * paradas-modal*) para mantener coherencia visual entre proyectos hermanos
+ * del grupo Saycu. Usan las mismas variables del saycu-theme. */
 
-.ped-page {
-  min-height: 100%;
-  display: flex;
-  flex-direction: column;
-  background: var(--bg-page, var(--bg-input));
-}
-
-.ped-header {
+.paradas-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--black-alpha-45);
   display: flex;
   align-items: center;
-  gap: 16px;
-  padding: 12px 24px;
+  justify-content: center;
+  z-index: 50;
+  padding: 16px;
+}
+
+.paradas-modal {
   background: var(--bg-input);
-  border-bottom: 1px solid var(--border-subtle);
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
-}
-
-.ped-header__left {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  flex: 1;
-  min-width: 0;
-}
-
-.ped-title {
-  font-size: 16px;
-  font-weight: 800;
-  color: var(--text-primary);
-  letter-spacing: 0.2px;
-}
-
-.ped-sub {
-  font-size: 12px;
-  color: var(--text-secondary);
-}
-
-.ped-logout {
-  background: transparent;
-  border: 1px solid var(--border-light);
-  border-radius: 8px;
-  padding: 6px 12px;
-  font-size: 14px;
-  color: var(--text-primary);
-  cursor: pointer;
-}
-.ped-logout:hover {
-  background: var(--bg-input);
-  border-color: var(--erp-primary);
-  color: var(--erp-primary);
-}
-
-.ped-main {
-  flex: 1;
-  padding: 16px 24px 32px;
-  max-width: 1080px;
-  width: 100%;
-  margin: 0 auto;
-}
-
-.ped-error {
-  background: var(--erp-required-bg, #fde7e7);
-  color: var(--erp-required, #b00020);
-  border: 1px solid var(--erp-required, #b00020);
-  border-radius: 8px;
-  padding: 10px 14px;
-  margin-bottom: 12px;
-  font-size: 14px;
-}
-
-.ped-loading,
-.ped-empty {
-  padding: 32px;
-  text-align: center;
-  color: var(--text-secondary);
-  font-size: 14px;
-}
-
-.ped-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 12px;
-}
-
-.ped-row {
-  background: var(--bg-input);
-  border: 1px solid var(--border-subtle);
   border-radius: 12px;
-  padding: 12px 14px;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08), 0 1px 4px rgba(0, 0, 0, 0.05);
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+  width: min(820px, 95vw);
+  max-height: 85vh;
+  overflow: auto;
+  box-shadow: 0 10px 30px var(--black-alpha-20);
+  padding: 18px;
 }
 
-.ped-row__main {
+.paradas-modal-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
+  gap: 12px;
+}
+
+.paradas-modal-header h3 {
+  margin: 0;
+  font-size: 18px;
   color: var(--text-primary);
 }
 
-.ped-row__chip {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.4px;
-  padding: 3px 8px;
-  border-radius: 999px;
-  background: var(--erp-primary-light, var(--erp-primary-alpha));
-  color: var(--erp-primary);
-  text-transform: uppercase;
+.paradas-close {
+  border: 1px solid var(--border-light);
+  background: var(--bg-sidebar);
+  color: var(--text-primary);
+  padding: 6px 12px;
+  border-radius: 8px;
+  cursor: pointer;
 }
 
-.ped-row__meta {
+.paradas-modal-subtitle {
+  margin: 10px 0 16px;
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.paradas-loading,
+.paradas-error,
+.paradas-empty {
+  padding: 12px 0;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.paradas-list {
   display: flex;
-  flex-wrap: wrap;
-  gap: 6px 12px;
-  font-size: 12px;
-  color: var(--text-secondary);
+  flex-direction: column;
+  gap: 12px;
 }
 
-.ped-row__prov {
-  margin-left: auto;
+.paradas-list h4 {
+  font-size: 14px;
+  color: var(--text-primary);
+  margin: 12px 0 6px;
+}
+
+.parada-item {
+  border: 1px solid var(--border-light);
+  border-radius: 10px;
+  padding: 12px;
+  background: var(--bg-window);
+}
+
+.parada-title {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 13px;
   font-weight: 600;
-  color: var(--erp-primary);
+  color: var(--text-primary);
+  margin-bottom: 8px;
 }
 
-.ped-pagination {
-  margin-top: 16px;
-  text-align: center;
+.parada-orden {
+  background: var(--erp-button);
+  color: var(--text-inverse);
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 12px;
+}
+
+.parada-tipo {
+  text-transform: uppercase;
+  font-size: 12px;
+  color: var(--erp-label);
+}
+
+.parada-body {
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+/* ─── Resumen de proveedores (cabecera explicativa) ─────────────────────── */
+
+.dp-proveedores-resumen {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin: 0 0 20px;
+  width: 100%;
+}
+
+@media (max-width: 900px) {
+  .dp-proveedores-resumen {
+    grid-template-columns: 1fr;
+  }
+}
+
+.dp-prov-card {
+  background: var(--bg-input);
+  border: 1px solid var(--border-light);
+  border-radius: 12px;
+  padding: 14px 16px;
+  box-shadow: 0 2px 8px var(--black-alpha-10, rgba(0,0,0,0.05));
+}
+
+.dp-prov-card--satelles { border-top: 4px solid var(--erp-primary, #2563eb); }
+.dp-prov-card--pcs      { border-top: 4px solid var(--erp-icon, #0891b2); }
+
+.dp-prov-card__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+  font-size: 15px;
+  color: var(--text-primary);
+}
+
+.dp-prov-card__icon { font-size: 20px; line-height: 1; }
+
+.dp-prov-card__badge {
+  margin-left: auto;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  background: var(--bg-sidebar);
+  border: 1px solid var(--border-light);
+  border-radius: 999px;
+  padding: 2px 8px;
+}
+
+.dp-prov-card__body {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.dp-prov-card__body code {
+  background: var(--bg-sidebar);
+  border: 1px solid var(--border-light);
+  border-radius: 4px;
+  padding: 0 4px;
+  font-size: 12px;
+}
+
+.dp-prov-card__body ul {
+  margin: 6px 0;
+  padding-left: 20px;
+}
+
+.dp-prov-card__body li { margin-bottom: 2px; }
+
+.dp-prov-card__body p {
+  margin: 0 0 8px;
+}
+
+.dp-prov-card__body p:last-child { margin-bottom: 0; }
+
+.dp-prov-card__note {
+  margin-top: 10px;
+  padding: 8px 10px;
+  border-left: 3px solid var(--erp-warning, #d97706);
+  background: var(--bg-sidebar);
+  border-radius: 0 6px 6px 0;
+  font-size: 12px;
+}
+
+.dp-prov-modelo {
+  grid-column: 1 / -1;
+  background: var(--bg-sidebar);
+  border: 1px solid var(--border-light);
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.dp-prov-modelo code {
+  background: var(--bg-input);
+  border: 1px solid var(--border-light);
+  border-radius: 4px;
+  padding: 0 4px;
+  font-size: 12px;
+}
+
+/* Aspecto de "botón clicable" para el summary del details (estado cerrado).
+   Al abrirse, summary y panel desplegado quedan unidos como un único
+   contenedor con borde continuo. Reusa los tokens del tema (sin paleta
+   nueva); el hover toma el color de borde de las cards (erp-header), igual
+   que el .dc-card al pasar el ratón. */
+.dp-prov-card__details {
+  margin-top: 10px;
+  border: none;
+  padding: 0;
+  background: transparent;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.dp-prov-card__details > summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 13px;
+  background: var(--bg-window);
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  padding: 8px 12px;
+  list-style: none;
+  display: block;
+  transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
+}
+
+.dp-prov-card__details > summary::-webkit-details-marker {
+  display: none;
+}
+
+.dp-prov-card__details > summary:hover {
+  background: var(--bg-sidebar);
+  border-color: var(--erp-header);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.dp-prov-card__details > summary::before {
+  content: '▸';
   color: var(--text-secondary);
   font-size: 12px;
+  margin-right: 6px;
+}
+
+.dp-prov-card__details[open] > summary {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  border-bottom-color: transparent;
+}
+
+.dp-prov-card__details[open] > summary::before {
+  content: '▾';
+}
+
+.dp-prov-card__details[open] > ul {
+  margin: 0;
+  padding: 10px 12px 10px 32px;
+  border: 1px solid var(--border-light);
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+  background: var(--bg-window);
+}
+
+.dp-prov-card__details ul ul {
+  margin-top: 4px;
+  padding: 0 0 0 18px;
+  border: none;
+  background: transparent;
+  border-radius: 0;
+}
+
+/* Toggle de paradas dentro del modal de detalle */
+.dp-toggle-paradas {
+  background: var(--bg-window);
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  text-align: left;
+  margin: 12px 0 4px;
+}
+
+.dp-toggle-paradas:hover {
+  background: var(--bg-sidebar);
+}
+
+/* ─── Toolbar de filtros (horizontal, sobre los cards) ──────────────────── */
+
+.dp-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.dp-selects {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.dp-selects .toolbar-label { min-width: 180px; }
+
+/* Pista en pequeño debajo del selector "Cliente Saycu" indicando el
+   proveedor (o proveedores) de datos asociados a la empresa. Reusa
+   tokens existentes (sin paleta nueva). */
+.dp-cred-hint {
+  display: block;
+  margin-top: 4px;
+  font-size: 11px;
+  line-height: 1.3;
+  color: var(--text-secondary);
+  min-height: 14px;          /* reserva el espacio para no descolocar la fila */
+}
+.dp-cred-hint--empty {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.dp-label-with-info {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.dp-info-i {
+  position: relative;
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  line-height: 14px;
+  text-align: center;
+  border-radius: 50%;
+  background: #6b7280;
+  color: #ffffff;
+  font-size: 9px;
+  font-weight: 700;
+  font-style: italic;
+  font-family: Georgia, serif;
+  vertical-align: super;
+  cursor: help;
+  user-select: none;
+}
+
+.dp-info-i:hover,
+.dp-info-i:focus { background: #2563eb; outline: none; }
+
+/* Tooltip propio (no el nativo): aparece al hover/focus de la "i". */
+.dp-info-i::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  top: calc(100% + 8px);
+  left: -10px;
+  width: 280px;
+  padding: 8px 10px;
+  background: #1f2937;
+  color: #ffffff;
+  border-radius: 6px;
+  font: 400 12px/1.4 system-ui, -apple-system, sans-serif;
+  font-style: normal;
+  text-align: left;
+  text-transform: none;
+  white-space: normal;
+  letter-spacing: normal;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-2px);
+  transition: opacity 0.15s, transform 0.15s, visibility 0s linear 0.15s;
+  z-index: 60;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+.dp-info-i::before {
+  content: '';
+  position: absolute;
+  top: calc(100% + 2px);
+  left: 0;
+  width: 10px;
+  height: 6px;
+  background: #1f2937;
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.15s, visibility 0s linear 0.15s;
+  z-index: 61;
+}
+
+.dp-info-i:hover::after,
+.dp-info-i:focus::after,
+.dp-info-i:hover::before,
+.dp-info-i:focus::before {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  transition: opacity 0.15s, transform 0.15s, visibility 0s;
+}
+
+/* ─── Bloque de resultados (debajo de los filtros) ─────────────────────── */
+
+.dp-results { min-width: 0; }
+
+
+/* ─── Botón de ayuda en cabecera (icon-only, toggle del resumen) ────────
+   Cuadrado 40×40 alineado al alto del .btn-refresh adyacente (~40px).
+   Estado activo (panel abierto) usa --erp-primary-light + borde y color
+   --erp-primary; sin inventar tokens nuevos. */
+
+.btn-help {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  background: var(--bg-input);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  font-size: 20px;        /* tamaño del icono SVG */
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease, transform 0.18s ease;
+}
+
+.btn-help:hover {
+  border-color: var(--erp-primary);
+  color: var(--erp-primary);
+  transform: translateY(-1px);
+}
+
+.btn-help:focus-visible {
+  outline: 2px solid var(--erp-primary);
+  outline-offset: 2px;
+}
+
+.btn-help[aria-expanded="true"] {
+  background: var(--erp-primary-light);
+  border-color: var(--erp-primary);
+  color: var(--erp-primary);
 }
