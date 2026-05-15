@@ -1,0 +1,24 @@
+:80 {
+	encode gzip
+
+	# El SPA está construido con `base: /pasarela/`, así que todas sus URLs
+	# (assets, deeplinks) empiezan por /pasarela/. system-caddy hace
+	# `handle /pasarela/*` (sin strippear). Aquí dentro hacemos
+	# `handle_path /pasarela/*` para servir el dist desde la raíz.
+	handle_path /pasarela/* {
+		root * /srv
+		try_files {path} /index.html
+		header Cache-Control "no-store"
+		file_server
+	}
+
+	# Si llega una petición a / (raíz), redirigimos a /pasarela/.
+	handle / {
+		redir /pasarela/ permanent
+	}
+
+	# Cualquier otra ruta sin prefijo es un mal mapeo de system-caddy.
+	handle {
+		respond "pasarela_panel: ruta sin prefijo /pasarela/" 404
+	}
+}

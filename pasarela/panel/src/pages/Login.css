@@ -1,0 +1,291 @@
+/* ===========================================
+   LOGIN - pasarela (panel web del N2).
+   Clonado de saycu/saycupartes/panel/src/pages/Login.css (que a su vez
+   clona el SCSS de saycu/saycutrans/app-mobile, según CLAUDE.md global
+   sección "PANTALLAS DE LOGIN — INVIOLABLE"). Variables saycu-theme,
+   cero hardcoded.
+   =========================================== */
+
+.login-page {
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  background: var(--bg-input);
+}
+
+.login-shell {
+  max-width: 450px;
+  margin: 0 auto;
+  padding: 16px 24px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.branding {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  background: var(--bg-input);
+  padding: 8px 14px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  box-shadow: 0 8px 18px var(--black-alpha-08);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.logo-mark {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--erp-primary) 0%, var(--erp-header-dark) 100%);
+  color: #ffffff;
+  font-weight: 800;
+  display: grid;
+  place-items: center;
+  letter-spacing: 0.5px;
+  box-shadow: 0 6px 14px var(--erp-primary-alpha);
+}
+
+body.theme-white .logo-mark {
+  background: transparent;
+  color: var(--gray-500);
+  box-shadow: none;
+}
+
+.brand-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  flex: 1;
+  min-width: 0;
+}
+
+.brand-title {
+  color: var(--text-primary);
+  font-weight: 800;
+  font-size: 17px;
+  white-space: nowrap;
+  line-height: 1.2;
+}
+
+.brand-sub {
+  color: var(--erp-primary);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+  line-height: 1.2;
+}
+
+.build-meta {
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  margin-left: auto;
+}
+
+.panel {
+  border-radius: 14px;
+  border: 1px solid var(--border-light);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.10), 0 1px 6px rgba(0, 0, 0, 0.06);
+  background: var(--bg-input);
+  margin-top: 12vh;
+}
+
+.panel-body {
+  padding: 16px 18px 18px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 8px 12px;
+  align-items: center;
+}
+
+.field-label {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--erp-label);
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+  text-align: right;
+}
+
+.native-field {
+  width: 100%;
+  height: 42px;
+  padding: 0 12px;
+  font-size: 16px;
+  color: var(--text-primary);
+  background: var(--bg-input);
+  border: 1px solid var(--border-input);
+  border-radius: 8px;
+  box-shadow: inset 0 1px 0 var(--white-alpha-45);
+  font-family: inherit;
+  box-sizing: border-box;
+  outline: none;
+}
+
+.native-field:focus {
+  border-color: var(--erp-primary);
+  box-shadow: 0 0 0 2px var(--erp-primary-alpha), inset 0 1px 0 var(--white-alpha-45);
+}
+
+.password-wrap {
+  position: relative;
+}
+
+.password-wrap .native-field {
+  padding-right: 40px;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  padding: 6px;
+  cursor: pointer;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.error-text {
+  text-align: center;
+  font-size: 14px;
+  margin: 12px 0 6px;
+  color: var(--erp-required);
+}
+
+.remember-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  margin-top: 8px;
+  padding: 6px 10px;
+  background: var(--bg-input);
+  border: none;
+  border-radius: 8px;
+}
+
+.native-checkbox {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--erp-primary);
+  cursor: pointer;
+}
+
+.remember-label {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--erp-label);
+  letter-spacing: 0.2px;
+  cursor: pointer;
+}
+
+.login-btn {
+  display: block;
+  width: 100%;
+  margin-top: 10px;
+  padding: 12px;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+  color: var(--erp-primary);
+  background: #ffffff;
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.10), 0 1px 4px rgba(0, 0, 0, 0.06);
+  transition: background 0.2s, box-shadow 0.2s;
+}
+
+.login-btn:hover,
+.login-btn:active {
+  background: #f5f5f5;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+.login-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.forgot-link {
+  display: block;
+  margin: 10px auto 0;
+  background: transparent;
+  border: none;
+  color: var(--erp-primary);
+  font-size: 14px;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 4px 8px;
+}
+.forgot-link:hover { color: var(--erp-primary-hover, var(--erp-primary)); }
+
+/* Modal informativo para "olvidé contraseña" mientras el backend no tenga
+   el endpoint implementado. */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.modal {
+  background: var(--bg-input);
+  padding: 20px 24px;
+  border-radius: 14px;
+  border: 1px solid var(--border-light);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+  max-width: 380px;
+  width: calc(100% - 40px);
+}
+
+@media (max-width: 430px), (max-height: 760px) {
+  .login-shell { padding: 12px 20px 16vh; gap: 8px; }
+  .branding { padding: 6px 10px; gap: 8px; }
+  .logo-mark { width: 32px; height: 32px; font-size: 13px; }
+  .brand-title { font-size: 15px; }
+  .brand-sub, .build-meta { font-size: 11px; }
+  .panel-body { padding: 14px 14px 16px; }
+  .form-grid { gap: 6px 10px; }
+  .field-label { font-size: 14px; }
+  .native-field { height: 38px; padding: 0 10px; font-size: 15px; }
+  .password-wrap .native-field { padding-right: 38px; }
+  .remember-row { margin-top: 6px; padding: 5px 8px; }
+  .native-checkbox { width: 18px; height: 18px; }
+  .remember-label { font-size: 13px; }
+  .error-text { font-size: 14px; margin: 8px 0 4px; }
+  .login-btn { margin-top: 6px; padding: 11px; font-size: 15px; }
+}
+
+@media (max-width: 380px), (max-height: 680px) {
+  .login-shell { padding: 10px 18px 14vh; gap: 6px; }
+  .branding { padding: 5px 8px; }
+  .logo-mark { width: 30px; height: 30px; }
+  .brand-title { font-size: 14px; }
+  .brand-sub, .build-meta { font-size: 10px; }
+  .panel-body { padding: 12px 12px 14px; }
+  .form-grid { gap: 5px 8px; }
+  .field-label { font-size: 13px; }
+  .native-field { height: 36px; padding: 0 9px; font-size: 14px; }
+  .password-wrap .native-field { padding-right: 36px; }
+  .remember-row { padding: 4px 6px; }
+  .remember-label { font-size: 12px; }
+  .login-btn { padding: 10px; font-size: 14px; }
+}

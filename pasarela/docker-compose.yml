@@ -27,6 +27,21 @@ services:
       - superapitrans_net
     restart: unless-stopped
 
+  panel:
+    build:
+      context: .
+      dockerfile: panel/Dockerfile
+      args:
+        # URL pública del API. Detrás de system-caddy va al subdominio api.
+        # Inyectado por docker compose desde VITE_API_BASE del .env del
+        # proyecto: dev → https://dev-api.superapi.eoden.es/pasarela,
+        # prod → https://api.superapi.eoden.es/pasarela.
+        VITE_API_BASE: "${VITE_API_BASE:?VITE_API_BASE requerido (ej: https://dev-api.superapi.eoden.es/pasarela)}"
+    container_name: pasarela_panel
+    networks:
+      - superapitrans_net
+    restart: unless-stopped
+
 networks:
   pasarela_net:
     name: pasarela_network

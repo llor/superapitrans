@@ -1,0 +1,141 @@
+/* Placeholder mínimo coherente con saycu-theme. La vista completa con
+   cards + modal de paradas + pcs_extra se clona aquí en el siguiente
+   paso, usando DatosPasarela.{jsx,css} del admin como fuente. */
+
+.ped-page {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-page, var(--bg-input));
+}
+
+.ped-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 24px;
+  background: var(--bg-input);
+  border-bottom: 1px solid var(--border-subtle);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+}
+
+.ped-header__left {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.ped-title {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: 0.2px;
+}
+
+.ped-sub {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.ped-logout {
+  background: transparent;
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 14px;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+.ped-logout:hover {
+  background: var(--bg-input);
+  border-color: var(--erp-primary);
+  color: var(--erp-primary);
+}
+
+.ped-main {
+  flex: 1;
+  padding: 16px 24px 32px;
+  max-width: 1080px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.ped-error {
+  background: var(--erp-required-bg, #fde7e7);
+  color: var(--erp-required, #b00020);
+  border: 1px solid var(--erp-required, #b00020);
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-bottom: 12px;
+  font-size: 14px;
+}
+
+.ped-loading,
+.ped-empty {
+  padding: 32px;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.ped-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+}
+
+.ped-row {
+  background: var(--bg-input);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  padding: 12px 14px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08), 0 1px 4px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ped-row__main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  color: var(--text-primary);
+}
+
+.ped-row__chip {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: var(--erp-primary-light, var(--erp-primary-alpha));
+  color: var(--erp-primary);
+  text-transform: uppercase;
+}
+
+.ped-row__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.ped-row__prov {
+  margin-left: auto;
+  font-weight: 600;
+  color: var(--erp-primary);
+}
+
+.ped-pagination {
+  margin-top: 16px;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
