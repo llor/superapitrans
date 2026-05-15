@@ -25,3 +25,10 @@ Thumbs.db
 
 # API keys locales (no versionar)
 .api-key-*
+
+# saycu-theme vendor-copy generado por los scripts de deploy del panel
+# (rsync desde saycu/saycu-theme/ a chofocles/saycu-theme/ y
+# pasarela/saycu-theme/ antes del docker build). NO versionar — es output.
+chofocles/saycu-theme/
+chofoclesapp/saycu-theme/
+pasarela/saycu-theme/
