@@ -24,9 +24,15 @@ import {
   IoChevronForwardOutline,
   IoRefreshOutline,
   IoLogOutOutline,
+  IoGridOutline,
+  IoListOutline,
+  IoTrashOutline,
 } from 'react-icons/io5';
 import { getUserFilters, setUserFilters } from '../services/filterStorage.js';
 import DataCards from '../components/DataCards.jsx';
+import PedidosTable from '../components/PedidosTable.jsx';
+import EditColumnasModal from '../components/EditColumnasModal.jsx';
+import { COLUMNAS_DEFAULT } from '../services/pedidosColumnas.js';
 import { gray400, gray500 } from 'saycu-theme/colors.js';
 import './Logs.css';
 import './Pedidos.css';
@@ -47,7 +53,16 @@ export default function Pedidos() {
   const [filtroEstado, setFiltroEstado] = useState('TODOS');
   const [filtroProveedor, setFiltroProveedor] = useState('todos');
   const [filtroCliente, setFiltroCliente] = useState('todos');
+  const [filtroDelegacion, setFiltroDelegacion] = useState('todas');
   const [busqueda, setBusqueda] = useState('');
+
+  // Modo de visualización + columnas visibles + orden (modo tabla).
+  // Se persisten en localStorage por usuario.
+  const [vistaTabla, setVistaTabla] = useState(false);
+  const [columnasVisibles, setColumnasVisibles] = useState(COLUMNAS_DEFAULT);
+  const [editColAbierto, setEditColAbierto] = useState(false);
+  const [sortBy, setSortBy] = useState('fecha_reparto');
+  const [sortOrder, setSortOrder] = useState('DESC');
 
   const [showParadas, setShowParadas] = useState(false);
   const [verParadasModal, setVerParadasModal] = useState(false);
@@ -56,7 +71,7 @@ export default function Pedidos() {
   const [loadingDetalle, setLoadingDetalle] = useState(false);
   const [errorDetalle, setErrorDetalle] = useState(null);
 
-  // Cargar filtros guardados (por usuario + página)
+  // Cargar filtros y preferencias de vista guardadas (por usuario + página)
   useEffect(() => {
     if (!user?.id) return;
     const stored = getUserFilters(user.id, 'pasarela-panel-pedidos');
@@ -64,19 +79,37 @@ export default function Pedidos() {
       if (stored.filtroEstado) setFiltroEstado(stored.filtroEstado);
       if (stored.filtroProveedor) setFiltroProveedor(stored.filtroProveedor);
       if (stored.filtroCliente) setFiltroCliente(stored.filtroCliente);
+      if (stored.filtroDelegacion) setFiltroDelegacion(stored.filtroDelegacion);
       if (stored.busqueda !== undefined) setBusqueda(stored.busqueda);
       if (stored.limit) setPagination((p) => ({ ...p, limit: stored.limit }));
+      if (typeof stored.vistaTabla === 'boolean') setVistaTabla(stored.vistaTabla);
+      if (Array.isArray(stored.columnasVisibles) && stored.columnasVisibles.length > 0) {
+        setColumnasVisibles(stored.columnasVisibles);
+      }
+      if (typeof stored.sortBy === 'string') setSortBy(stored.sortBy);
+      if (stored.sortOrder === 'ASC' || stored.sortOrder === 'DESC') setSortOrder(stored.sortOrder);
     }
     filtersLoadedRef.current = true;
   }, [user?.id]);
 
-  // Persistir filtros
+  // Persistir filtros + preferencias de vista
   useEffect(() => {
     if (!user?.id || !filtersLoadedRef.current) return;
     setUserFilters(user.id, 'pasarela-panel-pedidos', {
-      filtroEstado, filtroProveedor, filtroCliente, busqueda, limit: pagination.limit,
+      filtroEstado, filtroProveedor, filtroCliente, filtroDelegacion,
+      busqueda, limit: pagination.limit,
+      vistaTabla, columnasVisibles, sortBy, sortOrder,
     });
-  }, [user?.id, filtroEstado, filtroProveedor, filtroCliente, busqueda, pagination.limit]);
+  }, [user?.id, filtroEstado, filtroProveedor, filtroCliente, filtroDelegacion,
+      busqueda, pagination.limit, vistaTabla, columnasVisibles, sortBy, sortOrder]);
+
+  const limpiarFiltros = () => {
+    setFiltroEstado('TODOS');
+    setFiltroProveedor('todos');
+    setFiltroCliente('todos');
+    setFiltroDelegacion('todas');
+    setBusqueda('');
+  };
 
   const applyResponse = useCallback((response) => {
     const items = response.data || [];
@@ -98,10 +131,11 @@ export default function Pedidos() {
       setLoading(true);
       setError(null);
 
-      const params = { page: pagination.page, limit: pagination.limit };
+      const params = { page: pagination.page, limit: pagination.limit, sortBy, sortOrder };
       if (filtroEstado && filtroEstado !== 'TODOS') params.estado = filtroEstado;
       if (filtroProveedor && filtroProveedor !== 'todos') params.proveedor = filtroProveedor;
       if (filtroCliente && filtroCliente !== 'todos') params.cliente = filtroCliente;
+      if (filtroDelegacion && filtroDelegacion !== 'todas') params.delegacion = filtroDelegacion;
       if (busqueda.trim()) params.q = busqueda.trim();
 
       const response = await api.me.listPedidos(params);
@@ -114,7 +148,7 @@ export default function Pedidos() {
     } finally {
       setLoading(false);
     }
-  }, [pagination.page, pagination.limit, filtroEstado, filtroProveedor, filtroCliente, busqueda, applyResponse]);
+  }, [pagination.page, pagination.limit, filtroEstado, filtroProveedor, filtroCliente, filtroDelegacion, busqueda, sortBy, sortOrder, applyResponse]);
 
   useEffect(() => {
     if (filtersLoadedRef.current) cargarPedidos();
@@ -123,7 +157,7 @@ export default function Pedidos() {
   // Reset página al cambiar filtros
   useEffect(() => {
     setPagination((p) => ({ ...p, page: 1 }));
-  }, [filtroEstado, filtroProveedor, filtroCliente, busqueda]);
+  }, [filtroEstado, filtroProveedor, filtroCliente, filtroDelegacion, busqueda]);
 
   const proveedoresDisponibles = Array.from(
     new Set(pedidos.map((p) => p.proveedor_codigo).filter(Boolean))
@@ -131,6 +165,10 @@ export default function Pedidos() {
 
   const clientesDisponibles = Array.from(
     new Set(pedidos.map((p) => p.tercero_codigo).filter(Boolean))
+  ).sort();
+
+  const delegacionesDisponibles = Array.from(
+    new Set(pedidos.map((p) => p.delegacion_codigo).filter(Boolean))
   ).sort();
 
   const formatDate = (dateString) => {
@@ -224,6 +262,15 @@ export default function Pedidos() {
           <IoServerOutline className="page-icon" />
           Pasarela de datos · {user?.empresa_codigo || '—'}
         </h1>
+        <button
+          className="btn-refresh"
+          onClick={() => setVistaTabla((v) => !v)}
+          title={vistaTabla ? 'Cambiar a modo cards' : 'Cambiar a modo tabla'}
+          aria-label={vistaTabla ? 'Modo cards' : 'Modo tabla'}
+        >
+          {vistaTabla ? <IoGridOutline /> : <IoListOutline />}
+          {vistaTabla ? 'Cards' : 'Tabla'}
+        </button>
         <button className="btn-refresh" onClick={() => cargarPedidos()} disabled={loading}>
           <IoRefreshOutline className={loading ? 'spin' : ''} />
           Actualizar
@@ -252,6 +299,7 @@ export default function Pedidos() {
               <option value="TODOS">Todos</option>
               <option value="PENDIENTE">Pendientes</option>
               <option value="PROCESADO">Procesados</option>
+              <option value="TERMINADO">Terminados</option>
             </select>
           </label>
 
@@ -276,6 +324,16 @@ export default function Pedidos() {
           </label>
 
           <label className="toolbar-label">
+            Delegación
+            <select value={filtroDelegacion} onChange={(e) => setFiltroDelegacion(e.target.value)}>
+              <option value="todas">Todas</option>
+              {delegacionesDisponibles.map((d) => (
+                <option key={d} value={d}>{d}</option>
+              ))}
+            </select>
+          </label>
+
+          <label className="toolbar-label">
             Por página
             <select
               value={pagination.limit}
@@ -287,6 +345,16 @@ export default function Pedidos() {
               <option value={100}>100</option>
             </select>
           </label>
+
+          <button
+            type="button"
+            className="dp-clear-filters"
+            onClick={limpiarFiltros}
+            title="Limpiar filtros"
+            aria-label="Limpiar filtros"
+          >
+            <IoTrashOutline /> Limpiar filtros
+          </button>
         </div>
       </div>
 
@@ -304,6 +372,16 @@ export default function Pedidos() {
               <p>No hay pedidos</p>
               <span>Aún no se ha sincronizado ningún pedido para tu empresa</span>
             </div>
+          ) : vistaTabla ? (
+            <PedidosTable
+              pedidos={pedidos}
+              columnas={columnasVisibles}
+              sortBy={sortBy}
+              sortOrder={sortOrder}
+              onSortChange={(key, dir) => { setSortBy(key); setSortOrder(dir); }}
+              onEditarColumnas={() => setEditColAbierto(true)}
+              onRowClick={(p) => abrirParadas(p)}
+            />
           ) : (
             <DataCards
               items={pedidos}
@@ -354,6 +432,14 @@ export default function Pedidos() {
           {renderPagination('Paginación inferior')}
         </div>
       </div>
+
+      {editColAbierto && (
+        <EditColumnasModal
+          columnas={columnasVisibles}
+          onChange={setColumnasVisibles}
+          onClose={() => setEditColAbierto(false)}
+        />
+      )}
 
       {showParadas && (
         <div className="paradas-modal-overlay" onClick={cerrarParadas}>

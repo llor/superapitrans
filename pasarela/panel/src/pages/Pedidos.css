@@ -460,3 +460,29 @@
   border-color: var(--erp-primary);
   color: var(--erp-primary);
 }
+
+
+/* ─── Botón "Limpiar filtros" en la toolbar ────────────────────────────── */
+
+.dp-clear-filters {
+  align-self: flex-end;
+  background: var(--bg-input);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 38px;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.dp-clear-filters:hover {
+  color: var(--erp-required);
+  border-color: var(--erp-required);
+  background: var(--bg-input);
+}

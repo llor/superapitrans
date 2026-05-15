@@ -62,8 +62,16 @@ router.get('/pedidos', async (req, res, next) => {
 
         const estado = String(req.query.estado || '').trim().toUpperCase();
         if (estado && estado !== 'TODOS') {
-            params.push(estado);
-            whereParts.push(`p.estado = $${params.length}`);
+            // "TERMINADO" no es un valor de pedidos.estado (el CHECK acepta
+            // PENDIENTE/PROCESADO). El visor usa la banda Terminado/Pendiente
+            // según pedidos.tipo (ALBARAN/PEDIDO), así que cuando el filtro
+            // pide "Terminados" lo mapeamos a `tipo = 'ALBARAN'`.
+            if (estado === 'TERMINADO') {
+                whereParts.push(`p.tipo = 'ALBARAN'`);
+            } else {
+                params.push(estado);
+                whereParts.push(`p.estado = $${params.length}`);
+            }
         }
         const proveedor = String(req.query.proveedor || '').trim();
         if (proveedor && proveedor !== 'todos') {
@@ -75,6 +83,11 @@ router.get('/pedidos', async (req, res, next) => {
             params.push(cliente);
             whereParts.push(`p.tercero_codigo = $${params.length}`);
         }
+        const delegacion = String(req.query.delegacion || '').trim();
+        if (delegacion && delegacion !== 'todas') {
+            params.push(delegacion);
+            whereParts.push(`p.delegacion_codigo = $${params.length}`);
+        }
         const q = String(req.query.q || '').trim();
         if (q) {
             params.push(`%${q}%`);
@@ -83,10 +96,26 @@ router.get('/pedidos', async (req, res, next) => {
                 p.numero_pedido ILIKE ${ph}
                 OR p.id_ruta_externa ILIKE ${ph}
                 OR p.cliente_codigo ILIKE ${ph}
+                OR p.cliente_cif ILIKE ${ph}
                 OR p.tercero_codigo ILIKE ${ph}
+                OR p.tercero_cif ILIKE ${ph}
+                OR p.delegacion_codigo ILIKE ${ph}
                 OR p.matricula_tractor ILIKE ${ph}
                 OR p.matricula_remolque ILIKE ${ph}
+                OR p.matricula_contenedor ILIKE ${ph}
                 OR p.chofer_principal_codigo ILIKE ${ph}
+                OR p.chofer_principal_cif ILIKE ${ph}
+                OR p.chofer_secundario_codigo ILIKE ${ph}
+                OR p.chofer_secundario_cif ILIKE ${ph}
+                OR p.proveedor_codigo ILIKE ${ph}
+                OR p.albaranes_concatenados ILIKE ${ph}
+                OR p.bl_numero ILIKE ${ph}
+                OR p.expediente_transitario ILIKE ${ph}
+                OR p.operacion_tipo ILIKE ${ph}
+                OR p.naviera_codigo ILIKE ${ph}
+                OR p.naviera_nombre ILIKE ${ph}
+                OR p.buque_nombre ILIKE ${ph}
+                OR p.viaje_buque ILIKE ${ph}
             )`);
         }
 
@@ -94,7 +123,9 @@ router.get('/pedidos', async (req, res, next) => {
 
         const sortableFields = new Set([
             'fecha_reparto', 'fecha_plan', 'created_at', 'numero_pedido',
-            'estado', 'cliente_codigo', 'proveedor_codigo',
+            'estado', 'tipo', 'cliente_codigo', 'proveedor_codigo',
+            'delegacion_codigo', 'tercero_codigo', 'matricula_tractor',
+            'id_viaje', 'id_ruta_externa', 'bl_numero', 'expediente_transitario',
         ]);
         const sortByRaw = String(req.query.sortBy || 'fecha_reparto');
         const sortBy = sortableFields.has(sortByRaw) ? sortByRaw : 'fecha_reparto';

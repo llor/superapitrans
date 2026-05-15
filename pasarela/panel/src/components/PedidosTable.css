@@ -1,0 +1,109 @@
+/* Tabla del visor pasarela. Usa variables saycu-theme; cero hardcoded. */
+
+.ptab-wrap {
+  background: var(--bg-input);
+  border: 1px solid var(--border-light);
+  border-radius: 12px;
+  overflow: auto;
+  box-shadow: 0 2px 8px var(--black-alpha-08, rgba(0, 0, 0, 0.05));
+}
+
+.ptab {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  color: var(--text-primary);
+}
+
+.ptab thead {
+  background: var(--bg-sidebar);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.ptab__th {
+  text-align: left;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  color: var(--text-secondary);
+  padding: 10px 10px;
+  border-bottom: 1px solid var(--border-light);
+  white-space: nowrap;
+  user-select: none;
+  vertical-align: middle;
+}
+
+.ptab__th--sortable {
+  cursor: pointer;
+}
+.ptab__th--sortable:hover {
+  color: var(--erp-primary);
+  background: var(--bg-window);
+}
+.ptab__th--active {
+  color: var(--erp-primary);
+}
+.ptab__arrow {
+  font-size: 12px;
+  margin-left: 4px;
+  vertical-align: middle;
+}
+
+.ptab__edit-cell {
+  width: 38px;
+  padding: 6px 4px;
+  border-bottom: 1px solid var(--border-light);
+  background: var(--bg-sidebar);
+}
+.ptab__edit-btn {
+  background: transparent;
+  border: 1px solid var(--border-light);
+  border-radius: 6px;
+  color: var(--text-secondary);
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 16px;
+}
+.ptab__edit-btn:hover {
+  color: var(--erp-primary);
+  border-color: var(--erp-primary);
+  background: var(--bg-input);
+}
+
+.ptab__row {
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.ptab__row:hover {
+  background: var(--bg-window);
+}
+
+.ptab__row-marker {
+  text-align: center;
+  width: 38px;
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--border-subtle);
+  padding: 8px 4px;
+  font-size: 14px;
+}
+
+.ptab__td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border-subtle);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 280px;
+}
+
+@media (max-width: 700px) {
+  .ptab { font-size: 12px; }
+  .ptab__th { padding: 8px 8px; }
+  .ptab__td { padding: 6px 8px; max-width: 200px; }
+}
