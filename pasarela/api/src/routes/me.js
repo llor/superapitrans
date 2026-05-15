@@ -150,10 +150,16 @@ router.get('/pedidos', async (req, res, next) => {
                  p.created_at, p.updated_at,
                  COALESCE((SELECT COUNT(*)::int FROM paradas WHERE pedido_id = p.id), 0) AS paradas_count,
                  COALESCE((SELECT COUNT(*)::int FROM albaranes WHERE pedido_id = p.id), 0) AS albaranes_count,
-                 (SELECT municipio FROM paradas WHERE pedido_id = p.id AND tipo = 'CARGA'
-                   ORDER BY orden, id LIMIT 1) AS origen_municipio,
-                 (SELECT municipio FROM paradas WHERE pedido_id = p.id AND tipo = 'DESCARGA'
-                   ORDER BY orden DESC, id DESC LIMIT 1) AS destino_municipio
+                 -- "Dónde" del listado: COALESCE(municipio, lugar_nombre) porque
+                 -- algunos proveedores (Satelles) no entregan municipio discreto
+                 -- y todo el "dónde" cae en lugar_nombre. La canónica sigue
+                 -- siendo una sola tabla; el visor compone el mejor texto disponible.
+                 (SELECT COALESCE(municipio, lugar_nombre) FROM paradas
+                   WHERE pedido_id = p.id AND tipo = 'CARGA'
+                   ORDER BY secuencia NULLS LAST, orden, id LIMIT 1) AS origen_municipio,
+                 (SELECT COALESCE(municipio, lugar_nombre) FROM paradas
+                   WHERE pedido_id = p.id AND tipo = 'DESCARGA'
+                   ORDER BY secuencia DESC NULLS LAST, orden DESC, id DESC LIMIT 1) AS destino_municipio
              FROM pedidos p
              ${whereSql}
              ORDER BY p.${sortBy} ${sortOrder} NULLS LAST, p.id DESC

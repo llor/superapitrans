@@ -1,0 +1,181 @@
+/* ===========================================
+   SAYCU THEME — Login Recovery
+   Estilos compartidos: ojo password, forgot link,
+   modal recuperar, mensajes feedback.
+   Usa variables de saycu-theme/variables.css
+   =========================================== */
+
+/* --- Password wrapper + toggle --- */
+.password-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.password-wrapper input {
+  width: 100%;
+  padding-right: 42px;
+}
+
+button.password-toggle {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  box-shadow: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: color 0.2s;
+}
+
+button.password-toggle:hover {
+  color: var(--erp-primary);
+}
+
+/* --- Forgot password link --- */
+.forgot-link-row {
+  text-align: center;
+  margin-top: 12px;
+}
+
+.login-meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 4px 0 12px;
+}
+
+.login-meta-row .remember-row {
+  margin: 0;
+}
+
+.login-meta-row .forgot-link-row {
+  margin: 0;
+  text-align: right;
+}
+
+button.forgot-link {
+  background: none;
+  border: none;
+  box-shadow: none;
+  color: var(--erp-primary);
+  font-size: 13px;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+}
+
+button.forgot-link:hover {
+  color: var(--erp-primary-hover);
+}
+
+@media (max-height: 700px), (max-width: 480px) {
+  .login-meta-row {
+    margin: 2px 0 8px;
+    gap: 6px;
+  }
+
+  .login-meta-row button.forgot-link {
+    font-size: 12px;
+  }
+}
+
+/* --- Forgot modal overlay --- */
+.forgot-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--overlay-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+/* --- Forgot modal box --- */
+.forgot-modal {
+  background: var(--bg-sidebar);
+  border-radius: 12px;
+  padding: 0;
+  width: 100%;
+  max-width: 380px;
+  box-shadow: var(--shadow-modal);
+  overflow: hidden;
+}
+
+.forgot-modal h3,
+.forgot-modal p,
+.forgot-modal .forgot-success,
+.forgot-modal .forgot-error,
+.forgot-modal .error-message,
+.forgot-modal form {
+  padding-left: 28px;
+  padding-right: 28px;
+}
+
+.forgot-modal h3 {
+  margin: 0;
+  padding-top: 16px;
+  padding-bottom: 14px;
+  background: var(--erp-header);
+  color: var(--text-inverse);
+  font-size: 18px;
+}
+
+.forgot-modal p {
+  margin: 14px 0 16px;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+/* --- Forgot modal cancel button --- */
+.forgot-cancel {
+  width: 100%;
+  padding: 10px;
+  margin: 8px 28px 20px;
+  background: none;
+  border: 1px solid var(--border-input);
+  border-radius: 6px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.forgot-cancel:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+/* --- Feedback messages --- */
+.forgot-success {
+  background: var(--feedback-success-bg);
+  color: var(--feedback-success-text);
+  padding-top: 10px;
+  padding-bottom: 10px;
+  border-radius: 6px;
+  margin: 0 28px 16px;
+  font-size: 13px;
+  text-align: center;
+}
+
+.forgot-error,
+.error-message {
+  background: var(--feedback-error-bg);
+  color: var(--feedback-error-text);
+  padding-top: 10px;
+  padding-bottom: 10px;
+  border-radius: 6px;
+  margin: 0 28px 16px;
+  font-size: 13px;
+  text-align: center;
+}

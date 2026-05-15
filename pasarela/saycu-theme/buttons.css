@@ -1,0 +1,105 @@
+/* ===========================================
+   SAYCU THEME — Botones ERP estándar
+   =========================================== */
+
+/* Botón base */
+.btn-erp {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  font-family: 'Segoe UI', Tahoma, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  white-space: nowrap;
+  line-height: 1.5;
+}
+
+.btn-erp svg,
+.btn-erp ion-icon {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+/* Primario (azul ERP) */
+.btn-erp-primary {
+  background: var(--erp-header);
+  color: white;
+}
+.btn-erp-primary:hover:not(:disabled) {
+  background: var(--erp-header-dark);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(58, 95, 196, 0.3);
+}
+
+/* Success (verde) */
+.btn-erp-success {
+  background: var(--erp-active);
+  color: white;
+}
+.btn-erp-success:hover:not(:disabled) {
+  background: #006600;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 128, 0, 0.3);
+}
+
+/* Danger (rojo) */
+.btn-erp-danger {
+  background: var(--erp-required);
+  color: white;
+}
+.btn-erp-danger:hover:not(:disabled) {
+  background: #aa0000;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(204, 0, 0, 0.3);
+}
+
+/* Secondary (gris) */
+.btn-erp-secondary {
+  background: #6b7280;
+  color: white;
+}
+.btn-erp-secondary:hover:not(:disabled) {
+  background: #4b5563;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(107, 114, 128, 0.3);
+}
+
+/* Outline */
+.btn-erp-outline {
+  background: transparent;
+  color: var(--erp-header);
+  border: 2px solid var(--erp-header);
+}
+.btn-erp-outline:hover:not(:disabled) {
+  background: var(--erp-header);
+  color: white;
+  transform: translateY(-1px);
+}
+
+/* Disabled */
+.btn-erp:disabled {
+  background: #d1d5db !important;
+  color: #9ca3af !important;
+  border-color: #d1d5db !important;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* Tamaños */
+.btn-erp-sm { padding: 6px 14px; font-size: 12px; }
+.btn-erp-lg { padding: 14px 28px; font-size: 16px; }
+.btn-erp-block { width: 100%; }
+
+/* Grupo */
+.btn-group { display: flex; gap: 10px; align-items: center; }
+.btn-group-right { justify-content: flex-end; }
+.btn-group-center { justify-content: center; }
+.btn-group-between { justify-content: space-between; }

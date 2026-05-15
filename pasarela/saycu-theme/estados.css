@@ -1,0 +1,147 @@
+/* ===== ESTADOS DE PARADAS (cards draggables de configuración) ===== */
+
+/* — Layout dos columnas — */
+.estados-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px 40px;
+  align-items: start;
+}
+
+.estados-column {
+  min-width: 0;
+}
+
+.estados-column__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 10px;
+  margin-bottom: 8px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 13px;
+  color: #334155;
+}
+
+/* — Lista de cards — */
+.estados-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* — Card compacta — */
+.estado-card {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 8px;
+  border: 1px solid #cbd5e1;
+  border-left-width: 4px;
+  border-radius: 6px;
+  cursor: grab;
+  background: #fff;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.12);
+  transition: box-shadow 0.15s, outline 0.15s;
+}
+
+.estado-card:hover {
+  box-shadow: 0 3px 10px rgba(0,0,0,0.18);
+}
+
+.estado-card__order {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.estado-card__order-num {
+  font-weight: 700;
+  font-size: 14px;
+  color: #475569;
+  min-width: 16px;
+  text-align: center;
+}
+
+.estado-card__order-btns {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.btn-icon-sm {
+  padding: 0 !important;
+  width: 20px !important;
+  height: 20px !important;
+  border-radius: 4px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 12px !important;
+  min-width: unset !important;
+}
+
+.estado-card__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.estado-card__header {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.estado-card__name {
+  font-weight: 600;
+  font-size: 14px;
+  color: #1e293b;
+}
+
+.estado-card__code {
+  font-size: 12px;
+  color: #94a3b8;
+  font-family: monospace;
+}
+
+.estado-card__badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  margin-top: 2px;
+}
+
+.estado-card__actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 800px) {
+  .estados-columns {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .estado-card {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .estado-card__body {
+    width: 100%;
+    order: -1;
+  }
+  .estado-card__order {
+    order: 0;
+  }
+  .estado-card__actions {
+    margin-left: auto;
+  }
+}

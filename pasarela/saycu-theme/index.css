@@ -1,0 +1,10 @@
+/* SAYCU THEME — Importar todo de una vez */
+@import './variables.css';
+@import './reset.css';
+@import './login-recovery.css';
+@import './themes/index.css';
+@import './buttons.css';
+@import './badges.css';
+@import './datacards.css';
+@import './containers.css';
+@import './estados.css';

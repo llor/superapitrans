@@ -1,0 +1,87 @@
+/* ═══════════════════════════════════════════
+   TEMA: Púrpura
+   TODAS las variables derivadas deben estar
+   explícitas — no confiar en cadenas var().
+   ═══════════════════════════════════════════ */
+
+body.theme-purple {
+  /* ── Gama primaria ── */
+  --erp-header: #6a1b9a;
+  --erp-header-dark: #4a148c;
+  --erp-button: #6a1b9a;
+  --erp-button-hover: #ab47bc;
+  --erp-button-dark: #4a148c;
+  --erp-icon: #6a1b9a;
+  --erp-label: #4a148c;
+  --erp-primary: #6a1b9a;
+  --erp-primary-hover: #4a148c;
+  --erp-primary-alpha: rgba(106, 27, 154, 0.15);
+  --erp-primary-light: #f3e5f5;
+  --erp-primary-shadow: 0 4px 12px rgba(106, 27, 154, 0.3);
+
+  /* ── Topbar / toolbar ── */
+  --bg-topbar: #6a1b9a;
+  --text-on-topbar: #ffffff;
+  --legacy-toolbar-start: #6a1b9a;
+  --legacy-toolbar-end: #4a148c;
+
+  /* ── Aliases de color primario ── */
+  --color-primary: #6a1b9a;
+  --color-primary-hover: #4a148c;
+  --color-button-primary: #6a1b9a;
+  --color-erp-primary-dark: #4a148c;
+
+  /* ── Aliases numéricos (saycucontrol, etc.) ── */
+  --primary-500: #6a1b9a;
+  --primary-600: #4a148c;
+  --primary-700: #4a148c;
+  --primary-800: #4a148c;
+  --primary-900: #4a148c;
+  --blue-500: #6a1b9a;
+  --blue-600: #4a148c;
+  --blue-800: #4a148c;
+  --purple-500: #6a1b9a;
+  --purple-800: #4a148c;
+
+  /* ── Info ── */
+  --color-info: #6a1b9a;
+  --color-info-bg: #f3e5f5;
+  --color-info-text: #4a148c;
+  --color-info-border: #ce93d8;
+
+  /* ── Focus ── */
+  --shadow-focus-ring: 0 0 0 2px rgba(106, 27, 154, 0.3);
+  --border-focus: #4a148c;
+
+  /* ── Legacy aliases (explícitos, sin var() chains) ── */
+  --legacy-toolbar: #6a1b9a;
+  --legacy-text: #000000;
+  --legacy-text-soft: #666666;
+  --legacy-border: #cccccc;
+  --legacy-bg-start: #e8e8e8;
+  --legacy-bg-end: #f0f0f0;
+  --input-bg: #ffffff;
+  --input-border: #7f9db9;
+  --input-focus: #4a148c;
+
+  /* ── Fondos / texto derivados ── */
+  --bg-section: #f0f0f0;
+  --bg-control: #f0f0f0;
+  --bg-hover: #f3f4f6;
+  --text-muted: #9ca3af;
+  --text-heading: #1f2937;
+  --border-control: #cccccc;
+
+  /* ── Semánticos (error/success/warning) ── */
+  --erp-error: #cc0000;
+  --feedback-error-text: #cc0000;
+  --erp-success: #008000;
+  --color-success: #008000;
+  --color-warning: #ff9900;
+  --color-button-success: #008000;
+  --color-button-danger: #cc0000;
+  --color-danger: #e74c3c;
+
+  /* ── Login ── */
+  --login-card-shadow: 0 18px 60px rgba(0, 0, 0, 0.16), 0 2px 10px rgba(0, 0, 0, 0.08);
+}

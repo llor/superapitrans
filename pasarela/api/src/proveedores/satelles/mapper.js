@@ -151,6 +151,11 @@ function buildParadas(publication) {
         }
         const albaranSatellesId = sids.size === 1 ? Array.from(sids)[0] : null;
 
+        // Satelles entrega `place` mínimo (id + name + area + position GeoJSON).
+        // No aporta municipio/provincia/dirección/CP discretos: ese hueco
+        // canónico lo cubre la propia tabla `paradas` con lugar_nombre +
+        // coordenadas. El visor consolida con COALESCE(municipio, lugar_nombre).
+        // `position.coordinates` es GeoJSON [lng, lat].
         out.push({
             // pedido_id y albaran_id los rellena el caller
             albaran_satelles_id: albaranSatellesId,
@@ -158,8 +163,8 @@ function buildParadas(publication) {
             tipo,
             orden: tipo === 'CARGA' ? 'ORIGEN' : 'DESTINO',
             secuencia: dst.sequence || null,
-            tipo_lugar: safeStr(place.type) || null,
-            lugar_codigo: safeStr(place.code),
+            tipo_lugar: safeStr(place.area?.name) || null,
+            lugar_codigo: safeStr(place.code) || (place.id != null ? String(place.id) : null),
             lugar_nombre: safeStr(place.name),
             direccion1: safeStr(place.address1),
             direccion2: safeStr(place.address2),
@@ -169,8 +174,8 @@ function buildParadas(publication) {
             pais: safeStr(place.country),
             telefono: safeStr(place.phone),
             persona_contacto: safeStr(place.contact),
-            latitud: pos.latitude ?? null,
-            longitud: pos.longitude ?? null,
+            latitud: Array.isArray(pos.coordinates) ? (pos.coordinates[1] ?? null) : (pos.latitude ?? null),
+            longitud: Array.isArray(pos.coordinates) ? (pos.coordinates[0] ?? null) : (pos.longitude ?? null),
             producto,
             cantidad,
             unidad_medida: unidad,

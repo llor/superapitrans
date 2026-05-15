@@ -1,0 +1,460 @@
+/* ═══════════════════════════════════════════
+   TEMA: Blanco-Azul
+   ESPECIFICACIÓN DEL USUARIO:
+   - Idéntico al tema blanco (fondos blancos/grises iguales).
+   - Solo cambian: fondo de botones (azul del tema azul #3a5fc4),
+     títulos, textos de iconos y bordes (azul #3a5fc4).
+   - Todo lo demás: blanco/gris como en el tema blanco.
+   - NO azul clarito. El azul es el mismo del tema azul.
+   ═══════════════════════════════════════════ */
+
+body.theme-white-blue {
+  /* Acento/primario: azul del tema azul (para iconos, bordes, títulos) */
+  --erp-header: #3a5fc4;
+  --erp-header-dark: #2f4ea8;
+  --erp-button: #3a5fc4;
+  --erp-button-hover: #6f8fd1;
+  --erp-button-dark: #2f4ea8;
+  --erp-icon: #3a5fc4;
+  --erp-label: #3a5fc4;
+  --erp-primary: #3a5fc4;
+  --erp-primary-hover: #2f4ea8;
+  --erp-primary-alpha: rgba(58, 95, 196, 0.12);
+  --erp-primary-light: #f3f4f6;
+  --erp-primary-shadow: 0 4px 12px rgba(58, 95, 196, 0.18);
+  --color-info: #3a5fc4;
+  --color-info-bg: #f9fafb;
+  --color-info-text: #1f2937;
+  --color-info-border: #b8bcc4;
+  --shadow-focus-ring: 0 0 0 2px rgba(75, 85, 99, 0.28);
+  --border-focus: #4b5563;
+
+  /* Texto: oscuro igual que en white, pero headings en azul */
+  --text-primary: #1f2937;
+  --text-secondary: #374151;
+  --text-muted: #6b7280;
+  --text-heading: #3a5fc4;
+  --text-dark: #111827;
+  --text-inverse: #1f2937;
+
+  /* Topbar / headers / footers: gris casi blanco (capa intermedia) */
+  --bg-topbar: #f9fafb;
+  --text-on-topbar: #1f2937;
+  --primary-900: #f9fafb;
+  --legacy-toolbar-start: #f9fafb;
+  --legacy-toolbar-end: #f3f4f6;
+
+  /* ── Los 3 grises del tema WHITE (idénticos) ── */
+  --bg-light: #f3f4f6;
+  --bg-sidebar: #f9fafb;
+  --bg-neutral: #f9fafb;
+  --bg-section: #f9fafb;
+  --bg-container: #f9fafb;
+  --bg-window: #ffffff;
+  --bg-input: #ffffff;
+  --bg-modal: #ffffff;
+  --bg-hover: #f3f4f6;
+
+  /* Bordes: TODOS grises como en white */
+  --border-input: #b8bcc4;
+  --border-light: #b8bcc4;
+  --border-subtle: #c9cdd4;
+  --border-gray: #c9cdd4;
+  --border-control: #b8bcc4;
+  --border-slate: #c9cdd4;
+  --border-alpha-light: rgba(0,0,0,0.14);
+
+  /* ── Aliases de color primario ── */
+  --color-primary: #3a5fc4;
+  --color-primary-hover: #2f4ea8;
+  --color-button-primary: #3a5fc4;
+  --color-erp-primary-dark: #2f4ea8;
+
+  /* ── Aliases numéricos (saycucontrol, etc.) ── */
+  --primary-500: #3a5fc4;
+  --primary-600: #2f4ea8;
+  --primary-700: #2f4ea8;
+  --primary-800: #2f4ea8;
+  --primary-900: #f9fafb;
+  --blue-500: #3a5fc4;
+  --blue-600: #2f4ea8;
+  --blue-800: #2f4ea8;
+  --purple-500: #3a5fc4;
+  --purple-800: #2f4ea8;
+
+  /* Sombras: idénticas al white */
+  --shadow-card: 0 8px 24px rgba(0,0,0,0.24), 0 3px 10px rgba(0,0,0,0.16);
+  --shadow-card-hover: 0 14px 36px rgba(0,0,0,0.30), 0 5px 14px rgba(0,0,0,0.20);
+  --shadow-modal: 0 12px 40px rgba(0,0,0,0.18), 0 4px 14px rgba(0,0,0,0.10);
+  --shadow-modal-heavy: 0 16px 52px rgba(0,0,0,0.20), 0 4px 16px rgba(0,0,0,0.12);
+  --shadow-modal-lg: 0 12px 40px rgba(0,0,0,0.18), 0 4px 14px rgba(0,0,0,0.10);
+  --shadow-dato-card: 0 8px 22px rgba(0,0,0,0.20), 0 3px 9px rgba(0,0,0,0.14);
+  --shadow-dato-card-hover: 0 13px 34px rgba(0,0,0,0.27), 0 5px 13px rgba(0,0,0,0.18);
+  --shadow-subtle: 0 2px 8px rgba(0,0,0,0.09);
+  --shadow-sm: 0 2px 6px rgba(0,0,0,0.09);
+  --shadow-xs: 0 1px 4px rgba(0,0,0,0.08);
+  --shadow-micro: 0 1px 4px rgba(0,0,0,0.08);
+
+  /* ── Legacy aliases ── */
+  --legacy-toolbar: #f9fafb;
+  --legacy-text: #1f2937;
+  --legacy-text-soft: #374151;
+  --legacy-border: #b8bcc4;
+  --legacy-bg-start: #f3f4f6;
+  --legacy-bg-end: #f9fafb;
+  --input-bg: #ffffff;
+  --input-border: #b8bcc4;
+  --input-focus: #4b5563;
+  --bg-control: #f9fafb;
+
+  /* ── Semánticos (no cambian) ── */
+  --erp-error: #cc0000;
+  --feedback-error-text: #cc0000;
+  --erp-success: #008000;
+  --color-success: #008000;
+  --color-warning: #ff9900;
+  --color-button-success: #008000;
+  --color-button-danger: #cc0000;
+  --color-danger: #e74c3c;
+
+  /* Login: fondo global gris claro, card blanco, bordes grises */
+  --login-page-bg: #f3f4f6;
+  --login-card-bg: #ffffff;
+  --login-card-border: #c9cdd4;
+  --login-card-shadow: 0 18px 60px rgba(0,0,0,0.16), 0 2px 10px rgba(0,0,0,0.08);
+  --login-btn-bg: #3a5fc4;
+  --login-btn-color: #ffffff;
+  --login-btn-border: #9ca3af;
+  --login-btn-shadow: 0 4px 14px rgba(58, 95, 196, 0.30), 0 2px 6px rgba(58, 95, 196, 0.15);
+  --login-header-bg: #f9fafb;
+  --login-header-color: #3a5fc4;
+  --login-header-border: #c9cdd4;
+}
+
+/* ═══════════════════════════════════════════
+   TEMA WHITE-BLUE — Overrides de componentes
+   Base = white. Solo botones, títulos, iconos, labels en azul.
+   ═══════════════════════════════════════════ */
+
+/* ── 3 capas de fondo: gris (#f3f4f6) → casi blanco (#f9fafb) → blanco (#fff) ── */
+body.theme-white-blue .app-container,
+body.theme-white-blue .sc-layout,
+body.theme-white-blue #app-outer {
+  background: #f3f4f6 !important;
+}
+body.theme-white-blue .header,
+body.theme-white-blue .sc-topbar,
+body.theme-white-blue .navbar,
+body.theme-white-blue .sidebar-footer {
+  background: #f9fafb !important;
+}
+
+/* Borde inferior en topbars/navbars */
+body.theme-white-blue .header,
+body.theme-white-blue .sc-topbar,
+body.theme-white-blue .navbar,
+body.theme-white-blue .saycu-erp-header {
+  border-bottom: 1px solid #9ca3af !important;
+}
+
+/* ── Labels azules en TODAS las páginas ── */
+body.theme-white-blue .tile-title,
+body.theme-white-blue .action-title,
+body.theme-white-blue .sc-page-title,
+body.theme-white-blue .svc-label,
+body.theme-white-blue .stat-label,
+body.theme-white-blue .toolbar-label,
+body.theme-white-blue .form-group label,
+body.theme-white-blue .remember-row label,
+body.theme-white-blue .info-item label,
+body.theme-white-blue label {
+  color: #3a5fc4 !important;
+}
+
+/* ── Textos en header/topbar: oscuro (como white) ── */
+body.theme-white-blue .header-user .user-name,
+body.theme-white-blue .saycu-erp-user-name,
+body.theme-white-blue .erp-user-name {
+  color: #1f2937;
+}
+
+/* ── Botones en barra de navegación: fondo azul, borde gris ── */
+body.theme-white-blue .btn-back,
+body.theme-white-blue .btn-logout,
+body.theme-white-blue .saycu-erp-header-btn {
+  background: #3a5fc4 !important;
+  color: #ffffff !important;
+  border: 1px solid #9ca3af !important;
+}
+body.theme-white-blue .btn-back:hover,
+body.theme-white-blue .btn-logout:hover,
+body.theme-white-blue .saycu-erp-header-btn:hover {
+  background: #2f4ea8 !important;
+  color: #ffffff !important;
+}
+
+/* ── btn-logout en sidebar-footer ── */
+body.theme-white-blue .sidebar-footer .btn-logout {
+  background: #3a5fc4 !important;
+  color: #ffffff !important;
+  border: 1px solid #9ca3af !important;
+}
+body.theme-white-blue .sidebar-footer .btn-logout:hover {
+  background: #2f4ea8 !important;
+}
+
+/* ── Botones principales: fondo azul, borde gris ── */
+body.theme-white-blue .btn-primary,
+body.theme-white-blue .btn-new-empresa,
+body.theme-white-blue .btn-action-primary,
+body.theme-white-blue .btn-modal-action,
+body.theme-white-blue .sc-btn--primary {
+  background: #3a5fc4 !important;
+  color: #ffffff !important;
+  border: 1px solid #9ca3af !important;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08) !important;
+}
+body.theme-white-blue .btn-primary:hover:not(:disabled),
+body.theme-white-blue .btn-new-empresa:hover:not(:disabled),
+body.theme-white-blue .sc-btn--primary:hover:not(:disabled) {
+  background: #2f4ea8 !important;
+  color: #ffffff !important;
+  border-color: #6b7280 !important;
+}
+
+/* ── sc-btn--success: azul, borde gris ── */
+body.theme-white-blue .sc-btn--success {
+  background: #3a5fc4 !important;
+  color: #ffffff !important;
+  border: 1px solid #9ca3af !important;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08) !important;
+}
+body.theme-white-blue .sc-btn--success:hover:not(:disabled) {
+  background: #2f4ea8 !important;
+  color: #ffffff !important;
+  border-color: #6b7280 !important;
+}
+body.theme-white-blue .sc-btn--success:disabled {
+  background: #6f8fd1 !important;
+  color: #ffffff !important;
+  border-color: #c9cdd4 !important;
+}
+
+/* ── Botones success ── */
+body.theme-white-blue .btn-success,
+body.theme-white-blue .btn-erp-success {
+  background: #3a5fc4 !important;
+  color: #ffffff !important;
+  border: 1px solid #9ca3af !important;
+}
+body.theme-white-blue .btn-success:hover:not(:disabled),
+body.theme-white-blue .btn-erp-success:hover:not(:disabled) {
+  background: #2f4ea8 !important;
+}
+
+/* ── Botones danger: igual que white ── */
+body.theme-white-blue .btn-danger,
+body.theme-white-blue .btn-erp-danger {
+  background: #f9fafb !important;
+  color: #dc2626 !important;
+  border: 1px solid #fca5a5 !important;
+}
+body.theme-white-blue .btn-danger:hover:not(:disabled),
+body.theme-white-blue .btn-erp-danger:hover:not(:disabled) {
+  background: #fee2e2 !important;
+  border-color: #f87171 !important;
+}
+
+/* ── btn-erp-primary, btn-erp-secondary: fondo azul, borde gris ── */
+body.theme-white-blue .btn-erp-primary,
+body.theme-white-blue .btn-erp-secondary {
+  background: #3a5fc4 !important;
+  color: #ffffff !important;
+  border: 1px solid #9ca3af !important;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08) !important;
+}
+body.theme-white-blue .btn-erp-primary:hover:not(:disabled),
+body.theme-white-blue .btn-erp-secondary:hover:not(:disabled) {
+  background: #2f4ea8 !important;
+  color: #ffffff !important;
+  border-color: #6b7280 !important;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.12) !important;
+  transform: translateY(-1px);
+}
+
+/* ── btn-erp-outline: fondo gris claro, texto azul, borde gris ── */
+body.theme-white-blue .btn-erp-outline {
+  background: #f9fafb !important;
+  color: #3a5fc4 !important;
+  border: 1px solid #b8bcc4 !important;
+}
+body.theme-white-blue .btn-erp-outline:hover:not(:disabled) {
+  background: #f3f4f6 !important;
+  color: #2f4ea8 !important;
+  border-color: #6b7280 !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.10) !important;
+  transform: translateY(-1px);
+}
+
+/* ── dc-btn: fondo azul, borde gris ── */
+body.theme-white-blue .dc-btn--primary {
+  background: #3a5fc4 !important;
+  color: #ffffff !important;
+  border-color: #9ca3af !important;
+}
+body.theme-white-blue .dc-btn--primary:hover {
+  background: #2f4ea8 !important;
+}
+body.theme-white-blue .dc-btn--secondary {
+  background: #f3f4f6 !important;
+  color: #3a5fc4 !important;
+  border-color: #b8bcc4 !important;
+}
+body.theme-white-blue .dc-btn--secondary:hover {
+  background: #e5e7eb !important;
+}
+body.theme-white-blue .dc-btn--danger {
+  background: #f9fafb !important;
+  color: #dc2626 !important;
+  border: 1px solid #fca5a5 !important;
+}
+body.theme-white-blue .dc-btn--danger:hover {
+  background: #fee2e2 !important;
+}
+
+/* ── dc-btn--ghost ── */
+body.theme-white-blue .dc-btn--ghost {
+  background: #f3f4f6 !important;
+  color: #3a5fc4 !important;
+  border-color: #b8bcc4 !important;
+}
+body.theme-white-blue .dc-btn--ghost:hover {
+  background: #e5e7eb !important;
+  color: #2f4ea8 !important;
+}
+
+/* ── btn-outline ── */
+body.theme-white-blue .btn-outline,
+body.theme-white-blue .btn-action-secondary {
+  background: #f9fafb !important;
+  color: #3a5fc4 !important;
+  border: 1px solid #b8bcc4 !important;
+}
+body.theme-white-blue .btn-outline:hover:not(:disabled),
+body.theme-white-blue .btn-action-secondary:hover:not(:disabled) {
+  background: #f3f4f6 !important;
+  border-color: #6b7280 !important;
+}
+
+/* ── Cards: borde GRIS (como white) ── */
+body.theme-white-blue .dc-card {
+  border-color: #b8bcc4;
+}
+
+/* ── st-tile: borde GRIS ── */
+body.theme-white-blue .st-tile {
+  border-color: #b8bcc4;
+}
+body.theme-white-blue .st-tile:hover {
+  border-color: #4b5563;
+}
+
+/* ── Bordes en bars / headers / toolbars: GRISES (como white) ── */
+body.theme-white-blue .toolbar {
+  border-color: #9ca3af !important;
+}
+body.theme-white-blue .shell-topbar {
+  border-color: #9ca3af !important;
+}
+body.theme-white-blue .page-header {
+  padding-bottom: 12px;
+  border-bottom: 1px solid #9ca3af;
+  margin-bottom: 16px;
+}
+body.theme-white-blue .saycu-erp-page-header,
+body.theme-white-blue .sc-page-header {
+  padding-bottom: 12px;
+  border-bottom: 1px solid #9ca3af;
+  margin-bottom: 16px;
+}
+body.theme-white-blue .sidebar-footer {
+  border-top: 1px solid #9ca3af !important;
+}
+
+/* ── Modal headers: fondo gris casi blanco, título azul, borde gris ── */
+body.theme-white-blue .modal-header {
+  background: #f9fafb !important;
+  color: #3a5fc4 !important;
+  border-bottom: 1px solid #c9cdd4 !important;
+  border-radius: 12px 12px 0 0;
+}
+body.theme-white-blue .modal-header h2,
+body.theme-white-blue .modal-header h3 {
+  color: #3a5fc4 !important;
+}
+body.theme-white-blue .modal-subtitle {
+  color: #6b7280 !important;
+  opacity: 1 !important;
+}
+body.theme-white-blue .empresa-actions-modal .modal-header,
+body.theme-white-blue .api-keys-modal .modal-header {
+  background: #f9fafb !important;
+  color: #3a5fc4 !important;
+}
+body.theme-white-blue .empresa-actions-modal .modal-header h2,
+body.theme-white-blue .api-keys-modal .modal-header h2 {
+  color: #3a5fc4 !important;
+}
+
+/* ── btn-close y modal-close ── */
+body.theme-white-blue .btn-close,
+body.theme-white-blue .modal-header .btn-close {
+  background: rgba(0, 0, 0, 0.06) !important;
+  border: 1px solid rgba(0, 0, 0, 0.14) !important;
+  color: #374151 !important;
+}
+body.theme-white-blue .btn-close:hover,
+body.theme-white-blue .modal-header .btn-close:hover {
+  background: rgba(0, 0, 0, 0.12) !important;
+  color: #111827 !important;
+}
+body.theme-white-blue .modal-close {
+  color: #374151 !important;
+}
+body.theme-white-blue .modal-close:hover {
+  color: #111827 !important;
+}
+
+/* ── Shell project badge ── */
+body.theme-white-blue .shell-project-badge {
+  background: #3a5fc4 !important;
+  color: #ffffff !important;
+  border: 1px solid #9ca3af;
+}
+
+/* ── svc-pill activo ── */
+body.theme-white-blue .svc-pill.active {
+  background: #3a5fc4 !important;
+  border-color: #9ca3af !important;
+  color: #ffffff !important;
+}
+body.theme-white-blue .svc-pill:hover {
+  border-color: #6b7280 !important;
+  color: #3a5fc4 !important;
+}
+
+/* ── badge-admin ── */
+body.theme-white-blue .badge-admin {
+  background: #3a5fc4 !important;
+  color: #ffffff !important;
+}
+
+/* ── Botones con background --erp-header en saycutrans ── */
+body.theme-white-blue .admin-btn.admin-btn-paradas.has-paradas {
+  background: #3a5fc4 !important;
+  border-color: #9ca3af !important;
+  color: #ffffff !important;
+}
+body.theme-white-blue .admin-btn.admin-btn-paradas.has-paradas:hover:not(:disabled) {
+  background: #2f4ea8 !important;
+}

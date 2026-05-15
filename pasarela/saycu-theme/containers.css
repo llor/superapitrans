@@ -1,0 +1,105 @@
+/* ===========================================
+   SAYCU THEME — Contenedores de página y cards
+   Estilo aprobado: fondo gris, contenedor claro con sombra
+   =========================================== */
+
+/* ---- Página con lista de cards ---- */
+.st-page {
+  padding: 20px;
+  background: var(--bg-window);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+}
+
+.st-page > * {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Contenedor de cards: fondo más claro que la página, con sombra */
+.st-card-container {
+  background: var(--bg-container, #f0f0f0);
+  border-radius: 12px;
+  overflow: hidden;
+  padding: 0;
+  flex: 1;
+  box-shadow: var(--shadow-card, 3px 4px 10px rgba(0,0,0,0.22));
+}
+
+/* ---- Contenedor de dashboard/tiles (60vw, más estrecho) ---- */
+.st-dashboard-container {
+  width: 60vw;
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 24px;
+  background: var(--bg-container, #f0f0f0);
+  border-radius: 12px;
+  box-shadow: var(--shadow-card, 3px 4px 10px rgba(0,0,0,0.22));
+}
+
+/* ---- Tiles grid (estilo cuadrado para menús) ---- */
+.st-tiles-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.st-tile {
+  background: var(--bg-container, #f0f0f0);
+  border-radius: 12px;
+  padding: 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  border: 1px solid var(--border-light, #ccc);
+  box-shadow: var(--shadow-card, 3px 4px 8px rgba(0,0,0,0.25));
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.st-tile:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-card-hover, 4px 6px 14px rgba(0,0,0,0.32));
+  border-color: var(--erp-header);
+}
+
+.st-tile-icon {
+  color: var(--erp-icon);
+  margin-bottom: 4px;
+}
+
+.st-tile-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.st-tile-desc {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+/* ---- Responsive ---- */
+@media (max-width: 768px) {
+  .st-page > * {
+    width: 100%;
+  }
+
+  .st-dashboard-container {
+    width: 96vw;
+  }
+}
+
+/* ═══════════════════════════════════════════
+   TEMA BLANCO — overrides centralizados en
+   saycu-theme/themes/white.css
+   ═══════════════════════════════════════════ */

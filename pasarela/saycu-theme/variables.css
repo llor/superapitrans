@@ -1,0 +1,323 @@
+/* ===========================================
+   SAYCU THEME — Variables corporativas ERP
+   Agrupadas por GAMA CROMÁTICA para poder
+   cambiar tonos enteros modificando un solo bloque
+   =========================================== */
+
+:root {
+  /* ══════════════════════════════════════════
+     GAMAS CROMÁTICAS
+     Para cambiar un tono entero, edita solo
+     el bloque de esa gama.
+     ══════════════════════════════════════════ */
+
+  /* ── GAMA AZUL (primario / header / botones / iconos) ── */
+  --erp-header: #3a5fc4;
+  --erp-header-dark: #2f4ea8;
+  --erp-button: #3a5fc4;
+  --erp-button-hover: #6f8fd1;
+  --erp-button-dark: #2f4ea8;
+  --erp-icon: #3a5fc4;
+  --erp-label: #0000cc;
+  --erp-primary: var(--erp-header);
+  --erp-primary-hover: var(--erp-header-dark);
+  --erp-primary-alpha: rgba(58, 95, 196, 0.15);
+  --erp-primary-light: #e0e8f6;
+  --erp-primary-shadow: 0 4px 12px rgba(58, 95, 196, 0.3);
+  --color-info: #0066cc;
+  --color-info-bg: #dbeafe;
+  --color-info-text: #1e40af;
+  --color-info-border: #c7d2fe;
+  --color-blue-500: #3b82f6;
+  --color-blue-600: #2563eb;
+  --color-blue-800: #1d4ed8;
+  --color-blue-50: #eff6ff;
+  --color-blue-200: #bfdbfe;
+
+  /* ── GAMA ÍNDIGO ── */
+  --color-indigo: #6366f1;
+  --color-indigo-bg: #e0e7ff;
+  --color-indigo-text: #4338ca;
+
+  /* ── GAMA ROSA / PINK ── */
+  --color-pink-bg: #fce7f3;
+  --color-pink-text: #be185d;
+
+  /* ── GAMA PÚRPURA (secciones / acentos) ── */
+  --erp-section: #800080;
+  --color-purple-bg: #ede9fe;
+  --color-purple-text: #5b21b6;
+  --color-purple-500: #8b5cf6;
+  --color-purple-600: #7c3aed;
+
+  /* ── GAMA ROJA (error / requerido / peligro) ── */
+  --erp-required: #cc0000;
+  --erp-error: var(--erp-required);
+  --erp-error-bright: #ef4444;
+  --erp-error-dark: #991b1b;
+  --feedback-error-bg-light: #fef2f2;
+  --feedback-error-bg: #fee2e2;
+  --feedback-error-text: var(--erp-required);
+  --feedback-error-border: #fca5a5;
+  --color-red-200: #fecaca;
+  --color-red-400: #f87171;
+  --color-red-600: #dc2626;
+  --color-red-700: #b91c1c;
+  --color-red-500: #e53935;
+
+  /* ── GAMA VERDE (éxito / activo) ── */
+  --erp-active: #008000;
+  --erp-success: var(--erp-active);
+  --erp-success-bright: #22c55e;
+  --erp-success-dark: #166534;
+  --feedback-success-bg: #dcfce7;
+  --feedback-success-text: #16a34a;
+  --feedback-success-border: #bbf7d0;
+  --color-green-400: #4ade80;
+  --color-green-600: #15803d;
+  --color-green-light: #f0fdf4;
+  --color-emerald: #10b981;
+  --color-emerald-dark: #065f46;
+  --color-emerald-bg: #d1fae5;
+  --color-emerald-bg-light: #ecfdf5;
+  --color-emerald-light: #34d399;
+  --color-emerald-alpha-08: rgba(0, 178, 111, 0.08);
+  --color-emerald-alpha-10: rgba(0, 178, 111, 0.10);
+  --color-green-soft-bg: #eff7eb;
+  --color-success-glow: rgba(34, 197, 94, 0.85);
+  --color-error-glow: rgba(239, 68, 68, 0.6);
+  --color-error-glow-strong: rgba(239, 68, 68, 0.9);
+  --color-error-bg-alpha: rgba(239, 68, 68, 0.2);
+
+  /* ── GAMA NARANJA (advertencia) ── */
+  --erp-warning: #ff9900;
+  --erp-warning-dark: #9a3412;
+  --color-warning-bg: #ffedd5;
+  --color-warning-text: #9a3412;
+
+  /* ── GAMA AMARILLA (badges / countdown / highlight) ── */
+  --color-yellow-bg: #fef9c3;
+  --color-yellow: #fde047;
+  --color-yellow-light: #fef08a;
+  --color-yellow-dark: #854d0e;
+  --color-yellow-border: #fcd34d;
+  --color-yellow-intense: #facc15;
+  --color-orange-highlight: #f97316;
+  --color-orange-highlight-light: #fb923c;
+  --color-orange-highlight-alpha: rgba(249, 115, 22, 0.3);
+  --color-orange-highlight-alpha-strong: rgba(249, 115, 22, 0.4);
+  --color-amber: #f59e0b;
+  --color-amber-dark: #d97706;
+  --color-orange-bg: #fff7ed;
+  --color-orange-border: #fed7aa;
+  --color-orange-text: #c2410c;
+  --color-orange-border-light: #fdba74;
+  --color-orange-600: #ea580c;
+  --color-orange-dark: #e65100;
+  --color-yellow-amber-bg: #fef3c7;
+  --color-yellow-amber-border: #fde68a;
+  --color-yellow-amber-warning-bg: #fff8e1;
+  --color-yellow-amber-warning-border: #ffe0b2;
+
+  /* ══════════════════════════════════════════
+     DARK THEME (consola de logs / terminales)
+     Basado en Catppuccin Mocha
+     ══════════════════════════════════════════ */
+
+  --dark-bg: #1e1e2e;
+  --dark-surface: #313244;
+  --dark-border: #45475a;
+  --dark-text: #cdd6f4;
+  --dark-text-muted: #6c7086;
+  --dark-text-secondary: #a6adc8;
+  --dark-text-overlay: #bac2de;
+  --dark-accent: #89b4fa;
+  --dark-accent-alpha: rgba(137, 180, 250, 0.15);
+  --dark-success: #a6e3a1;
+
+  /* ══════════════════════════════════════════
+     ESCALA DE GRISES
+     Escala neutral completa para textos,
+     fondos, bordes y estados.
+     ══════════════════════════════════════════ */
+
+  --gray-50: #f9fafb;
+  --gray-100: #f3f4f6;
+  --gray-200: #e5e7eb;
+  --gray-300: #d1d5db;
+  --gray-400: #9ca3af;
+  --gray-500: #6b7280;
+  --gray-600: #4b5563;
+  --gray-700: #374151;
+  --gray-800: #1f2937;
+  --gray-900: #111827;
+
+  /* ══════════════════════════════════════════
+     SLATE (grises azulados)
+     ══════════════════════════════════════════ */
+
+  --slate-100: #f1f5f9;
+  --slate-300: #cbd5e1;
+  --slate-400: #94a3b8;
+  --slate-500: #64748b;
+  --slate-600: #475569;
+  --slate-800: #1e293b;
+
+  /* ══════════════════════════════════════════
+     FONDOS
+     ══════════════════════════════════════════ */
+
+  --bg-html: transparent;
+  --bg-sidebar: #f0f0f0;
+  --bg-window: #e8e8e8;
+  --bg-input: #ffffff;
+  --bg-section: var(--bg-sidebar);
+  --bg-control: var(--bg-sidebar);
+  --bg-hover: var(--gray-100);
+  --bg-light: #f6f6f6;
+  --bg-modal: #f5f7fa;
+  --bg-neutral: #fafafa;
+  --bg-slate-50: #f8fafc;
+  --bg-code-block: #fafbfc;
+
+  /* ══════════════════════════════════════════
+     TEXTO
+     ══════════════════════════════════════════ */
+
+  --text-primary: #000000;
+  --text-secondary: #666666;
+  --text-muted: var(--gray-400);
+  --text-heading: var(--gray-800);
+  --text-inverse: #ffffff;
+  --text-on-topbar: var(--text-inverse);  /* override en tema blanco: #374151 */
+  --bg-topbar: var(--erp-header);         /* override en tema blanco: #f3f4f6 */
+  --login-btn-shadow: 0 4px 14px rgba(0,0,0,0.14), 0 2px 6px rgba(0,0,0,0.08);
+  --text-dark: #333333;
+  --text-subtle: #999999;
+  --text-code: #444444;
+
+  /* ══════════════════════════════════════════
+     BORDES
+     ══════════════════════════════════════════ */
+
+  --border-light: #cccccc;
+  --border-input: #7f9db9;
+  --border-focus: #0000cc;
+  --shadow-focus-ring: 0 0 0 2px rgba(58, 95, 196, 0.3);
+  --border-control: var(--border-light);
+  --border-subtle: #d8d8d8;
+  --border-slate: #e2e8f0;
+  --border-gray: #e0e0e0;
+  --border-gray-light: #eeeeee;
+  --border-code-block: #e1e4e8;
+  --border-disabled: #bbbbbb;
+
+  /* ══════════════════════════════════════════
+     OVERLAYS Y SOMBRAS
+     ══════════════════════════════════════════ */
+
+  --overlay-bg: rgba(0, 0, 0, 0.5);
+  --overlay-bg-strong: rgba(0, 0, 0, 0.58);
+  --shadow-modal: 0 22px 56px rgba(0, 0, 0, 0.25);
+  --shadow-card: 0 10px 26px rgba(0, 0, 0, 0.36), 0 4px 12px rgba(0, 0, 0, 0.22);
+  --shadow-card-hover: 0 16px 40px rgba(0, 0, 0, 0.42), 0 6px 16px rgba(0, 0, 0, 0.26);
+  --shadow-subtle: 0 2px 6px rgba(0, 0, 0, 0.15);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.2);
+  --shadow-xs: 0 2px 8px rgba(0, 0, 0, 0.08);
+  --shadow-input: 0 1px 2px rgba(0, 0, 0, 0.25);
+  --shadow-login: 0 18px 60px rgba(0, 0, 0, 0.16), 0 2px 10px rgba(0, 0, 0, 0.08);
+  --shadow-modal-heavy: 0 16px 48px rgba(0, 0, 0, 0.3);
+  --shadow-modal-lg: 0 20px 40px rgba(0, 0, 0, 0.25);
+  --shadow-dato-card: 0 9px 24px rgba(0, 0, 0, 0.28), 0 4px 10px rgba(0, 0, 0, 0.16);
+  --shadow-dato-card-hover: 0 15px 36px rgba(0, 0, 0, 0.34), 0 5px 14px rgba(0, 0, 0, 0.20);
+  --shadow-micro: 0 2px 8px rgba(0, 0, 0, 0.06);
+  --border-alpha-light: rgba(0, 0, 0, 0.12);
+
+  /* ══════════════════════════════════════════
+     LOGIN (pre-login = blanco neutro)
+     Los temas de color lo sobreescriben con
+     gradiente diagonal en themes/*.css
+     ══════════════════════════════════════════ */
+
+  --login-page-bg: #ffffff;
+  --login-card-bg: #f3f4f6;
+  --login-card-border: #d1d5db;
+  --login-card-shadow: var(--shadow-login);
+  --login-btn-bg: #e5e7eb;
+  --login-btn-color: #374151;
+  --login-btn-border: #9ca3af;
+  --login-header-bg: #e5e7eb;
+  --login-header-color: #374151;
+  --login-header-border: transparent;
+
+  /* Negros semitransparentes (sombras, overlays) */
+  --black-alpha-05: rgba(0, 0, 0, 0.05);
+  --black-alpha-06: rgba(0, 0, 0, 0.06);
+  --black-alpha-08: rgba(0, 0, 0, 0.08);
+  --black-alpha-10: rgba(0, 0, 0, 0.10);
+  --black-alpha-12: rgba(0, 0, 0, 0.12);
+  --black-alpha-15: rgba(0, 0, 0, 0.15);
+  --black-alpha-16: rgba(0, 0, 0, 0.16);
+  --black-alpha-18: rgba(0, 0, 0, 0.18);
+  --black-alpha-20: rgba(0, 0, 0, 0.20);
+  --black-alpha-25: rgba(0, 0, 0, 0.25);
+  --black-alpha-30: rgba(0, 0, 0, 0.30);
+  --black-alpha-45: rgba(0, 0, 0, 0.45);
+  --black-alpha-50: rgba(0, 0, 0, 0.50);
+  --black-alpha-58: rgba(0, 0, 0, 0.58);
+
+  /* Blancos semitransparentes (para elementos sobre fondo oscuro/primario) */
+  --white-alpha-10: rgba(255, 255, 255, 0.10);
+  --white-alpha-15: rgba(255, 255, 255, 0.15);
+  --white-alpha-20: rgba(255, 255, 255, 0.20);
+  --white-alpha-25: rgba(255, 255, 255, 0.25);
+  --white-alpha-30: rgba(255, 255, 255, 0.30);
+  --white-alpha-35: rgba(255, 255, 255, 0.35);
+  --white-alpha-45: rgba(255, 255, 255, 0.45);
+  --white-alpha-70: rgba(255, 255, 255, 0.70);
+  --white-alpha-80: rgba(255, 255, 255, 0.80);
+
+  /* ══════════════════════════════════════════
+     FEEDBACK (variantes Material / TW)
+     ══════════════════════════════════════════ */
+
+  --feedback-mat-success-bg: #e8f5e9;
+  --feedback-mat-success-border: #9ec5a3;
+  --feedback-mat-success-text: #215c2a;
+  --feedback-mat-info-bg: #e3f2fd;
+  --feedback-mat-info-border: #90caf9;
+  --feedback-mat-info-text: #1565c0;
+  --feedback-blue-alt-bg: #f5f8ff;
+  --feedback-blue-alt-border: #c5d8f5;
+  --feedback-blue-alt-text: #1976d2;
+  --feedback-tw-success-bg: #d4edda;
+  --feedback-tw-success-text: #155724;
+  --feedback-tw-error-bg: #fce4ec;
+  --feedback-tw-error-text: #c62828;
+  --email-bg-light: #f5f5f5;
+
+  /* ══════════════════════════════════════════
+     ALIASES (compatibilidad legacy)
+     ══════════════════════════════════════════ */
+
+  --color-primary: var(--erp-header);
+  --color-primary-hover: var(--erp-header-dark);
+  --color-success: var(--erp-active);
+  --color-danger: #e74c3c;
+  --color-warning: var(--erp-warning);
+  --color-button-primary: var(--erp-header);
+  --color-button-success: var(--erp-active);
+  --color-button-danger: var(--erp-required);
+  --color-erp-primary-dark: var(--erp-header-dark);
+  --legacy-toolbar: var(--erp-header);
+  --legacy-toolbar-start: var(--erp-header);
+  --legacy-toolbar-end: var(--erp-header-dark);
+  --legacy-text: var(--text-primary);
+  --legacy-text-soft: var(--text-secondary);
+  --legacy-border: var(--border-light);
+  --legacy-bg-start: var(--bg-window);
+  --legacy-bg-end: var(--bg-sidebar);
+  --input-bg: var(--bg-input);
+  --input-border: var(--border-input);
+  --input-focus: var(--border-focus);
+}
