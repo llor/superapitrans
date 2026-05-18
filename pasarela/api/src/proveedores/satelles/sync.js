@@ -71,7 +71,7 @@ async function insertParada(pool, pedidoId, albaranIdsBySatellesId, parada) {
         'pais', 'telefono', 'persona_contacto', 'latitud', 'longitud',
         'producto', 'cantidad', 'unidad_medida',
         'llegada_prevista', 'salida_prevista', 'llegada_real', 'salida_real',
-        'kms_tramo',
+        'kms_tramo', 'documentos',
     ];
     const vals = [
         pedidoId, albaranId, parada.reparto_id_externo, parada.tipo, parada.orden,
@@ -81,6 +81,7 @@ async function insertParada(pool, pedidoId, albaranIdsBySatellesId, parada) {
         parada.producto, parada.cantidad, parada.unidad_medida,
         parada.llegada_prevista, parada.salida_prevista, parada.llegada_real, parada.salida_real,
         parada.kms_tramo,
+        JSON.stringify(Array.isArray(parada.documentos) ? parada.documentos : []),
     ];
     const placeholders = cols.map((_, i) => `$${i + 1}`).join(', ');
     await pool.query(

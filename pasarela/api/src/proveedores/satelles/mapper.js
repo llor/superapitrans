@@ -184,6 +184,12 @@ function buildParadas(publication) {
             llegada_real: dst.actualArrival || null,
             salida_real: dst.actualDeparture || null,
             kms_tramo: null,    // pendiente: calcular por legs si interesa por tramo
+            // Documentos del chofer (albaranes/PDFs/fotos). Satelles los
+            // entrega embebidos en cada destino del payload de finished;
+            // probado 2026-05-18 que NO hay endpoint /routes/{id}/.../documents
+            // separado en ecotrans.satelles.es (404 sin body). Se persiste
+            // tal cual; el modal del panel lo lee de BD.
+            documentos: Array.isArray(dst.documents) ? dst.documents : [],
         });
     }
     return out;
