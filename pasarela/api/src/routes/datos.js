@@ -78,6 +78,49 @@ router.get('/pedidos/:id', requireKey(['datos.read']), async (req, res, next) =>
     }
 });
 
+// Estados válidos por orden semántico: el ERP los marca a medida que avanza
+// el ciclo de un pedido (catálogo cerrado, mismo CHECK que la BD).
+const ESTADOS_VALIDOS = ['PENDIENTE', 'LEIDO', 'ACEPTADO', 'INICIADO', 'TERMINADO'];
+
+router.patch('/pedidos/:id/estado',
+    requireKey(['datos.write']),
+    async (req, res, next) => {
+        try {
+            const pool = getTenantPool(req.client.empresaCodigo);
+            const id = Number.parseInt(req.params.id, 10);
+            if (!Number.isFinite(id)) {
+                res.locals.errorCode = 'id_invalido';
+                return res.status(400).json({ ok: false, error: 'id_invalido' });
+            }
+            const nuevoEstado = String(req.body?.estado || '').toUpperCase().trim();
+            if (!ESTADOS_VALIDOS.includes(nuevoEstado)) {
+                res.locals.errorCode = 'estado_invalido';
+                return res.status(400).json({
+                    ok: false,
+                    error: 'estado_invalido',
+                    estados_validos: ESTADOS_VALIDOS,
+                });
+            }
+            const r = await pool.query(
+                `UPDATE pedidos SET estado = $1, updated_at = NOW()
+                 WHERE id = $2
+                 RETURNING id, estado`,
+                [nuevoEstado, id]
+            );
+            if (r.rowCount === 0) {
+                res.locals.errorCode = 'no_encontrado';
+                return res.status(404).json({ ok: false, error: 'no_encontrado' });
+            }
+            res.json({ ok: true, data: r.rows[0] });
+        } catch (err) {
+            next(err);
+        }
+    }
+);
+
+// Compatibilidad: el endpoint viejo "marcar-procesado" ahora marca como
+// TERMINADO (era su semántica real). Cualquier integración antigua del ERP
+// sigue funcionando sin tocar su código.
 router.post('/pedidos/:id/marcar-procesado',
     requireKey(['datos.write']),
     async (req, res, next) => {
@@ -85,20 +128,20 @@ router.post('/pedidos/:id/marcar-procesado',
             const pool = getTenantPool(req.client.empresaCodigo);
             const id = Number.parseInt(req.params.id, 10);
             if (!Number.isFinite(id)) {
-            res.locals.errorCode = 'id_invalido';
-            return res.status(400).json({ ok: false, error: 'id_invalido' });
-        }
+                res.locals.errorCode = 'id_invalido';
+                return res.status(400).json({ ok: false, error: 'id_invalido' });
+            }
             const r = await pool.query(
-                `UPDATE pedidos SET estado = 'PROCESADO', updated_at = NOW()
-                 WHERE id = $1 AND estado = 'PENDIENTE'
+                `UPDATE pedidos SET estado = 'TERMINADO', updated_at = NOW()
+                 WHERE id = $1 AND estado <> 'TERMINADO'
                  RETURNING id, estado`,
                 [id]
             );
             if (r.rowCount === 0) {
-                res.locals.errorCode = 'no_encontrado_o_ya_procesado';
-                return res.status(404).json({ ok: false, error: 'no_encontrado_o_ya_procesado' });
+                res.locals.errorCode = 'no_encontrado_o_ya_terminado';
+                return res.status(404).json({ ok: false, error: 'no_encontrado_o_ya_terminado' });
             }
-            res.json({ ok: true, data: r.rows[0] });
+            res.json({ ok: true, data: r.rows[0], deprecated: 'use PATCH /pedidos/:id/estado' });
         } catch (err) {
             next(err);
         }

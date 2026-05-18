@@ -18,30 +18,20 @@
 
 Estado: cron activo `*/5` con `PASARELA_DRY_RUN=false` en prod. Tests automatizados 17/17 OK en dev y prod.
 
-## pasarela — PCS valenciaportPCS — BLOQUEADO POR PROVEEDOR
+## pasarela — PCS valenciaportPCS ✅ OPERATIVO EN PROD (2026-05-18)
 
-Lista oficial de mensajes confirmada por el proveedor para perfil
-"transportista":
-- **ENVÍA**: `InlandTransportDetails` (asignación datos de transporte).
-- **RECIBE**: `DUT` (instrucciones + órdenes — actualizaciones), `ReleaseOrder`,
-  `AcceptanceOrder`, `Acknowledgment`, `AcceptanceConfirmation`,
-  `ReleaseConfirmation`.
+Estado real (verificado 2026-05-18 en BD prod, no en el README que estaba
+obsoleto):
+- Cliente OAuth + descarga implementado en `pasarela/api/src/proveedores/pcs-valencia/{client,mapper,sync}.js` (no es stub).
+- `saycu_pasarela_jsr` en prod tiene **1001 pedidos** con `proveedor_codigo='pcs-valencia'` ya sincronizados.
+- Cron `*/5` los persiste vía `listMessages → downloadMessage → mapMessage → upsert pedido/albaranes/paradas/pedidos_pcs_extra`.
+- Idempotencia por unique `(proveedor_codigo, proveedor_publication_id)`.
 
-Bloqueo externo (informe enviado al proveedor PCS el 2026-05-08 con las 4
-pruebas literales SOAP+REST en TEST y PROD): el usuario solo entra al portal
-SOAP en PROD (`login.asmx`); el OAuth REST devuelve `invalid_client / you do
-not have access`; ni SOAP ni REST permiten invocar el servicio de mensajería
-porque al usuario no le han asignado los roles efectivos del servicio MESSG.
-Detalle completo en `pasarela/GUION.md` sección "EN ESPERA".
+PENDIENTE / RIESGOS:
 
-Cuando PCS emita un par OAuth `client_id`/`client_secret` y le asigne los
-permisos al usuario:
-
-- [ ] **Migración 0008** cambiando descriptor del proveedor `pcs-valencia` de `[user, pass, oauth_url, api_base]` a `[client_id, client_secret, token_url, api_base]`.
-- [ ] **Cliente PCS REST** completo (OAuth + 6 mensajes inbound + 1 outbound). Stub actual en `pasarela/api/src/proveedores/pcs-valencia/{client,mapper,sync}.js` lanza `Error('pcs-valencia: pendiente swagger + credenciales')`.
-- [ ] **Mapeo TRANS → tablas canónicas pasarela**: `ReleaseOrder` / `AcceptanceOrder` / `DUT` → documento + viaje + parada en terminal del puerto. `InlandTransportDetails` lo emitimos cuando un chofer comunique matrícula/hora.
-- [ ] **Credenciales** se cargan por la UI admin (mismo flujo que Satelles), una vez tengamos el par OAuth real.
-- [ ] **Tests automatizados** del cliente PCS Valencia con el mismo patrón que los de `tests/api.test.js` (regla operativa: código + test + manual `ApiDocsPasarela.jsx` se mantienen en sincronía).
+- [ ] **🔴 PUNTO 6 — ACK PCS Valencia (no acumular repetidos)**. Comentario en `pasarela/api/src/proveedores/pcs-valencia/sync.js:8-11`: «el GET no consume el mensaje y la idempotencia evita duplicados». Resultado: cada vuelta del cron probablemente trae los mismos 1001 mensajes y reescribe filas. Implementar `Acknowledgement` outbound: `POST {api_base}/messages/upload/{box}` con el XML de Ack. Requiere XSD/cuerpo confirmado por PCS. `uploadMessage()` ya existe en `client.js`, solo falta el cuerpo correcto. Cuando funcione, llamar tras cada UPSERT OK y NO antes (idempotencia mantenida si el ack falla).
+- [ ] **Outbound `InlandTransportDetailsv2`**: `uploadMessage()` listo, falta disparador desde flujo del chofer (matrícula/hora reales).
+- [ ] **Tests automatizados** del cliente PCS Valencia con el mismo patrón que los de `tests/api.test.js`.
 
 ## infra ✅ HECHO
 

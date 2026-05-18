@@ -122,4 +122,81 @@ async function commitFinishedRoutes(cred, publicationIds) {
     return { ok: true, count: publicationIds.length };
 }
 
-module.exports = { getFinishedRoutes, commitFinishedRoutes };
+/**
+ * Documentos asociados a los destinos de una ruta (albaranes/PDFs/imágenes
+ * que el chofer ha cargado). Endpoint del Postman oficial:
+ *
+ *   GET {hostBase}/routes/{routeId}/destinations/documents
+ *
+ * El prefijo /puba/ se usa solo para los endpoints "public api" de
+ * publicaciones (finished/commit). Para documentos el Postman usa el host
+ * raíz. Si Satelles cambia a /puba/, el primer 404 se reintenta con prefijo.
+ *
+ * Devuelve el JSON que Satelles ofrezca tal cual — la forma exacta (URLs
+ * descargables vs base64 vs metadatos) se conoce al probar contra una
+ * credencial real, por eso aquí solo se proxea sin transformar.
+ */
+async function getDocumentosRuta(cred, routeId) {
+    const token = await obtenerToken({
+        hostBase: cred.hostBase,
+        clientId: cred.client_id,
+        clientSecret: cred.client_secret,
+        scope: SCOPE_FINISHED,
+    });
+    const host = cred.hostBase.replace(/\/$/, '');
+    const headers = {
+        'Accept': 'application/json',
+        'Accept-Language': 'es',
+        'Authorization': `Bearer ${token}`,
+    };
+    const candidates = [
+        `${host}/routes/${encodeURIComponent(routeId)}/destinations/documents`,
+        `${host}/puba/routes/${encodeURIComponent(routeId)}/destinations/documents`,
+    ];
+    let last = null;
+    for (const url of candidates) {
+        // eslint-disable-next-line no-await-in-loop
+        const res = await fetch(url, { headers });
+        if (res.status === 404) { last = { status: 404, url }; continue; }
+        if (!res.ok) {
+            // eslint-disable-next-line no-await-in-loop
+            const text = await res.text().catch(() => '');
+            throw new Error(`Satelles documentos failed: HTTP ${res.status} ${text.slice(0, 200)}`);
+        }
+        // eslint-disable-next-line no-await-in-loop
+        return await res.json();
+    }
+    throw new Error(`Satelles documentos: 404 en ambos prefijos (último ${last?.url})`);
+}
+
+/**
+ * Proxy de descarga de un documento concreto. Necesita la URL/identificador
+ * tal cual lo devuelve getDocumentosRuta. Si Satelles entrega URLs absolutas
+ * descargables, basta con redirigir; si entrega solo IDs, se llama aquí con
+ * la URL construida. El llamador (endpoint del backend) decide cuál mandar.
+ */
+async function downloadDocumento(cred, url) {
+    const token = await obtenerToken({
+        hostBase: cred.hostBase,
+        clientId: cred.client_id,
+        clientSecret: cred.client_secret,
+        scope: SCOPE_FINISHED,
+    });
+    const res = await fetch(url, {
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Accept': '*/*',
+        },
+    });
+    if (!res.ok) {
+        const text = await res.text().catch(() => '');
+        throw new Error(`Satelles download failed: HTTP ${res.status} ${text.slice(0, 200)}`);
+    }
+    return {
+        status: res.status,
+        contentType: res.headers.get('content-type') || 'application/octet-stream',
+        body: res.body, // ReadableStream para pipe directo al cliente
+    };
+}
+
+module.exports = { getFinishedRoutes, commitFinishedRoutes, getDocumentosRuta, downloadDocumento };
