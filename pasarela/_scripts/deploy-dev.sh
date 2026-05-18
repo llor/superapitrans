@@ -23,7 +23,7 @@ ssh "$REMOTE_HOST" "cd $REMOTE_DIR && _scripts/bootstrap-env.sh"
 log "3) Aplicar migraciones admin (idempotentes) en saycu_admin"
 ssh "$REMOTE_HOST" "
   set -e
-  for f in $REMOTE_DIR/db/migrations/0001_admin.sql $REMOTE_DIR/db/migrations/0003_admin_satelles_host.sql; do
+  for f in $REMOTE_DIR/db/migrations/0001_admin.sql $REMOTE_DIR/db/migrations/0003_admin_satelles_host.sql $REMOTE_DIR/db/migrations/0013_admin_pasarela_config.sql; do
     docker cp \"\$f\" system-postgres:/tmp/pasarela_admin.sql
     docker exec system-postgres psql -U postgres -d saycu_admin -f /tmp/pasarela_admin.sql
   done

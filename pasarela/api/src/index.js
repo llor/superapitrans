@@ -26,10 +26,14 @@ if (!PORT) {
 
 const app = buildApp();
 
-const server = app.listen(PORT, () => {
+const server = app.listen(PORT, async () => {
     console.log(`[pasarela-api] escuchando en puerto ${PORT}`);
     if (process.env.PASARELA_SYNC_ENABLED === 'true') {
-        cronScheduler.start();
+        try {
+            await cronScheduler.start();
+        } catch (err) {
+            console.error(`[pasarela-api] cron NO arrancado: ${err.message}`);
+        }
     } else {
         console.log('[pasarela-api] cron de sincronización deshabilitado (PASARELA_SYNC_ENABLED != true)');
     }

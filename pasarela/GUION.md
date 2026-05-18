@@ -25,6 +25,15 @@ Cron: `* * * * *` (cada minuto desde 2026-05-18, antes `*/5`). Si no hay
 mensajes nuevos, cada proveedor devuelve lista vacía y retorna inmediato:
 el ciclo es prácticamente gratuito.
 
+La expresión vive en `saycu_admin.pasarela_config` (clave `cron_expr`),
+no en `.env`. El pasarela_api la lee al arrancar y revisa esa tabla cada
+60s; si cambia, reprograma en caliente sin redespliegue. El operador
+edita el valor desde la web admin → "Datos Nodo API" → icono ⚙️.
+Validación regex sencilla en admin; la estricta la hace el watcher con
+`node-cron.validate`. Si la expresión guardada es semánticamente
+inválida, el watcher mantiene la anterior y reporta el incidente por
+email. Estado en dev desde 2026-05-18; pendiente subir a prod.
+
 Tests automatizados (node:test) cubriendo los 5 endpoints inbound,
 17/17 OK en dev y prod. Visor de logs + manual API desplegados. El ERP
 del cliente se conectará previsiblemente con un programa intermedio en
