@@ -117,6 +117,29 @@ async function downloadMessage(cred, id, box = DEFAULT_BOX) {
     return res.text();
 }
 
+// Marca un mensaje como descargado para que NO vuelva a salir en la próxima
+// llamada a listMessages (= "ACK" de PCS Valencia). Según el Swagger oficial:
+//   DELETE /messages/download/{box}/{id}  →  202 Accepted (idempotente: 202
+//   también si ya estaba marcado). El mensaje se puede seguir descargando
+//   individualmente durante un tiempo; pasado ese plazo el portal lo borra
+//   definitivamente. `box` debe ser el MISMO usado al descargar.
+//
+// 404 = "Message not found" según Swagger: el portal ya lo eliminó por el
+// plazo de gracia y no hay nada que ack-ear. Funcionalmente equivale a OK
+// para nuestro flujo (ya no volverá a salir en la lista), así que se trata
+// como éxito en vez de propagar excepción.
+async function deleteMessage(cred, id, box = DEFAULT_BOX) {
+    try {
+        await _fetchConBearer(cred,
+            `/messages/download/${encodeURIComponent(box)}/${encodeURIComponent(id)}`,
+            { method: 'DELETE', accept: 'application/json, */*' }
+        );
+    } catch (err) {
+        if (/HTTP 404/.test(err.message || '')) return; // ya borrado en el portal
+        throw err;
+    }
+}
+
 // Outbound (placeholder): cuando arranquemos a emitir
 // InlandTransportDetailsv2 / Acknowledgement habrá que confirmar formato
 // exacto. Lo dejo cableado pero NO se invoca todavía desde el sync.
@@ -141,6 +164,7 @@ module.exports = {
     obtenerToken,
     listMessages,
     downloadMessage,
+    deleteMessage,
     uploadMessage,
     _internal: { tokenCache, cacheKey },
 };

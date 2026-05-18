@@ -2,21 +2,24 @@
  * Sincronizador PCS ValenciaportPCS.
  *
  * Por cada credencial activa de `pcs-valencia`:
- *   1) GET /messages/download/{box}                 listado de pendientes.
+ *   1) GET    /messages/download/{box}        listado de pendientes.
  *   2) Por cada mensaje: GET /messages/download/{box}/{id} → XML → mapper.
  *   3) BEGIN/UPSERT pedido + albaranes + paradas/COMMIT en el tenant.
- *   4) [NO IMPLEMENTADO TODAVÍA] ack mediante POST /messages/upload/{box}
- *      con un Acknowledgement: requiere XSD/cuerpo confirmado por PCS.
- *      Mientras tanto el GET no consume el mensaje y la idempotencia por
+ *   4) DELETE /messages/download/{box}/{id}   "ack" según Swagger oficial: el
+ *      mensaje deja de salir en la siguiente call a List. Solo se invoca tras
+ *      COMMIT correcto; los errores de mapeo/BD dejan el mensaje en cola para
+ *      reintento. Idempotente (202 también si ya estaba marcado). Si el DELETE
+ *      falla, se loguea y se sigue: la idempotencia por
  *      `(proveedor_codigo, proveedor_publication_id)` evita duplicados.
  *
- * PASARELA_DRY_RUN=true: lista + descarga + mapea pero NO toca la BD.
- * Útil para verificar el mapeo contra prod sin persistir.
+ * PASARELA_DRY_RUN=true: lista + descarga + mapea pero NO toca la BD NI
+ * borra el mensaje del portal. Útil para verificar el mapeo contra prod
+ * sin persistir y sin consumir la cola.
  */
 
 const { getTenantPool } = require('../../db');
 const { listCredencialesActivas, marcarSync } = require('../../auth/provider-cred');
-const { listMessages, downloadMessage } = require('./client');
+const { listMessages, downloadMessage, deleteMessage } = require('./client');
 const { mapMessage, PROVEEDOR } = require('./mapper');
 
 async function upsertPedido(pool, pedido) {
@@ -141,6 +144,8 @@ async function syncCredencial(cred, log) {
     let procesadas = 0;
     let saltadas = 0;
     let errores = 0;
+    let ackOk = 0;
+    let ackErr = 0;
     for (const meta of pendientes) {
         try {
             const xml = await downloadMessage(cred, meta.id);
@@ -169,6 +174,16 @@ async function syncCredencial(cred, log) {
             }
             await tenantPool.query('COMMIT');
             procesadas++;
+            // Ack al portal SOLO tras COMMIT correcto. Si falla el DELETE, no
+            // pasa nada crítico: la idempotencia del upsert por
+            // (proveedor_codigo, proveedor_publication_id) absorbe el reintento.
+            try {
+                await deleteMessage(cred, meta.id);
+                ackOk++;
+            } catch (ackError) {
+                ackErr++;
+                log(`[${PROVEEDOR}] empresa=${cred.empresaCodigo} ${meta.id} ACK ERROR ${ackError.message}`);
+            }
         } catch (err) {
             errores++;
             try { await tenantPool.query('ROLLBACK'); } catch (_) { /* ignorar */ }
@@ -177,8 +192,8 @@ async function syncCredencial(cred, log) {
     }
 
     await marcarSync({ credencialId: cred.credencialId, ok: errores === 0, error: errores ? `${errores} errores` : null });
-    log(`[${PROVEEDOR}] empresa=${cred.empresaCodigo} procesadas=${procesadas} saltadas=${saltadas} errores=${errores}`);
-    return { ok: errores === 0, processed: procesadas, skipped: saltadas, errors: errores };
+    log(`[${PROVEEDOR}] empresa=${cred.empresaCodigo} procesadas=${procesadas} saltadas=${saltadas} errores=${errores} ack_ok=${ackOk} ack_err=${ackErr}`);
+    return { ok: errores === 0, processed: procesadas, skipped: saltadas, errors: errores, ackOk, ackErr };
 }
 
 async function syncAll(log = console.log) {
