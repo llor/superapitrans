@@ -1,15 +1,34 @@
 # pasarela
 
-Última actualización: 2026-05-10. Sub-servicio de superapitrans cuya
+Última actualización: 2026-05-18. Sub-servicio de superapitrans cuya
 función es **LEER APIs externas** (proveedor por proveedor) y persistir
 lo intercambiado en 4 tablas canónicas multi-tenant
 (`saycu_pasarela_<CODIGO>`), exponiéndolo después por una API inbound
-con bearer key. Satelles operativo en prod: cron `*/5 * * * *` con
-`PASARELA_DRY_RUN=false`, sync activo. Tests automatizados (node:test)
-cubriendo los 5 endpoints inbound, 17/17 OK en dev y prod. Visor de
-logs + manual API desplegados. PCS Valencia pendiente externamente
-(par OAuth real). El ERP del cliente se conectará previsiblemente con
-un programa intermedio en C entre el ERP y la API inbound.
+con bearer key.
+
+Estado proveedores (2026-05-18):
+- **Satelles** ✅ operativo en prod. Sync: GET /puba/routes/finished →
+  upsert pedido/albaranes/paradas → POST /puba/routes/finished/commit.
+  El commit es el equivalente al "ACK": las rutas ya procesadas dejan
+  de aparecer en el siguiente GET. Sin documentos de destino: la API
+  los soporta (GET /api/erpsync/routes/.../documents, scope
+  satelles-erpsync:write) pero GFE no los está cargando todavía;
+  cliente preparado para activarse en cuanto aparezcan.
+- **PCS Valencia** ✅ operativo en prod. Sync: GET /messages/download/{box}
+  (pendingStatus=pending por defecto) → downloadMessage → upsert pedido/
+  paradas/pedidos_pcs_extra → **DELETE /messages/download/{box}/{id}**
+  (ack, 202 idempotente, 404 = ya borrado por plazo de gracia). La cola
+  histórica de JSR (1001 pedidos) se drenó el 2026-05-18; a partir de
+  ahí cada ciclo solo entrega los mensajes nuevos.
+
+Cron: `* * * * *` (cada minuto desde 2026-05-18, antes `*/5`). Si no hay
+mensajes nuevos, cada proveedor devuelve lista vacía y retorna inmediato:
+el ciclo es prácticamente gratuito.
+
+Tests automatizados (node:test) cubriendo los 5 endpoints inbound,
+17/17 OK en dev y prod. Visor de logs + manual API desplegados. El ERP
+del cliente se conectará previsiblemente con un programa intermedio en
+C entre el ERP y la API inbound.
 
 Este GUION describe **el framework**, no los clientes concretos. Las
 empresas y sus credenciales viven en BD y en la UI de admin, no aquí.
