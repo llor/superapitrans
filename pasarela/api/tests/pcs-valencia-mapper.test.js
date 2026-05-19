@@ -136,6 +136,14 @@ test('pcs-valencia mapper → DUTv2 (con LoadingUnloadingDetails)', () => {
     assert.equal(r.pedido.matricula_contenedor, 'BOLU5600867');
     assert.equal(r.pedido.bl_numero, '68640704660000');
     assert.equal(r.pedido.operacion_tipo, 'IMPORT');
+    // Terminal de devolución del contenedor vacío (AcceptanceCompany):
+    // este DUT incluye Orden de Entrega → GRUPO TORRES en ALDAYA.
+    assert.equal(r.pcsExtra.terminal_devolucion_codigo, 'DETO');
+    assert.equal(r.pcsExtra.terminal_devolucion_nombre, 'GRUPO TORRES');
+    assert.equal(r.pcsExtra.terminal_devolucion_cif, 'B96315320D');
+    assert.equal(r.pcsExtra.terminal_devolucion_direccion, 'C/RIU MOLINER S/N');
+    assert.equal(r.pcsExtra.terminal_devolucion_ciudad, 'ALDAYA');
+    assert.equal(r.pcsExtra.terminal_devolucion_codigo_postal, '46960');
 });
 
 // Detalle marítimo PCS — usa un DUT rico (OceanCarrier, Goods, Seals, Ports,
@@ -217,6 +225,49 @@ test('pcs-valencia mapper → DUTv2 rico extrae TODOS los extras', () => {
     assert.equal(r.pcsExtra.mercancia_bultos_numero, 5);
     assert.equal(r.pcsExtra.mercancia_bultos_tipo_codigo, 'BX');
     assert.equal(r.pcsExtra.mercancia_bultos_tipo_descripcion, 'BULTOS');
+    // Terminal de devolución del contenedor vacío (<AcceptanceCompany>):
+    // este DUT SÍ trae Orden de Entrega, así que se puebla.
+    assert.equal(r.pcsExtra.terminal_devolucion_codigo, 'DETO');
+    assert.equal(r.pcsExtra.terminal_devolucion_nombre, 'TORRES');
+});
+
+// DUT sin Orden de Entrega: <AcceptanceCompany> está ausente del XML.
+// El puerto reportó este caso el 2026-05-18 para TIBA26051800052093: el
+// chofer no sabe dónde devolver el contenedor vacío hasta que el shipper
+// emita la orden. El mapper debe dejar los campos terminal_devolucion_*
+// a null para que el panel pinte "no incluida".
+const XML_DUT_SIN_ACCEPTANCE = `<?xml version="1.0" encoding="UTF-8"?><UnifiedInlandTransportDocument>
+  <MessageHeader><Number>VPRT-SIN-OE</Number><DateAndTime>2026-05-18T10:00:00</DateAndTime><Version>1.1</Version></MessageHeader>
+  <DocumentDetails>
+    <OperationType>IMPORT</OperationType>
+    <TransportType>CARRIER_HAULAGE</TransportType>
+    <References><PCSDocumentNumber>TIBA26051800052093</PCSDocumentNumber><BookingNumber>BK-SIN-OE</BookingNumber><BLNumber>BL-SIN-OE</BLNumber></References>
+    <Parties><Type>CONTRACTING_PARTY</Type><PCSCode>MLYC</PCSCode><Name>MILLER</Name></Parties>
+  </DocumentDetails>
+  <Containers>
+    <ContainerDetails><PlateNumber>BOLU5600867</PlateNumber></ContainerDetails>
+    <ReleaseDetails>
+      <ReleaseCompany><PCSCode>MVAL</PCSCode><Name>NOATUM</Name></ReleaseCompany>
+      <References><PCSDocumentNumber>SIN-OE-REL</PCSDocumentNumber></References>
+      <DatesAndTimes><ProposedByContractingCompany>2026-05-19T08:00:00</ProposedByContractingCompany></DatesAndTimes>
+    </ReleaseDetails>
+  </Containers>
+</UnifiedInlandTransportDocument>`;
+
+test('pcs-valencia mapper → DUTv2 sin AcceptanceCompany deja terminal_devolucion_* a null', () => {
+    const r = mapMessage(XML_DUT_SIN_ACCEPTANCE, {
+        id: 'VPRT-SIN-OE',
+        messageType: 'DUTv2',
+        tenantCodigo: 'JSR',
+    });
+    assert.ok(r.pcsExtra, 'pcsExtra debería existir (hay otros campos PCS)');
+    assert.equal(r.pcsExtra.terminal_devolucion_codigo, null);
+    assert.equal(r.pcsExtra.terminal_devolucion_nombre, null);
+    assert.equal(r.pcsExtra.terminal_devolucion_cif, null);
+    assert.equal(r.pcsExtra.terminal_devolucion_direccion, null);
+    assert.equal(r.pcsExtra.terminal_devolucion_ciudad, null);
+    assert.equal(r.pcsExtra.terminal_devolucion_codigo_postal, null);
+    assert.equal(r.pcsExtra.terminal_devolucion_unlocode, null);
 });
 
 test('pcs-valencia mapper → tipo desconocido tira error claro', () => {

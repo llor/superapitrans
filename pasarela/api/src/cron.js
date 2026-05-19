@@ -20,6 +20,30 @@ const errorReporter = require('./utils/error-reporter-client');
 
 const CHECK_INTERVAL_MS = 60_000;
 
+// Soportamos dos formatos:
+//   - Cron estándar (5 tokens): `* * * * *`, `*/5 * * * *`, `0 */2 * * *`, …
+//   - "every:Nm" → "cada N minutos" exactos vía setInterval. Necesario
+//     porque hay frecuencias útiles (90 min, 150 min, 210 min, 300 min)
+//     que no se pueden expresar como una sola cron-expr regular.
+const EVERY_RE = /^every:(\d+)m$/i;
+
+function esEveryFormat(expr) {
+    return EVERY_RE.test(String(expr || '').trim());
+}
+
+function getEveryMinutes(expr) {
+    const m = String(expr || '').trim().match(EVERY_RE);
+    return m ? parseInt(m[1], 10) : null;
+}
+
+function validarFreq(expr) {
+    if (esEveryFormat(expr)) {
+        const n = getEveryMinutes(expr);
+        return Number.isFinite(n) && n >= 1 && n <= 10080;
+    }
+    return cron.validate(expr);
+}
+
 let currentExpr = null;
 let currentTask = null;
 let watcherInterval = null;
@@ -39,22 +63,31 @@ async function leerCronExprBD() {
     return v.trim();
 }
 
+async function ejecutarCiclo(log) {
+    try {
+        await satelles.syncAll(log);
+    } catch (err) {
+        log(`[cron] error en satelles.syncAll: ${err.message}`);
+    }
+    try {
+        await pcsValencia.syncAll(log);
+    } catch (err) {
+        log(`[cron] error en pcs-valencia.syncAll: ${err.message}`);
+    }
+}
+
 function programar(expr, log) {
-    if (!cron.validate(expr)) {
+    if (esEveryFormat(expr)) {
+        const minutes = getEveryMinutes(expr);
+        const ms = minutes * 60 * 1000;
+        const handle = setInterval(() => { ejecutarCiclo(log); }, ms);
+        return { stop: () => clearInterval(handle) };
+    }
+    if (!validarFreq(expr)) {
         throw new Error(`expresión cron inválida: "${expr}"`);
     }
-    const task = cron.schedule(expr, async () => {
-        try {
-            await satelles.syncAll(log);
-        } catch (err) {
-            log(`[cron] error en satelles.syncAll: ${err.message}`);
-        }
-        try {
-            await pcsValencia.syncAll(log);
-        } catch (err) {
-            log(`[cron] error en pcs-valencia.syncAll: ${err.message}`);
-        }
-    }, { timezone: process.env.TZ || 'Europe/Madrid' });
+    const task = cron.schedule(expr, () => ejecutarCiclo(log),
+        { timezone: process.env.TZ || 'Europe/Madrid' });
     return task;
 }
 
@@ -73,7 +106,7 @@ async function recargarSiCambio(log) {
         return;
     }
     if (expr === currentExpr) return;
-    if (!cron.validate(expr)) {
+    if (!validarFreq(expr)) {
         const msg = `[cron-watcher] expresión inválida en BD: "${expr}". Mantengo "${currentExpr}".`;
         log(msg);
         errorReporter.reportError({
@@ -92,7 +125,7 @@ async function recargarSiCambio(log) {
 
 async function start(log = console.log) {
     currentExpr = await leerCronExprBD();
-    if (!cron.validate(currentExpr)) {
+    if (!validarFreq(currentExpr)) {
         throw new Error(`pasarela_config.cron_expr inválida: "${currentExpr}"`);
     }
     log(`[cron] programado satelles.syncAll + pcs-valencia.syncAll con expresión "${currentExpr}" (leída de saycu_admin.pasarela_config)`);

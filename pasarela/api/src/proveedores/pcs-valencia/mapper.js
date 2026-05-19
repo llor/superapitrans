@@ -387,6 +387,29 @@ function extractPcsExtra(xml) {
         mercBultosNum = tag(goodsXml, 'NumberOfPackages');
     }
 
+    // Terminal de devolución del contenedor vacío
+    // (<AcceptanceDetails><AcceptanceCompany>): organización de admisión del
+    // vacío a la que el chofer debe devolver el contenedor al final del
+    // viaje. Solo aparece en DUTs con Orden de Entrega; cuando el DUT no
+    // la incluye (caso reportado por el puerto el 2026-05-18 para
+    // TIBA26051800052093), todos estos campos quedan null y el panel
+    // muestra "no incluida".
+    let terminalCodigo = null, terminalNombre = null, terminalCif = null;
+    let terminalDireccion = null, terminalCiudad = null;
+    let terminalCodigoPostal = null, terminalUnlocode = null;
+    if (acceptanceDet) {
+        const ac = rawTag(acceptanceDet, 'AcceptanceCompany');
+        if (ac) {
+            terminalCodigo = tag(ac, 'PCSCode');
+            terminalNombre = tag(ac, 'Name');
+            terminalCif = tag(ac, 'NationalIdentityNumber');
+            terminalDireccion = tag(ac, 'StreetAddress');
+            terminalCiudad = tag(ac, 'City');
+            terminalCodigoPostal = tag(ac, 'PostalCode');
+            terminalUnlocode = tag(ac, 'UNLOCODE');
+        }
+    }
+
     const out = {
         transporte_tipo: docDetails ? tag(docDetails, 'TransportType') : null,
         transporte_ferroviario: docDetails ? _toBool(tag(docDetails, 'IsRailTransport')) : null,
@@ -413,6 +436,13 @@ function extractPcsExtra(xml) {
         mercancia_bultos_numero: _toInt(mercBultosNum),
         mercancia_bultos_tipo_codigo: mercTipoCod,
         mercancia_bultos_tipo_descripcion: mercTipoDesc,
+        terminal_devolucion_codigo: terminalCodigo,
+        terminal_devolucion_nombre: terminalNombre,
+        terminal_devolucion_cif: terminalCif,
+        terminal_devolucion_direccion: terminalDireccion,
+        terminal_devolucion_ciudad: terminalCiudad,
+        terminal_devolucion_codigo_postal: terminalCodigoPostal,
+        terminal_devolucion_unlocode: terminalUnlocode,
     };
     const hasAny = Object.values(out).some((v) => v !== null && v !== undefined);
     return hasAny ? out : null;

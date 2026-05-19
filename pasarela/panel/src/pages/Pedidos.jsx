@@ -416,6 +416,12 @@ export default function Pedidos() {
                   </span>
                 )},
                 { label: 'Albaranes', render: (p) => p.albaranes_count || 0 },
+                { label: 'Terminal devolución', render: (p) => {
+                  if (p.proveedor_codigo !== 'pcs-valencia') return <span style={{ color: gray400 }}>—</span>;
+                  return p.terminal_devolucion
+                    ? <span className="dc-badge dc-badge--green" title="El DUT trae <AcceptanceCompany>: el chofer sabe dónde devolver el contenedor vacío.">Indicada</span>
+                    : <span className="dc-badge dc-badge--gray" title="El DUT no incluye Orden de Entrega: el puerto no ha enviado la organización de admisión del vacío.">No indicada</span>;
+                }},
                 { label: 'Estado', render: (p) => (
                   <span
                     className={`dc-badge ${p.estado === 'PROCESADO' ? 'dc-badge--green' : 'dc-badge--yellow'}`}
@@ -540,6 +546,44 @@ export default function Pedidos() {
                       </div>
                     </div>
                   )}
+
+                  {/* TERMINAL DE DEVOLUCIÓN DEL CONTENEDOR VACÍO
+                       (solo PCS Valencia; siempre visible: muestra los datos
+                       del <AcceptanceCompany> del DUT cuando viene Orden de
+                       Entrega, o "no incluida" cuando no — caso reportado
+                       por el puerto el 2026-05-18 para TIBA26051800052093). */}
+                  {ped.proveedor_codigo === 'pcs-valencia' && (() => {
+                    const ex = detalle.pcs_extra || {};
+                    const hayTerminal = ex.terminal_devolucion_codigo
+                      || ex.terminal_devolucion_nombre
+                      || ex.terminal_devolucion_cif
+                      || ex.terminal_devolucion_direccion
+                      || ex.terminal_devolucion_ciudad
+                      || ex.terminal_devolucion_codigo_postal
+                      || ex.terminal_devolucion_unlocode;
+                    return (
+                      <div className="parada-item">
+                        <div className="parada-title">
+                          <span className="parada-tipo">TERMINAL DE DEVOLUCIÓN DEL CONTENEDOR VACÍO</span>
+                        </div>
+                        {hayTerminal ? (
+                          <div className="parada-body" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4 }}>
+                            {fila('Código (PCS)', ex.terminal_devolucion_codigo)}
+                            {fila('Nombre', ex.terminal_devolucion_nombre)}
+                            {fila('CIF', ex.terminal_devolucion_cif)}
+                            {fila('Dirección', ex.terminal_devolucion_direccion)}
+                            {fila('Ciudad', ex.terminal_devolucion_ciudad)}
+                            {fila('Código postal', ex.terminal_devolucion_codigo_postal)}
+                            {fila('UNLOCODE', ex.terminal_devolucion_unlocode)}
+                          </div>
+                        ) : (
+                          <div className="parada-body" style={{ color: gray500 }}>
+                            El puerto no ha proporcionado esta información: el documento (DUT) no incluye Orden de Entrega, por lo que no llega la organización de admisión del vacío.
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
 
                   {/* DETALLE PCS — contenedor, mercancía, puertos, precinto, aduanas */}
                   {detalle.pcs_extra && (() => {

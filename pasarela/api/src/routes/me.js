@@ -159,7 +159,13 @@ router.get('/pedidos', async (req, res, next) => {
                    ORDER BY secuencia NULLS LAST, orden, id LIMIT 1) AS origen_municipio,
                  (SELECT COALESCE(municipio, lugar_nombre) FROM paradas
                    WHERE pedido_id = p.id AND tipo = 'DESCARGA'
-                   ORDER BY secuencia DESC NULLS LAST, orden DESC, id DESC LIMIT 1) AS destino_municipio
+                   ORDER BY secuencia DESC NULLS LAST, orden DESC, id DESC LIMIT 1) AS destino_municipio,
+                 -- Terminal de devolución del contenedor vacío (solo
+                 -- PCS Valencia). TRUE si el DUT trajo <AcceptanceCompany>;
+                 -- FALSE si no (DUT sin Orden de Entrega o sin pcs_extra).
+                 EXISTS (SELECT 1 FROM pedidos_pcs_extra
+                          WHERE pedido_id = p.id
+                            AND terminal_devolucion_codigo IS NOT NULL) AS terminal_devolucion
              FROM pedidos p
              ${whereSql}
              ORDER BY p.${sortBy} ${sortOrder} NULLS LAST, p.id DESC

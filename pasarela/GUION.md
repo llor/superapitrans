@@ -1,10 +1,28 @@
 # pasarela
 
-Última actualización: 2026-05-18. Sub-servicio de superapitrans cuya
+Última actualización: 2026-05-19. Sub-servicio de superapitrans cuya
 función es **LEER APIs externas** (proveedor por proveedor) y persistir
 lo intercambiado en 4 tablas canónicas multi-tenant
 (`saycu_pasarela_<CODIGO>`), exponiéndolo después por una API inbound
 con bearer key.
+
+Cambios 2026-05-19:
+- **Terminal de devolución del contenedor vacío** (PCS Valencia, DUT):
+  migración 0014 añade 7 columnas `terminal_devolucion_*` a
+  `pedidos_pcs_extra` (codigo, nombre, cif, direccion, ciudad,
+  codigo_postal, unlocode). El mapper extrae
+  `<Containers><AcceptanceDetails><AcceptanceCompany>`. Si el DUT no
+  trae Orden de Entrega (caso TIBA26051800052093), los campos quedan
+  NULL y el panel muestra "no incluida". Nueva sección en el modal de
+  detalle (panel pasarela + admin DatosPasarela) y badge "Indicada /
+  No indicada" en la card.
+- **Frecuencia configurable por número de minutos**:
+  `pasarela_config.cron_expr` acepta también el formato `every:Nm`
+  (cada N minutos vía setInterval), además de cron estándar. Lo usa el
+  selector simplificado del modal "Configuración Nodo API" del admin
+  con la lista cerrada 1/2/3/4/5/10/15/20/30/40/50/60/90/120/150/180/
+  210 minutos · 4/5/6 horas. Validador del admin backend y del
+  pasarela_api watcher reconocen ambos formatos.
 
 Estado proveedores (2026-05-18):
 - **Satelles** ✅ operativo en prod. Sync: GET /puba/routes/finished →

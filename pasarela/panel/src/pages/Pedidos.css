@@ -29,6 +29,13 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  position: sticky;
+  top: -18px;
+  background: var(--bg-input);
+  margin: -18px -18px 0;
+  padding: 18px;
+  z-index: 2;
+  border-bottom: 1px solid var(--border-subtle, transparent);
 }
 
 .paradas-modal-header h3 {
