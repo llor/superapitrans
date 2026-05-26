@@ -17,6 +17,13 @@ Cambios 2026-05-26:
   servicio pasarela). Regla efectiva: la 0014 (y todas las `*_tenant_*`)
   se aplican a TODOS los `saycu_pasarela_<CODIGO>` con `pasarela` en
   `saycu_admin.empresas.servicios`, no solo a los con PCS Valencia.
+- Auditoría de drift de schema tenant unificada en el script general
+  del grupo: `saycu/_scripts/audit-tenant-schema.sh [dev|prod] [pasarela]`.
+  Crea BD efímera, aplica las `*_tenant*.sql` del repo en orden, diffea
+  el schema de cada BD tenant contra la canónica y manda email al
+  receptor del ErrorReporter (project `audit-tenant-schema`) si hay
+  drift. Sustituye al script específico que estuvo brevemente en
+  `pasarela/_scripts/audit-tenant-schema.sh` (eliminado).
 
 Cambios 2026-05-19:
 - **Terminal de devolución del contenedor vacío** (PCS Valencia, DUT):
