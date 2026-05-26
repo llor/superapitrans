@@ -1,10 +1,22 @@
 # pasarela
 
-Última actualización: 2026-05-19. Sub-servicio de superapitrans cuya
+Última actualización: 2026-05-26. Sub-servicio de superapitrans cuya
 función es **LEER APIs externas** (proveedor por proveedor) y persistir
 lo intercambiado en 4 tablas canónicas multi-tenant
 (`saycu_pasarela_<CODIGO>`), exponiéndolo después por una API inbound
 con bearer key.
+
+Cambios 2026-05-26:
+- Migración 0014 aplicada a `saycu_pasarela_test` en prod (faltaba; el
+  comentario inicial del fichero la circunscribía a tenants con PCS
+  Valencia, pero el endpoint
+  `admin.saycusoft.es/api/admin/pasarela-datos/empresas/:cod/pedidos`
+  consulta `pedidos_pcs_extra.terminal_devolucion_codigo` para CUALQUIER
+  tenant con `pasarela` activo y reventaba con 500 al abrir TEST). Tras
+  el fix, la columna existe en DEMO/GFE/JSR/TEST (los 4 tenants con
+  servicio pasarela). Regla efectiva: la 0014 (y todas las `*_tenant_*`)
+  se aplican a TODOS los `saycu_pasarela_<CODIGO>` con `pasarela` en
+  `saycu_admin.empresas.servicios`, no solo a los con PCS Valencia.
 
 Cambios 2026-05-19:
 - **Terminal de devolución del contenedor vacío** (PCS Valencia, DUT):
