@@ -1,8 +1,0 @@
-{
-	"appId": "es.saycusoft.chofocles",
-	"appName": "Chofocles",
-	"webDir": "dist",
-	"server": {
-		"androidScheme": "https"
-	}
-}
