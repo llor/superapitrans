@@ -48,6 +48,15 @@ function buildPedido(publication) {
         }
     }
 
+    // Concatenar números de expedición únicos (delivery.customerShipment)
+    const numerosExpedicion = new Set();
+    for (const dst of safeArr(route.destinations)) {
+        for (const act of safeArr(dst.actions)) {
+            const cs = act?.delivery?.customerShipment;
+            if (cs) numerosExpedicion.add(String(cs));
+        }
+    }
+
     // Concatenar números de albarán únicos
     const numerosAlbaranes = new Set();
     for (const dst of safeArr(route.destinations)) {
@@ -78,6 +87,7 @@ function buildPedido(publication) {
         matricula_remolque: safeStr(trailer.licensePlate),
         numero_pedido: numerosPedidos.size ? Array.from(numerosPedidos).join(';') : null,
         albaranes_concatenados: numerosAlbaranes.size ? Array.from(numerosAlbaranes).join(';') : null,
+        expedicion: numerosExpedicion.size ? Array.from(numerosExpedicion).join(';') : null,
         tipo: 'ALBARAN',                                    // ruta finalizada → albarán
         estado: 'PENDIENTE',
         fecha_plan: route.planDate || null,
