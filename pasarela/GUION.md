@@ -1,10 +1,33 @@
-# pasarela
+# pasarela (futuro: SaycuNode)
 
-Última actualización: 2026-05-26. Sub-servicio de superapitrans cuya
-función es **LEER APIs externas** (proveedor por proveedor) y persistir
-lo intercambiado en 4 tablas canónicas multi-tenant
-(`saycu_pasarela_<CODIGO>`), exponiéndolo después por una API inbound
-con bearer key.
+Última actualización: 2026-06-03. Nodo de datos del grupo Saycu:
+lee APIs externas (proveedor por proveedor) y persiste lo intercambiado
+en 4 tablas canónicas multi-tenant (`saycu_pasarela_<CODIGO>`),
+exponiéndolo después por una API inbound con bearer key.
+
+Cambios 2026-06-03:
+- **customerShipment (nº expedición)**: migración 0015, columna
+  `pedidos.expedicion VARCHAR(200)`. Mapper Satelles extrae
+  `delivery.customerShipment`, concatena con `;`. Aplicada a todas las
+  BDs tenant en dev y prod. Visor admin actualizado.
+- **chofocles separado**: ya no vive en este repo. Repo propio
+  `llor/chofocles` (local: `saycu/chofocles/`).
+- **PDF API Satelles v1.8.0**: guardado en `documentos/satelles/`.
+
+ALCANCE POR PROVEEDOR — DECISIÓN DEL N1 (2026-06-03)
+-----------------------------------------------------
+- **Satelles**: SOLO datos para facturación. No nos interesa nada más
+  porque solo podemos hacer lo que Satelles nos deja hacer. Campos de la
+  API 1.7.0/1.8.0 no implementados (modos de reparto, CRUD pedidos,
+  legs/odómetros, shippingActions) salvo petición expresa del N1.
+- **PCS Valencia**: alcance más amplio, nos dejan hacer más cosas.
+  Extensible (outbound, más tipos de mensaje) cuando toque.
+
+SIGUIENTE PASO — CLIENTE C# EN SERVIDOR WINDOWS
+------------------------------------------------
+Montar programa C# en el servidor Windows (acceso vía proyecto Guindon,
+ver `proyectos/guindon/`) que consuma la API de SaycuNode. Previsto
+para 2026-06-04.
 
 Cambios 2026-05-26:
 - Migración 0014 aplicada a `saycu_pasarela_test` en prod (faltaba; el
