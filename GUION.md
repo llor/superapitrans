@@ -1,15 +1,16 @@
-# superapitrans
+# superapitrans (futuro: SaycuNode)
 
-Última actualización: 2026-05-18.
+Última actualización: 2026-06-03.
 
 
 OBJETIVO
 --------
 
-Servicio API alojado en `debian.saycusoft.es` (mismo servidor que el resto
-del grupo Saycu) al que accederán diferentes tipos de consumidores. Es el
-contenedor común de servicios API del grupo saycutrans: agrupa varios
-sub-proyectos (hoy: chofocles) tras un único subdominio API público.
+Nodo de datos del grupo Saycu: obtiene datos de proveedores externos y los
+ofrece vía API. Alojado en `debian.saycusoft.es`.
+
+NOTA: renombrado pendiente a SaycuNode (Fase B). Por ahora el repo, la
+carpeta y la infra siguen llamándose `superapitrans`.
 
 
 ARQUITECTURA Saycu (cómo encaja superapitrans)
@@ -30,10 +31,14 @@ superapitrans está registrado en `system-caddy` como un proyecto más:
   - `system-caddy/conf/Caddyfile.prod`: `api.{$BASE_DOMAIN_SUPERAPI}`.
   - `system-caddy/conf/Caddyfile.dev` : `dev-api.{$BASE_DOMAIN_SUPERAPI}`.
 
-superapitrans no tiene Caddy propio. La carpeta solo contiene:
-- `chofocles/` (sub-servicio).
+superapitrans no tiene Caddy propio. La carpeta contiene:
+- `pasarela/` (el nodo de datos propiamente dicho).
+- `documentos/` (specs de proveedores: Satelles, PCS Valencia, etc.).
 - `_scripts/detect_env.sh` (utilidad para deploys).
 - GUION.md y CLAUDE.md.
+
+chofocles se separó a su propio repo el 2026-06-03: `llor/chofocles`
+(local: `saycu/chofocles/`). Ya no vive aquí.
 
 
 CONEXIONES Y ACCESOS
@@ -83,33 +88,20 @@ Cuando se asigne el dominio definitivo:
    `<nuevo-nombre>/` con `mv` — no afecta a runtime.
 
 
-SPEC MAESTRA — DÓNDE ESTÁ
---------------------------
+EL NODO (pasarela/)
+-------------------
 
-La especificación funcional del sistema (flujos email → IA →
-plantilla → chofer → app → factura, modelo empresa-chofer/tenant,
-rondas de decisiones del 2026-05-01, semáforo de espec) vive en
-`chofocles/GUION.md` porque es lo que más toca a ese subproyecto.
-Para tocar pasarela o el contenedor superapitrans se leerá ahí cuando
-haga falta contexto cruzado.
-
-SUB-PROYECTOS
--------------
-
-- **chofocles/** — extracción de órdenes de transporte por email.
-  - API: `https://api.{BASE_DOMAIN}/chofocles/...` → backend interno
-    `chofocles_api:3411` con prefijo `/api`.
-  - Panel: `https://panel.{BASE_DOMAIN}/chofocles/`.
-  - Detalle: ver `chofocles/GUION.md`.
-
-- **chofoclesapp/** — esqueleto de la app móvil chofocles (Capacitor +
-  React + Vite). Ver `chofoclesapp/GUION.md`.
-
-- **pasarela/** — sistema de API con keys (inbound clientes + outbound
+- **pasarela/** — sistema de API con keys (inbound clientes N2 + outbound
   proveedores) y tabla de datos canónica.
   - API: `https://api.{BASE_DOMAIN}/pasarela/...` → backend interno
     `pasarela_api:3412` con prefijo `/api`.
   - Detalle: ver `pasarela/GUION.md`.
+
+NOTA HISTÓRICA: chofocles y chofoclesapp vivieron aquí hasta 2026-06-03.
+Separados a repo propio `llor/chofocles` (local: `saycu/chofocles/`).
+Siguen compartiendo el subdominio `api.{BASE_DOMAIN}` y la red Docker
+`superapitrans_network` en los servidores hasta que la Fase B de
+infraestructura los desacople.
 
 
 DECISIONES DE DISEÑO — CONFIRMADAS
@@ -139,6 +131,9 @@ arrancar `system_caddy`. Una sola vez por servidor:
 
     docker network create superapitrans_network
 
-Después, los sub-servicios (chofocles, futuros) arrancan desde su propia
-carpeta con su propio compose. Cada uno se conecta a
-`superapitrans_network` como red externa.
+Después, el nodo (pasarela/) arranca desde su propia carpeta con su
+propio compose, conectado a `superapitrans_network` como red externa.
+
+chofocles sigue usando `superapitrans_network` en los servidores
+(desplegado en `/var/opt/superapitrans/chofocles/`) hasta que la
+Fase B de infra lo mueva a su propia red.

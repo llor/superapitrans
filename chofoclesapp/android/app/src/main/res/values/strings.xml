@@ -1,7 +1,0 @@
-<?xml version='1.0' encoding='utf-8'?>
-<resources>
-    <string name="app_name">Chofocles</string>
-    <string name="title_activity_main">Chofocles</string>
-    <string name="package_name">es.saycusoft.chofocles</string>
-    <string name="custom_url_scheme">es.saycusoft.chofocles</string>
-</resources>
