@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -67,6 +68,9 @@ namespace NodeImport
                     var idx = _cboEstado.Items.IndexOf(_restoreArgs.Estado);
                     if (idx >= 0) _cboEstado.SelectedIndex = idx;
                 }
+
+                // Hacer visible y matar la instancia anterior tras un breve delay
+                Shown += (s, ev) => FinalizarRestore();
             }
             else
             {
@@ -776,6 +780,16 @@ namespace NodeImport
                 Log(resumen, errores > 0 ? Color.Orange : Color.LimeGreen);
                 Logger.Info(resumen);
                 _lblEstado.Text = resumen;
+
+                // Reiniciar la app para liberar COM de A3 y evitar que a3ERP
+                // mate el proceso por inactividad o que la segunda importación
+                // falle por COM sucio (mismo problema que SaycuImport).
+                if (ok > 0)
+                {
+                    Logger.Info("Reiniciando app para liberar conexion A3...");
+                    await Task.Delay(1500);
+                    ReiniciarApp();
+                }
             }
         }
 
@@ -870,6 +884,64 @@ namespace NodeImport
             finally
             {
                 _comLock.Release();
+            }
+        }
+
+        // — Auto-reinicio post-importación (patrón SaycuImport) —
+        // a3ERP lanza el .exe como proceso hijo. Tras importar, el COM queda
+        // en estado sucio y la segunda importación peta. La solución es
+        // relanzar el .exe con --restore, conservando log, filtros y posición.
+
+        private void ReiniciarApp()
+        {
+            var desde = _dtpDesde.Value.ToString("yyyy-MM-dd");
+            var hasta = _dtpHasta.Value.ToString("yyyy-MM-dd");
+            var myPid = Process.GetCurrentProcess().Id;
+
+            // Guardar log RTF para que la nueva instancia lo restaure
+            string logFile = null;
+            try
+            {
+                logFile = Path.Combine(Path.GetTempPath(), $"NodeImport_log_{myPid}.rtf");
+                File.WriteAllText(logFile, _txtLog.Rtf);
+            }
+            catch (Exception exLog)
+            {
+                Logger.Error($"Error guardando log: {exLog.Message}");
+                logFile = null;
+            }
+
+            var b = Bounds;
+            var boundsArg = $"{b.X},{b.Y},{b.Width},{b.Height}";
+
+            var exe = Application.ExecutablePath;
+            var args = $"--restore --desde {desde} --hasta {hasta} --kill-pid {myPid} --bounds {boundsArg}";
+            if (logFile != null)
+                args += $" --logfile \"{logFile}\"";
+
+            Logger.Info($"Reiniciando app: {exe} {args}");
+            Process.Start(new ProcessStartInfo(exe, args) { UseShellExecute = true });
+            // NO cerramos — la nueva instancia nos mata con --kill-pid
+        }
+
+        private async void FinalizarRestore()
+        {
+            Opacity = 1;
+
+            var killPid = _restoreArgs?.KillPid;
+            _restoreArgs = null;
+
+            await Task.Delay(3000);
+
+            if (killPid is int pid)
+            {
+                try
+                {
+                    var old = Process.GetProcessById(pid);
+                    old.Kill();
+                    Logger.Info($"Instancia anterior (PID {pid}) terminada");
+                }
+                catch { /* Ya murió sola */ }
             }
         }
 
