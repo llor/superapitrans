@@ -23,6 +23,7 @@ namespace NodeImport
         // Controles
         private ComboBox _cboEstado;
         private DateTimePicker _dtpDesde;
+        private ComboBox _cboTipo;
         private DateTimePicker _dtpHasta;
         private Button _btnConsultar;
         private Button _btnImportar;
@@ -126,7 +127,7 @@ namespace NodeImport
             // Panel superior: filtros
             var panelSuperior = new GroupBox
             {
-                Text = "Consulta de pedidos en SaycuNode",
+                Text = "Consulta en SaycuNode",
                 Dock = DockStyle.Top,
                 Height = 100,
                 Padding = new Padding(10, 5, 10, 5)
@@ -149,17 +150,33 @@ namespace NodeImport
                 { "(Todos)", "PENDIENTE", "LEIDO", "ACEPTADO", "INICIADO", "TERMINADO" });
             _cboEstado.SelectedIndex = 1;
 
+            var lblTipo = new Label
+            {
+                Text = "Tipo:",
+                Location = new Point(250, 22),
+                AutoSize = true
+            };
+
+            _cboTipo = new ComboBox
+            {
+                Location = new Point(290, 19),
+                Width = 130,
+                DropDownStyle = ComboBoxStyle.DropDownList
+            };
+            _cboTipo.Items.AddRange(new object[] { "(Todos)", "ALBARAN", "PEDIDO" });
+            _cboTipo.SelectedIndex = 0;
+
             var lblProv = new Label
             {
                 Text = "Proveedor:",
-                Location = new Point(250, 22),
+                Location = new Point(435, 22),
                 AutoSize = true,
                 ForeColor = Color.Gray
             };
             var lblProvVal = new Label
             {
                 Text = _config.Pasarela.Empresa ?? "(no definido)",
-                Location = new Point(320, 22),
+                Location = new Point(510, 22),
                 AutoSize = true,
                 Font = new Font("Segoe UI", 9F, FontStyle.Bold)
             };
@@ -205,7 +222,7 @@ namespace NodeImport
 
             panelSuperior.Controls.AddRange(new Control[]
             {
-                lblEstado, _cboEstado, lblProv, lblProvVal,
+                lblEstado, _cboEstado, lblTipo, _cboTipo, lblProv, lblProvVal,
                 lblDesde, _dtpDesde, lblHasta, _dtpHasta, _btnConsultar
             });
 
@@ -387,7 +404,7 @@ namespace NodeImport
             };
             _lblRegistros = new ToolStripStatusLabel
             {
-                Text = "0 pedidos",
+                Text = "0 registros",
                 BorderSides = ToolStripStatusLabelBorderSides.Left,
                 ForeColor = Color.White
             };
@@ -410,15 +427,18 @@ namespace NodeImport
             _btnConsultar.Enabled = false;
             _btnImportar.Enabled = false;
             Cursor = Cursors.WaitCursor;
-            _lblEstado.Text = "Consultando pedidos...";
+            _lblEstado.Text = "Consultando...";
 
             try
             {
                 string estado = _cboEstado.SelectedIndex > 0
                     ? _cboEstado.SelectedItem.ToString()
                     : null;
+                string tipoFiltro = _cboTipo.SelectedIndex > 0
+                    ? _cboTipo.SelectedItem.ToString()
+                    : null;
 
-                Log($"Consultando pedidos (estado: {estado ?? "todos"})...");
+                Log($"Consultando (estado: {estado ?? "todos"}, tipo: {tipoFiltro ?? "todos"})...");
 
                 var pedidos = await _api.ListarTodosPedidos(estado);
 
@@ -426,13 +446,19 @@ namespace NodeImport
                 var hasta = _dtpHasta.Value.Date;
                 _pedidos = pedidos.Where(p =>
                 {
+                    // Filtro por tipo
+                    if (tipoFiltro != null && !string.Equals(p.Tipo, tipoFiltro, StringComparison.OrdinalIgnoreCase))
+                        return false;
+                    // Filtro por fecha
                     if (string.IsNullOrEmpty(p.FechaEfectiva)) return true;
                     if (DateTime.TryParse(p.FechaEfectiva, out var fecha))
                         return fecha.Date >= desde && fecha.Date <= hasta;
                     return true;
                 }).ToList();
 
-                Log($"Encontrados: {_pedidos.Count} pedidos (de {pedidos.Count} en API)");
+                int nAlb = _pedidos.Count(p => string.Equals(p.Tipo, "ALBARAN", StringComparison.OrdinalIgnoreCase));
+                int nPed = _pedidos.Count(p => string.Equals(p.Tipo, "PEDIDO", StringComparison.OrdinalIgnoreCase));
+                Log($"Encontrados: {_pedidos.Count} ({nAlb} albaranes, {nPed} pedidos) de {pedidos.Count} en API");
 
                 // Consultar ya importados via SQL
                 await ConsultarImportadosAsync();
@@ -440,7 +466,7 @@ namespace NodeImport
                 CargarGrid();
                 _btnFiltrarPendientes.Enabled = true;
                 _lblEstado.Text = "Listo";
-                _lblRegistros.Text = $"{_pedidos.Count} pedidos";
+                _lblRegistros.Text = $"{_pedidos.Count} ({nAlb} alb. / {nPed} ped.)";
             }
             catch (Exception ex)
             {
@@ -500,7 +526,7 @@ namespace NodeImport
             });
             _grid.Columns.Add(new DataGridViewTextBoxColumn { Name = "Ver", HeaderText = "", Width = 20, ReadOnly = true });
             _grid.Columns.Add(new DataGridViewTextBoxColumn { Name = "Id", HeaderText = "ID", Width = 60, ReadOnly = true });
-            _grid.Columns.Add(new DataGridViewTextBoxColumn { Name = "NumeroPedido", HeaderText = "Num. Pedido", Width = 110, ReadOnly = true });
+            _grid.Columns.Add(new DataGridViewTextBoxColumn { Name = "NumeroPedido", HeaderText = "Referencia", Width = 110, ReadOnly = true });
             _grid.Columns.Add(new DataGridViewTextBoxColumn { Name = "Proveedor", HeaderText = "Proveedor", Width = 100, ReadOnly = true });
             _grid.Columns.Add(new DataGridViewTextBoxColumn { Name = "Tipo", HeaderText = "Tipo", Width = 65, ReadOnly = true });
             _grid.Columns.Add(new DataGridViewTextBoxColumn { Name = "EstadoApi", HeaderText = "Estado API", Width = 90, ReadOnly = true });
@@ -629,7 +655,7 @@ namespace NodeImport
 
             if (seleccionados.Count == 0)
             {
-                Log("No hay pedidos seleccionados para importar.", Color.DarkGoldenrod);
+                Log("No hay registros seleccionados para importar.", Color.DarkGoldenrod);
                 return;
             }
 
@@ -651,7 +677,7 @@ namespace NodeImport
             _btnConsultar.Enabled = false;
             Cursor = Cursors.WaitCursor;
 
-            Log($"Importando {seleccionados.Count} pedido(s) a A3ERP ({empresaA3})...", Color.DodgerBlue);
+            Log($"Importando {seleccionados.Count} registro(s) a A3ERP ({empresaA3})...", Color.DodgerBlue);
             _lblEstado.Text = $"Importando 0/{seleccionados.Count}...";
 
             int ok = 0, errores = 0;
