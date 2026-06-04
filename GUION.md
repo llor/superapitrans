@@ -175,23 +175,74 @@ logístico (GPS, tiempos, contenedor, BL, firmas) queda en la API
 pasarela. Si el N1 necesita más campos en a3ERP en el futuro, se
 pueden añadir vía el diccionario de a3ERP (tablas/campos personalizados).
 
-**Empresa a3ERP:** TRANSCOLLADO (BD ya creada en SQL Server de
-SRV-SAYC00-009). Pendiente: darle permisos al usuario Windows `llor`
-y darla de alta en admin.saycusoft.es.
+**Distinción pedidos vs albaranes:**
+- La tabla canónica se llama `pedidos` pero el campo `tipo` distingue:
+  `ALBARAN` (nota de entrega) vs `PEDIDO` (orden de compra).
+- **Satelles** solo genera albaranes (tipo=ALBARAN). Nunca pedidos.
+- **PCS Valencia** genera ambos mezclados.
+- En a3ERP cada tipo va por su camino COM: albarán →
+  `a3ERPActiveX.Albaran`, pedido → `a3ERPActiveX.Pedido`.
+- La UI tiene filtro de Tipo (Todos/ALBARAN/PEDIDO) y la barra de
+  estado muestra el desglose (X alb. / Y ped.).
+
+**Auto-reinicio post-importación (patrón SaycuImport):**
+Cuando NodeImport se abre desde a3ERP como aplicación externa, a3ERP
+lanza el .exe como proceso hijo. Tras la primera importación, la
+conexión COM queda en estado sucio (hilo STA no reutilizable). Si el
+usuario importa otra vez, peta. Además a3ERP puede matar el proceso
+por inactividad.
+- **Solución:** tras cada importación exitosa, el .exe se relanza a sí
+  mismo con `--restore`, conservando: log RTF, filtros (estado, tipo,
+  fechas), posición de ventana (--bounds).
+- La nueva instancia arranca invisible (Opacity=0), restaura todo, se
+  hace visible y mata la instancia vieja (--kill-pid).
+- El usuario no nota nada — parece la misma ventana.
+- Misma solución que SaycuImport (documentado en su GUION.md).
+
+**Empresa a3ERP:** De momento se prueba con GFE (GLOBAL FEED
+ECOTRANS, S.L.) que es la que tiene datos de Satelles. La empresa
+real del N1 es TRANSCOLLADO (BD ya creada en SQL Server de
+SRV-SAYC00-009). Pendiente: darle permisos al usuario Windows.
+
+**API key pasarela para GFE:** creada en prod el 2026-06-04.
+Prefijo `pas_live_b2cb99b`, scopes `datos.read` + `datos.write`.
+Empresa admin id=12 (GFE). La key completa está en el config.json
+de la carpeta Publish de a3win.
 
 **Entorno de desarrollo:** SRV-SAYC00-009 vía `ssh a3win`.
 Mismo flujo que SaycuImportV2: editar en Mac → SCP → compilar en Windows.
+- SSH entra como usuario `llor`, escritorio remoto como `juanemilio.llor000`.
+- El enlace simbólico del escritorio está en el perfil de `juanemilio`.
+- .NET SDK 10.0.300 x86 instalado en `C:\dotnet\` (no en el PATH;
+  invocar como `C:\dotnet\dotnet.exe`).
 
-**Configuración:** `config.json` local + config remota desde admin.
+**Compilación:**
+```
+scp *.cs *.csproj *.ico *.bat a3win:'C:\Saycusoft\NodeImport\'
+ssh a3win 'C:\dotnet\dotnet.exe publish "C:\Saycusoft\NodeImport\NodeImport.csproj" -c Release -r win-x86 --self-contained true -o "C:\Saycusoft\NodeImport\bin\Publish"'
+```
+
+**Configuración:** `config.json` local.
 - URL Pasarela API, empresa, API key (Bearer).
 - Empresa a3ERP, usuario, password.
-- Selector de proveedor (Satelles/PCS Valencia) por empresa.
-- Mapeo de campos configurable.
+- Import: codCliA3, codArtSatelles, codArtPcs, cambiarEstadoTras.
 
 **Instalador:** Inno Setup (`.menu` para a3ERP + wizard de config).
+Entrada de menú Id=`NI_IMP` (convive con SaycuImport Id=`SS_IMP` en
+el mismo `saycuwmodelos.menu`).
+
+**Log:** fichero diario en `bin\Publish\log\nodeimport_YYYYMMDD.log`.
 
 **Carpeta local:** `superapitrans/A3/NodeImport/`.
 **Carpeta Windows dev:** `C:\Saycusoft\NodeImport\`.
+**Carpeta Windows publicación:** `C:\Saycusoft\NodeImport\bin\Publish\`.
+
+**Carpetas en a3win (C:\Saycusoft\):**
+- `NodeImport/` — fuentes + compilación de NodeImport.
+- `SaycuImport/` — instalación productiva de SaycuImport (DataControl).
+- `SaycuImportV2/` — fuentes + compilación de SaycuImport.
+- `Albarania/` — script PowerShell de envío de albaranes.
+- (SaycuImportV30 eliminada el 2026-06-04: era clon descartado de V2.)
 
 **Ficheros fuente (2473 líneas totales):**
 - `NodeImport.csproj` — Proyecto .NET 10, WinForms, x86.
@@ -225,13 +276,16 @@ Mismo flujo que SaycuImportV2: editar en Mac → SCP → compilar en Windows.
   en el mismo .menu.
 
 **TODO:**
-- [ ] Resolver permisos de TRANSCOLLADO (usuario `llor` en SQL Server).
-- [ ] Dar de alta empresa + API key en admin.saycusoft.es para la pasarela.
-- [ ] Primera compilación en a3win (SCP + `dotnet publish -c Release -r win-x86 --self-contained true`).
+- [ ] Resolver permisos de TRANSCOLLADO (usuario Windows en SQL Server).
+- [x] API key de GFE creada en prod (2026-06-04).
+- [x] Primera compilación en a3win (.NET 10 SDK instalado, exe funcionando).
 - [x] Fichero `.menu` para integración en menú de a3ERP (en el .iss).
 - [x] Instalador Inno Setup (NodeImport_Setup.iss).
+- [x] Consulta de albaranes Satelles verificada en vivo (199 PENDIENTE de GFE).
 - [ ] Rellenar codCliA3 / codArt reales en config.json.
-- [ ] Probar importación real con datos de Satelles y PCS Valencia.
+- [ ] Probar importación real a a3ERP (necesita credenciales a3ERP).
+- [ ] Compilar instalador con Inno Setup 6 (si no está instalado en a3win).
+- [ ] Decidir dominio definitivo (saycunode.es vs saycunode.saycutrans.es).
 
 **Decisiones pendientes:** Si el N1 quiere campos logísticos dentro de
 a3ERP, se abordará con el diccionario de a3ERP (tablas/campos personalizados).
