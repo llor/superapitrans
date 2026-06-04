@@ -217,13 +217,19 @@ Mismo flujo que SaycuImportV2: editar en Mac → SCP → compilar en Windows.
 - `Logger.cs` — Log a fichero diario.
 - `ErrorHelper.cs` — Diálogo de error con detalle técnico.
 - `config.json` — Plantilla con campos CAMBIAR.
+- `compilar.bat` — Script de compilación (`dotnet build -c Release -r win-x86`).
+- `Instalador/NodeImport_Setup.iss` — Instalador Inno Setup: wizard con
+  3 páginas (Pasarela, A3 ERP, Import), validación Bearer contra la API,
+  genera config.json, crea/actualiza entrada `NI_IMP` en el menú de a3ERP
+  (saycuwmodelos.menu). Mismo patrón que SaycuImport (Id=`SS_IMP`), conviven
+  en el mismo .menu.
 
 **TODO:**
 - [ ] Resolver permisos de TRANSCOLLADO (usuario `llor` en SQL Server).
 - [ ] Dar de alta empresa + API key en admin.saycusoft.es para la pasarela.
 - [ ] Primera compilación en a3win (SCP + `dotnet publish -c Release -r win-x86 --self-contained true`).
-- [ ] Fichero `.menu` para integración en menú de a3ERP.
-- [ ] Instalador Inno Setup.
+- [x] Fichero `.menu` para integración en menú de a3ERP (en el .iss).
+- [x] Instalador Inno Setup (NodeImport_Setup.iss).
 - [ ] Rellenar codCliA3 / codArt reales en config.json.
 - [ ] Probar importación real con datos de Satelles y PCS Valencia.
 
