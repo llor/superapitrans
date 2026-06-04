@@ -81,7 +81,15 @@ namespace NodeImport
             response.EnsureSuccessStatusCode();
 
             var json = await response.Content.ReadAsStringAsync();
-            return JsonSerializer.Deserialize<PedidoPasarela>(json, _jsonOpts);
+            var wrapper = JsonSerializer.Deserialize<DetallePedidoResponse>(json, _jsonOpts);
+            var pedido = wrapper?.Data?.Pedido;
+            if (pedido != null && wrapper.Data != null)
+            {
+                pedido.Albaranes = wrapper.Data.Albaranes;
+                pedido.Paradas = wrapper.Data.Paradas;
+                pedido.PcsExtra = wrapper.Data.PcsExtra;
+            }
+            return pedido;
         }
 
         /// <summary>

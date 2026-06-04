@@ -239,7 +239,44 @@ namespace NodeImport
         public string PrecintoNumero { get; set; }
     }
 
+    public class DetallePedidoResponse
+    {
+        [JsonPropertyName("ok")]
+        public bool Ok { get; set; }
+
+        [JsonPropertyName("data")]
+        public DetallePedidoData Data { get; set; }
+    }
+
+    public class DetallePedidoData
+    {
+        [JsonPropertyName("pedido")]
+        public PedidoPasarela Pedido { get; set; }
+
+        [JsonPropertyName("albaranes")]
+        public List<AlbaranPasarela> Albaranes { get; set; }
+
+        [JsonPropertyName("paradas")]
+        public List<ParadaPasarela> Paradas { get; set; }
+
+        [JsonPropertyName("pcs_extra")]
+        public PcsExtraPasarela PcsExtra { get; set; }
+    }
+
     public class ListaPedidosResponse
+    {
+        [JsonPropertyName("ok")]
+        public bool Ok { get; set; }
+
+        [JsonPropertyName("data")]
+        public ListaPedidosData Data { get; set; }
+
+        // Atajos para no romper el resto del código
+        public List<PedidoPasarela> Pedidos => Data?.Pedidos;
+        public int Total => Data?.Total ?? 0;
+    }
+
+    public class ListaPedidosData
     {
         [JsonPropertyName("pedidos")]
         public List<PedidoPasarela> Pedidos { get; set; }
