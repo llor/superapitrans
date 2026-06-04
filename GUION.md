@@ -275,17 +275,34 @@ el mismo `saycuwmodelos.menu`).
   (saycuwmodelos.menu). Mismo patrón que SaycuImport (Id=`SS_IMP`), conviven
   en el mismo .menu.
 
+**ESTADO ACTUAL — Aparcado 2026-06-04:**
+El programa está compilado, consulta albaranes de GFE desde la pasarela
+y los muestra en el grid (199 albaranes PENDIENTE verificados). La empresa
+GFE se ha creado en a3ERP (SQL Server) con datos de ejemplo. Falta probar
+la importación COM real. El siguiente paso es:
+1. Abrir NodeImport en a3win (escritorio remoto, usuario juanemilio).
+2. Consultar → seleccionar UN albarán → Importar.
+3. Si el login COM falla con SA/SA, probar sin contraseña o crear usuario
+   desde la interfaz de a3ERP (Utilidades → Usuarios).
+4. Verificar que el albarán aparece en a3ERP (Compras → Albaranes).
+
+**Config actual en a3win (`bin\Publish\config.json`):**
+- Pasarela: `https://api.superapi.eoden.es/pasarela` | empresa GFE
+- a3ERP: empresa GFE | usuario SA | password SA
+- Import: codCliA3=1 (SPORTS ABC, datos ejemplo)
+
 **TODO:**
-- [ ] Resolver permisos de TRANSCOLLADO (usuario Windows en SQL Server).
 - [x] API key de GFE creada en prod (2026-06-04).
 - [x] Primera compilación en a3win (.NET 10 SDK instalado, exe funcionando).
 - [x] Fichero `.menu` para integración en menú de a3ERP (en el .iss).
 - [x] Instalador Inno Setup (NodeImport_Setup.iss).
-- [x] Consulta de albaranes Satelles verificada en vivo (199 PENDIENTE de GFE).
-- [ ] Rellenar codCliA3 / codArt reales en config.json.
-- [ ] Probar importación real a a3ERP (necesita credenciales a3ERP).
+- [x] Consulta de albaranes Satelles verificada en vivo (199 PENDIENTE).
+- [x] Empresa GFE creada en a3ERP con datos de ejemplo.
+- [x] Permisos SQL Server dados a llor y juanemilio sobre GFE.
+- [ ] **SIGUIENTE: probar importación COM real (paso 1-4 arriba).**
 - [ ] Compilar instalador con Inno Setup 6 (si no está instalado en a3win).
 - [ ] Decidir dominio definitivo (saycunode.es vs saycunode.saycutrans.es).
+- [ ] Documentar todo en admin.saycusoft.es ficha GFE.
 
 **Decisiones pendientes:** Si el N1 quiere campos logísticos dentro de
 a3ERP, se abordará con el diccionario de a3ERP (tablas/campos personalizados).

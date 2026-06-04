@@ -5,9 +5,9 @@
     "apiKey": "pas_live_b2cb99b76b973c5c6ad0f4595fdffcc352dced7711549aca"
   },
   "a3erp": {
-    "empresa": "TRANSCOLLADO",
-    "usuario": "JE",
-    "password": "JE"
+    "empresa": "GFE",
+    "usuario": "SA",
+    "password": "SA"
   },
   "a3sql": {
     "modoAuth": "windows",
