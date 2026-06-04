@@ -68,6 +68,16 @@ function buildPedido(publication) {
         }
     }
 
+    // Sumar km de todos los trips de la ruta
+    let kmTotal = 0, kmVacio = 0, kmCargado = 0;
+    for (const trip of safeArr(route.trips)) {
+        const s = trip.summary || {};
+        kmTotal   += s.distance       || 0;
+        kmVacio   += s.distanceEmpty   || 0;
+        kmCargado += s.distanceLoaded  || 0;
+    }
+    const hayTrips = safeArr(route.trips).length > 0;
+
     return {
         id_viaje: route.id || null,
         id_ruta_externa: null,                              // Satelles no expone
@@ -95,6 +105,9 @@ function buildPedido(publication) {
         origen: 'proveedor_externo',
         proveedor_codigo: PROVEEDOR,
         proveedor_publication_id: publication.id || null,
+        km_total:   hayTrips ? Math.round(kmTotal * 100) / 100   : null,
+        km_vacio:   hayTrips ? Math.round(kmVacio * 100) / 100   : null,
+        km_cargado: hayTrips ? Math.round(kmCargado * 100) / 100 : null,
     };
 }
 

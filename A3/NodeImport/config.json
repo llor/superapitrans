@@ -1,0 +1,23 @@
+{
+  "pasarela": {
+    "url": "https://api.superapi.eoden.es/chofocles",
+    "empresa": "TRANSCOLLADO",
+    "apiKey": "CAMBIAR"
+  },
+  "a3erp": {
+    "empresa": "TRANSCOLLADO",
+    "usuario": "CAMBIAR",
+    "password": "CAMBIAR"
+  },
+  "a3sql": {
+    "modoAuth": "windows",
+    "usuario": "",
+    "password": ""
+  },
+  "import": {
+    "codCliA3": "CAMBIAR",
+    "codArtSatelles": "",
+    "codArtPcs": "",
+    "cambiarEstadoTras": "LEIDO"
+  }
+}

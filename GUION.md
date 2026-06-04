@@ -137,3 +137,95 @@ propio compose, conectado a `superapitrans_network` como red externa.
 chofocles sigue usando `superapitrans_network` en los servidores
 (desplegado en `/var/opt/superapitrans/chofocles/`) hasta que la
 Fase B de infra lo mueva a su propia red.
+
+
+NODEIMPORT (A3/ — Cliente C# Windows)
+--------------------------------------
+
+Última actualización: 2026-06-04.
+
+**Qué es:** Programa C# WinForms (.NET 10, x86) que importa datos de la
+API pasarela a a3ERP. Se integra en el menú de a3ERP como aplicación
+externa, igual que SaycuImport de DataControl.
+
+**Nombre:** NodeImport (sin prefijo "Saycu", es un programa oculto/interno).
+
+**Arquitectura:** Clonada de `datacontrol/A3/SaycuImportV2/`:
+- Lee datos de la Pasarela API por HTTP (Bearer API key).
+- Escribe en a3ERP por COM ActiveX (`a3ERPActiveX.dll`).
+- No crea tablas propias en SQL Server; usa las nativas de a3ERP.
+- Marca lo importado con prefijo en REFERENCIA (`NI-{id}`) para
+  rastreo vía `SELECT FROM CABEALBV/CABEPED WHERE REFERENCIA LIKE 'NI-%'`.
+
+**Dos modos de importación según proveedor:**
+
+1. **Satelles** → Albaranes de compra (`a3ERPActiveX.Albaran`, `bEsDeCompra=true`).
+   Solo campos necesarios para facturación: cliente, fecha, referencia,
+   artículo/servicio, cantidad. Sin paradas.
+
+2. **PCS Valencia** → Pedidos de compra (`a3ERPActiveX.Pedido`, `bEsDeCompra=true`).
+   Cada pedido de transporte = 1 cabecera; cada parada = 1 línea del
+   pedido (descripción con dirección, tipo carga/descarga, mercancía).
+   Estructura compatible con SaycuTrans (viaje → paradas).
+
+**Campos en a3ERP (camino sencillo, como DataControl):**
+Solo campos comerciales estándar (REFERENCIA, CODCLI/CODPRO, CODART,
+DESCLIN, CANTIDAD, PRECIO, CENTROCOSTE, OBSERVACIONES). El detalle
+logístico (GPS, tiempos, contenedor, BL, firmas) queda en la API
+pasarela. Si el N1 necesita más campos en a3ERP en el futuro, se
+pueden añadir vía el diccionario de a3ERP (tablas/campos personalizados).
+
+**Empresa a3ERP:** TRANSCOLLADO (BD ya creada en SQL Server de
+SRV-SAYC00-009). Pendiente: darle permisos al usuario Windows `llor`
+y darla de alta en admin.saycusoft.es.
+
+**Entorno de desarrollo:** SRV-SAYC00-009 vía `ssh a3win`.
+Mismo flujo que SaycuImportV2: editar en Mac → SCP → compilar en Windows.
+
+**Configuración:** `config.json` local + config remota desde admin.
+- URL Pasarela API, empresa, API key (Bearer).
+- Empresa a3ERP, usuario, password.
+- Selector de proveedor (Satelles/PCS Valencia) por empresa.
+- Mapeo de campos configurable.
+
+**Instalador:** Inno Setup (`.menu` para a3ERP + wizard de config).
+
+**Carpeta local:** `superapitrans/A3/NodeImport/`.
+**Carpeta Windows dev:** `C:\Saycusoft\NodeImport\`.
+
+**Ficheros fuente (2473 líneas totales):**
+- `NodeImport.csproj` — Proyecto .NET 10, WinForms, x86.
+- `Config.cs` — AppConfig (PasarelaConfig + A3ErpConfig + A3SqlConfig +
+  ImportSettings). CliArgs con --cli, --estado, --desde, --hasta, --solo-consulta.
+  ImportSettings: codCliA3, codArtSatelles, codArtPcs, cambiarEstadoTras.
+- `Registro.cs` — Modelos tipados: PedidoPasarela, AlbaranPasarela,
+  ParadaPasarela, PcsExtraPasarela, ListaPedidosResponse.
+- `PasarelaApi.cs` — Cliente HTTP con Bearer auth. ListarPedidos,
+  ListarTodosPedidos (paginación automática), ObtenerPedido, CambiarEstado,
+  TestConexion.
+- `A3ErpService.cs` — COM ActiveX: Conectar, ImportarSatelles (Albaran),
+  ImportarPcsValencia (Pedido con paradas como líneas),
+  ObtenerReferenciasImportadasSql (ADODB), CrearArticuloSiNoExiste,
+  ObtenerOCrearCentroCoste, TestConexionRapida.
+- `Program.cs` — Entry point: GUI (mutex instancia única), CLI (--cli),
+  restore (--restore). Flujo CLI completo: consultar → filtrar → importar.
+- `MainForm.cs` — WinForms: cabecera azul corporativa, filtros (estado,
+  fechas), grid con columnas (Sel, indicador color, ID, NumeroPedido,
+  Proveedor, Tipo, EstadoApi, Fecha, Cliente, Tercero, Tractor, Remolque,
+  Albaranes, EstadoImport), botón Importar, toggle pendientes, test A3ERP,
+  panel de log oscuro, barra de estado. Importación vía STA thread helper.
+- `Logger.cs` — Log a fichero diario.
+- `ErrorHelper.cs` — Diálogo de error con detalle técnico.
+- `config.json` — Plantilla con campos CAMBIAR.
+
+**TODO:**
+- [ ] Resolver permisos de TRANSCOLLADO (usuario `llor` en SQL Server).
+- [ ] Dar de alta empresa + API key en admin.saycusoft.es para la pasarela.
+- [ ] Primera compilación en a3win (SCP + `dotnet publish -c Release -r win-x86 --self-contained true`).
+- [ ] Fichero `.menu` para integración en menú de a3ERP.
+- [ ] Instalador Inno Setup.
+- [ ] Rellenar codCliA3 / codArt reales en config.json.
+- [ ] Probar importación real con datos de Satelles y PCS Valencia.
+
+**Decisiones pendientes:** Si el N1 quiere campos logísticos dentro de
+a3ERP, se abordará con el diccionario de a3ERP (tablas/campos personalizados).
