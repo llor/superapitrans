@@ -34,7 +34,7 @@ namespace NodeImport
         public async Task<ListaPedidosResponse> ListarPedidos(
             int limit = 100, int offset = 0, string estado = null)
         {
-            var url = $"{_baseUrl}/api/datos/pedidos?limit={limit}&offset={offset}";
+            var url = $"{_baseUrl}/datos/pedidos?limit={limit}&offset={offset}";
             if (!string.IsNullOrEmpty(estado))
                 url += $"&estado={Uri.EscapeDataString(estado)}";
 
@@ -76,7 +76,7 @@ namespace NodeImport
         /// </summary>
         public async Task<PedidoPasarela> ObtenerPedido(long id)
         {
-            var url = $"{_baseUrl}/api/datos/pedidos/{id}";
+            var url = $"{_baseUrl}/datos/pedidos/{id}";
             var response = await _http.GetAsync(url);
             response.EnsureSuccessStatusCode();
 
@@ -89,7 +89,7 @@ namespace NodeImport
         /// </summary>
         public async Task CambiarEstado(long id, string nuevoEstado)
         {
-            var url = $"{_baseUrl}/api/datos/pedidos/{id}/estado";
+            var url = $"{_baseUrl}/datos/pedidos/{id}/estado";
             var body = JsonSerializer.Serialize(new { estado = nuevoEstado });
             var content = new StringContent(body, Encoding.UTF8, "application/json");
 
@@ -103,7 +103,7 @@ namespace NodeImport
         /// </summary>
         public async Task<string> TestConexion()
         {
-            var url = $"{_baseUrl}/api/health";
+            var url = $"{_baseUrl}/health";
             var response = await _http.GetAsync(url);
             response.EnsureSuccessStatusCode();
             return await response.Content.ReadAsStringAsync();

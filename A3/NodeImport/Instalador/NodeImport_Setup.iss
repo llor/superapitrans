@@ -266,7 +266,7 @@ begin
 
   // 2. Validar API key + empresa
   try
-    FullUrl := Url + '/api/' + Empresa + '/pedidos?limit=1';
+    FullUrl := Url + '/datos/pedidos?limit=1';
     WinHttpReq.Open('GET', FullUrl, False);
     WinHttpReq.SetTimeouts(5000, 5000, 10000, 10000);
     WinHttpReq.SetRequestHeader('Authorization', 'Bearer ' + ApiKey);
