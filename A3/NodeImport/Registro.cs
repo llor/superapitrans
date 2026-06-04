@@ -140,7 +140,7 @@ namespace NodeImport
         public string Orden { get; set; }
 
         [JsonPropertyName("secuencia")]
-        public int Secuencia { get; set; }
+        public int? Secuencia { get; set; }
 
         [JsonPropertyName("lugar_nombre")]
         public string LugarNombre { get; set; }

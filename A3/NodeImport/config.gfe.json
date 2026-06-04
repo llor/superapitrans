@@ -6,8 +6,8 @@
   },
   "a3erp": {
     "empresa": "TRANSCOLLADO",
-    "usuario": "CAMBIAR",
-    "password": "CAMBIAR"
+    "usuario": "JE",
+    "password": "JE"
   },
   "a3sql": {
     "modoAuth": "windows",
@@ -15,7 +15,7 @@
     "password": ""
   },
   "import": {
-    "codCliA3": "CAMBIAR",
+    "codCliA3": "1",
     "codArtSatelles": "",
     "codArtPcs": "",
     "cambiarEstadoTras": "LEIDO"
