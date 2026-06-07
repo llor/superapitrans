@@ -2,7 +2,11 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import { auth } from '../api.js';
+import { useControlGlobal } from '../lib/controlGlobal/useControlGlobal';
+import UpdateBanner from '../lib/controlGlobal/UpdateBanner';
 import './Login.css';
+
+const PANEL_VERSION = (typeof __APP_VERSION__ !== 'undefined' && __APP_VERSION__) || '0.1.0';
 
 const EyeIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -35,6 +39,8 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showForgot, setShowForgot] = useState(false);
+  const [pendingNav, setPendingNav] = useState(false);
+  const { deviceUid, updateInfo, setUpdateInfo, clearUpdateInfo } = useControlGlobal({ versionName: PANEL_VERSION });
 
   useEffect(() => {
     try {
@@ -60,7 +66,16 @@ export default function Login() {
     setLoading(true);
     try {
       const empresaCodigo = empresa.toUpperCase();
-      await login({ empresa_codigo: empresaCodigo, usuario, password });
+      const data = await login({
+        empresa_codigo: empresaCodigo,
+        usuario,
+        password,
+        extra: {
+          device_uid: deviceUid,
+          version_name: PANEL_VERSION,
+          os_name: typeof navigator !== 'undefined' ? navigator.platform : null,
+        },
+      });
 
       if (recordar) {
         localStorage.setItem(REMEMBER_FLAG_KEY, '1');
@@ -70,7 +85,12 @@ export default function Login() {
         localStorage.removeItem(REMEMBER_CREDS_KEY);
       }
 
-      navigate('/pedidos', { replace: true });
+      if (data && data.control_global && data.control_global.update_available) {
+        setPendingNav(true);
+        setUpdateInfo(data.control_global);
+      } else {
+        navigate('/pedidos', { replace: true });
+      }
     } catch (err) {
       setError(err.message === 'credenciales_invalidas'
         ? 'Empresa, usuario o contraseña incorrectos'
@@ -79,6 +99,14 @@ export default function Login() {
       setLoading(false);
     }
   };
+
+  function dismissUpdateBanner() {
+    clearUpdateInfo();
+    if (pendingNav) {
+      setPendingNav(false);
+      navigate('/pedidos', { replace: true });
+    }
+  }
 
   return (
     <div className="login-page">
@@ -173,6 +201,7 @@ export default function Login() {
       {showForgot && (
         <ForgotPasswordModal onClose={() => setShowForgot(false)} />
       )}
+      {updateInfo && <UpdateBanner info={updateInfo} onClose={dismissUpdateBanner} appLabel="saycunode · Pasarela" />}
     </div>
   );
 }

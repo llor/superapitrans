@@ -24,6 +24,7 @@ const { Router } = require('express');
 const bcrypt = require('bcryptjs');
 const { getAdminPool } = require('../db');
 const { signUserToken, panelUsersTable } = require('../auth/user-jwt');
+const controlGlobal = require('../utils/control-global-client');
 
 const router = Router();
 
@@ -68,10 +69,39 @@ router.post('/login', async (req, res, next) => {
                         ? String(empresa_codigo).toUpperCase()
                         : null,
                 };
+                // ControlGlobal: registro de login (fire-and-forget, nunca bloquea).
+                let controlGlobalInfo = null;
+                try {
+                    const cg = await controlGlobal.reportLogin({
+                        version_name: req.body.version_name ? String(req.body.version_name) : null,
+                        version_code: req.body.version_code != null ? Number(req.body.version_code) || null : null,
+                        device_uid: req.body.device_uid ? String(req.body.device_uid) : null,
+                        device_model: req.body.device_model ? String(req.body.device_model) : null,
+                        os_name: req.body.os_name ? String(req.body.os_name) : null,
+                        os_version: req.body.os_version ? String(req.body.os_version) : null,
+                        empresa_codigo: payload.empresa_codigo,
+                        service_code: 'pasarela',
+                        usuario_kind: 'admin_global',
+                        usuario_id: u.id,
+                        usuario_ref: u.usuario,
+                        ip: req.ip,
+                        user_agent: req.get('User-Agent'),
+                        success: true,
+                        jwt_jti: null,
+                    });
+                    if (cg && cg.ok) {
+                        controlGlobalInfo = {
+                            latest: cg.latest || null,
+                            update_available: !!cg.update_available,
+                            update_required: !!cg.update_required,
+                        };
+                    }
+                } catch (_) { /* fire-and-forget */ }
                 return res.json({
                     ok: true,
                     token: signUserToken(payload),
                     user: payload,
+                    control_global: controlGlobalInfo,
                 });
             }
         }
@@ -134,10 +164,39 @@ router.post('/login', async (req, res, next) => {
             rol_base: 'consulta',
             roles_extra: Array.isArray(permisosPasarela) ? permisosPasarela : [],
         };
+        // ControlGlobal: registro de login (fire-and-forget, nunca bloquea).
+        let controlGlobalInfo = null;
+        try {
+            const cg = await controlGlobal.reportLogin({
+                version_name: req.body.version_name ? String(req.body.version_name) : null,
+                version_code: req.body.version_code != null ? Number(req.body.version_code) || null : null,
+                device_uid: req.body.device_uid ? String(req.body.device_uid) : null,
+                device_model: req.body.device_model ? String(req.body.device_model) : null,
+                os_name: req.body.os_name ? String(req.body.os_name) : null,
+                os_version: req.body.os_version ? String(req.body.os_version) : null,
+                empresa_codigo: empresaCodigoUpper,
+                service_code: 'pasarela',
+                usuario_kind: 'empresa_usuario',
+                usuario_id: u.id,
+                usuario_ref: u.login,
+                ip: req.ip,
+                user_agent: req.get('User-Agent'),
+                success: true,
+                jwt_jti: null,
+            });
+            if (cg && cg.ok) {
+                controlGlobalInfo = {
+                    latest: cg.latest || null,
+                    update_available: !!cg.update_available,
+                    update_required: !!cg.update_required,
+                };
+            }
+        } catch (_) { /* fire-and-forget */ }
         return res.json({
             ok: true,
             token: signUserToken(payload),
             user: payload,
+            control_global: controlGlobalInfo,
         });
     } catch (err) {
         next(err);

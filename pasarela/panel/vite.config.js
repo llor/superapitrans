@@ -1,5 +1,8 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import { readFileSync } from 'fs';
+
+const { version } = JSON.parse(readFileSync('./package.json', 'utf-8'));
 
 // Panel servido detrás de system-caddy en
 // https://{dev-,}panel.superapi.eoden.es/pasarela/, por lo que el SPA se
@@ -10,6 +13,9 @@ import react from '@vitejs/plugin-react';
 export default defineConfig({
     base: '/pasarela/',
     plugins: [react()],
+    define: {
+        __APP_VERSION__: JSON.stringify(version),
+    },
     server: {
         port: 5174,
         host: true,

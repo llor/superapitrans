@@ -7,14 +7,14 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => auth.getUser());
   const [loading, setLoading] = useState(false);
 
-  async function login({ empresa_codigo, usuario, password }) {
+  async function login({ empresa_codigo, usuario, password, extra }) {
     setLoading(true);
     try {
-      const data = await api.login(usuario, password, empresa_codigo);
+      const data = await api.login(usuario, password, empresa_codigo, extra || {});
       auth.setSession(data.token, data.user);
       if (empresa_codigo) auth.setEmpresaCodigo(empresa_codigo);
       setUser(data.user);
-      return data.user;
+      return data;
     } finally {
       setLoading(false);
     }

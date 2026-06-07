@@ -9,6 +9,7 @@ const { buildApp } = require('./app');
 const { closeAllPools } = require('./db');
 const cronScheduler = require('./cron');
 const errorReporter = require('./utils/error-reporter-client');
+const controlGlobal = require('./utils/control-global-client');
 
 errorReporter.install({
     project: 'pasarela-api',
@@ -17,6 +18,16 @@ errorReporter.install({
     captureUncaught: false,
     captureUnhandled: false,
     patchExpressAsync: true,
+});
+
+controlGlobal.install({
+    project: 'pasarela-api',
+    appCode: 'pasarela-panel',
+    platform: 'web',
+    clientKind: 'web',
+    url: process.env.CONTROL_GLOBAL_URL,
+    secret: process.env.CONTROL_GLOBAL_SECRET,
+    environment: process.env.NODE_ENV || 'production',
 });
 
 const PORT = process.env.PORT;

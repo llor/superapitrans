@@ -61,8 +61,8 @@ async function request(path, { method = 'GET', body, headers = {} } = {}) {
 }
 
 export const api = {
-  login: (usuario, password, empresa_codigo) =>
-    request('/api/auth/login', { method: 'POST', body: { usuario, password, empresa_codigo } }),
+  login: (usuario, password, empresa_codigo, extra = {}) =>
+    request('/api/auth/login', { method: 'POST', body: { usuario, password, empresa_codigo, ...extra } }),
   // Forgot/reset password: pendientes (ver TODO en pasarela_api/routes/auth.js).
   // forgotPassword: (email, empresa_codigo) =>
   //   request('/api/auth/forgot-password', { method: 'POST', body: { email, empresa_codigo } }),
