@@ -123,6 +123,7 @@ enruta, así que estos clientes quedan apuntando a un dominio muerto):
   `https://api.saycunode.saycutrans.es/pasarela` (estaba aparcado 2026-06-04).
 - APK de chofocles: recompilar con el dominio nuevo y redistribuir (las APKs
   instaladas apuntan a `api.superapi.eoden.es/chofocles` → rotas hasta actualizar).
+  SIN URGENCIA: chofocles está en reserva/parado (sin usuarios) a 2026-06-08.
 - Monitorización: actualizar `/etc/saycu-monitoring/monitoring.conf` en el server.
 - (Opcional, cosmético) renombrar la carpeta `superapitrans/` → SaycuNode (Fase B).
 
