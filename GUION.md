@@ -108,19 +108,23 @@ DEV (HECHO y verificado, 2026-06-08):
 - system-caddy NO usa `.env-dev`/`.env-prod`: un `.env` por servidor.
 - Backups en saycudev: `.bak-20260608-121320`.
 
-PROD (PENDIENTE — requiere OK del usuario; recrear `system_caddy` en saycu
-afecta momentáneamente a TODOS los dominios del grupo):
-1. `BASE_DOMAIN_SUPERAPI=saycunode.saycutrans.es` en system-caddy `.env` de saycu (backup).
-2. `VITE_API_BASE` en `.env-prod` de pasarela y chofocles (NUNCA `.env`).
-3. Recrear `system_caddy` en saycu → certs de api/panel.saycunode (LE sin caché
-   negativa previa de esos nombres; debería emitir directo).
-4. Recompilar paneles: pasarela tiene `deploy-panel-prod.sh`; **chofocles NO
-   tiene deploy-panel-prod.sh** (solo dev) → crear el script o desplegar a mano.
-5. Sincronizar `Caddyfile.dev` corregido (sin `dev-saycutrans.es`) al server prod.
-6. Actualizar `config.json` de NodeImport en a3win.
-7. Actualizar monitorización (`/etc/saycu-monitoring/monitoring.conf`).
-8. APK de chofocles (recompilar con dominio nuevo).
-9. (Opcional, cosmético) renombrar la carpeta `superapitrans/` — no afecta a runtime.
+PROD (HECHO y verificado, 2026-06-08):
+- `BASE_DOMAIN_SUPERAPI` en system-caddy `.env` de saycu (backup .bak-20260608-123233);
+  `VITE_API_BASE` en `.env-prod` de pasarela y chofocles.
+- `system_caddy` recreado → certs Let's Encrypt emitidos (api/panel.saycunode).
+- Paneles pasarela y chofocles recompilados; bundles apuntan al dominio nuevo
+  (0 al viejo). API + paneles responden 200 por `*.saycunode`. Grupo prod intacto.
+- Creado `chofocles/_scripts/deploy-panel-prod.sh` (no existía).
+- `Caddyfile.dev` corregido sincronizado al server prod.
+
+PENDIENTE (fuera del frontal — el dominio viejo `superapi.eoden.es` ya NO
+enruta, así que estos clientes quedan apuntando a un dominio muerto):
+- NodeImport en a3win: actualizar el `config.json` real (carpeta Publish) a
+  `https://api.saycunode.saycutrans.es/pasarela` (estaba aparcado 2026-06-04).
+- APK de chofocles: recompilar con el dominio nuevo y redistribuir (las APKs
+  instaladas apuntan a `api.superapi.eoden.es/chofocles` → rotas hasta actualizar).
+- Monitorización: actualizar `/etc/saycu-monitoring/monitoring.conf` en el server.
+- (Opcional, cosmético) renombrar la carpeta `superapitrans/` → SaycuNode (Fase B).
 
 
 EL NODO (pasarela/)
