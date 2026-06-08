@@ -5,9 +5,9 @@ import { readFileSync } from 'fs';
 const { version } = JSON.parse(readFileSync('./package.json', 'utf-8'));
 
 // Panel servido detrás de system-caddy en
-// https://{dev-,}panel.superapi.eoden.es/pasarela/, por lo que el SPA se
+// https://{dev-,}panel.saycunode.saycutrans.es/pasarela/, por lo que el SPA se
 // construye con base path '/pasarela/'. El API público vive en
-// https://{dev-,}api.superapi.eoden.es/pasarela/* (mismo rewrite + reverse
+// https://{dev-,}api.saycunode.saycutrans.es/pasarela/* (mismo rewrite + reverse
 // proxy a pasarela_api:3412 desde system-caddy).
 
 export default defineConfig({

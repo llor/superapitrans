@@ -72,7 +72,7 @@ DOMINIOS Y SUBDOMINIOS
 
 **Variable única `BASE_DOMAIN_SUPERAPI`** en el `.env` de system-caddy.
 Único punto de cambio cuando se asigne el dominio definitivo. Hoy
-`superapi.eoden.es`; mañana, lo que sea.
+`saycunode.saycutrans.es`; mañana, lo que sea.
 
 Subdominios cableados:
 - PROD: `api.${BASE_DOMAIN_SUPERAPI}`     → todos los sub-servicios por
@@ -88,7 +88,7 @@ DNS reservados pero sin cablear todavía: `panel`, `dev-panel`, `www`,
 system-caddy.
 
 PROHIBIDO:
-- Hardcodear `superapi.eoden.es` (ni cualquier otro dominio) en el código
+- Hardcodear `saycunode.saycutrans.es` (ni cualquier otro dominio) en el código
   o en docker-compose. Siempre vía `${BASE_DOMAIN_SUPERAPI}` o sus
   derivados.
 - Almacenar dominios en BBDD. Caddy/DNS/Frontends/APK los necesitan en

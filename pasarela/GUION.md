@@ -341,7 +341,7 @@ GESTIÓN DE CATÁLOGO Y CREDENCIALES (UI desde admin.saycusoft.es)
 ROUTING EXTERNO (system-caddy) — SE COMPARTE PARA TODOS LOS PROVEEDORES
 ----------------------------------------------------------------------
 
-El `system_caddy` enruta `https://[dev-]api.superapi.eoden.es/pasarela/*`
+El `system_caddy` enruta `https://[dev-]api.saycunode.saycutrans.es/pasarela/*`
 al contenedor `pasarela_api:3412` con `rewrite * /api{path}`. Es decir,
 cualquier sub-ruta cae automáticamente:
 
@@ -718,8 +718,8 @@ Desplegado y verificado en dev y prod:
 - ✅ `pasarela_api` corriendo en ambos entornos (puerto interno 3412),
   conectado a `system_postgres_net`, `superapitrans_network` y
   `pasarela_network`. Healthcheck OK.
-- ✅ `system-caddy` enrutando `https://api.superapi.eoden.es/pasarela/*`
-  (prod) y `https://dev-api.superapi.eoden.es/pasarela/*` (dev).
+- ✅ `system-caddy` enrutando `https://api.saycunode.saycutrans.es/pasarela/*`
+  (prod) y `https://dev-api.saycunode.saycutrans.es/pasarela/*` (dev).
 - ✅ Auth bearer (`pas_live_<32hex>`) verificada con curl real en ambos
   entornos: `GET /pasarela/datos/pedidos?empresa=<CODIGO>` con scope
   `datos.read` devuelve 200; sin Authorization devuelve 401.

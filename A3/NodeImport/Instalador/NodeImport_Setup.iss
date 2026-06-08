@@ -368,9 +368,9 @@ end;
 function GetSelectedUrl(): String;
 begin
   if IsDevMode() then
-    Result := 'https://dev-api.superapi.eoden.es/pasarela'
+    Result := 'https://dev-api.saycunode.saycutrans.es/pasarela'
   else
-    Result := 'https://api.superapi.eoden.es/pasarela';
+    Result := 'https://api.saycunode.saycutrans.es/pasarela';
 end;
 
 // ===================================================================

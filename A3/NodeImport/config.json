@@ -1,6 +1,6 @@
 {
   "pasarela": {
-    "url": "https://api.superapi.eoden.es/chofocles",
+    "url": "https://api.saycunode.saycutrans.es/chofocles",
     "empresa": "TRANSCOLLADO",
     "apiKey": "CAMBIAR"
   },

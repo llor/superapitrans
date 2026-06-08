@@ -43,4 +43,4 @@ log "5) Verificación"
 sleep 2
 ssh "$REMOTE_HOST" "docker ps --filter name=pasarela_panel --format 'table {{.Names}}\t{{.Status}}'"
 
-log "OK. Probar:  https://dev-panel.superapi.eoden.es/pasarela/"
+log "OK. Probar:  https://dev-panel.saycunode.saycutrans.es/pasarela/"

@@ -5,7 +5,7 @@
 # El script de deploy hace vendor-copy de saycu-theme a pasarela/saycu-theme/
 # antes del build, así package.json puede resolver "file:../saycu-theme".
 # Build arg VITE_API_BASE: URL pública del API (ej.
-# https://dev-api.superapi.eoden.es/pasarela). Sin él, el panel apuntaría a
+# https://dev-api.saycunode.saycutrans.es/pasarela). Sin él, el panel apuntaría a
 # /api relativo y no funcionaría detrás de system-caddy.
 
 FROM node:20-alpine AS build

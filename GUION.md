@@ -23,7 +23,7 @@ del grupo Saycu se "registra" allí como un bloque de Caddyfile, y se
 conecta vía una red Docker externa.
 
 superapitrans está registrado en `system-caddy` como un proyecto más:
-- Variable de entorno: `BASE_DOMAIN_SUPERAPI=superapi.eoden.es` en
+- Variable de entorno: `BASE_DOMAIN_SUPERAPI=saycunode.saycutrans.es` en
   `/var/opt/saycucontrol/system-caddy/.env`.
 - Red Docker externa: `superapitrans_network` (debe existir antes de
   arrancar `system_caddy`).
@@ -49,8 +49,8 @@ CONEXIONES Y ACCESOS
 - **Carpeta local:** `/Volumes/THUND/proyectos/saycu/superapitrans/`.
 - **Carpeta remota:** `/var/opt/superapitrans/` (en saycudev y saycu).
 - **Subdominio público de API**:
-  - PROD: `api.superapi.eoden.es`
-  - DEV : `dev-api.superapi.eoden.es`
+  - PROD: `api.saycunode.saycutrans.es`
+  - DEV : `dev-api.saycunode.saycutrans.es`
 - **Path por sub-servicio:** `https://api.{BASE_DOMAIN}/<servicio>/...`.
   system-caddy strippea `/<servicio>/` y reescribe `/api{path}` antes de
   hacer reverse-proxy al backend del sub-servicio. El código del
@@ -59,33 +59,51 @@ CONEXIONES Y ACCESOS
   externa `system_postgres_net`.
 
 
-SUBDOMINIOS RESERVADOS (DNS apuntando a saycu/saycudev, sin cablear aún)
--------------------------------------------------------------------------
+SUBDOMINIOS (dominio definitivo: saycunode.saycutrans.es)
+---------------------------------------------------------
 
-DNS ya creado:
-- `api.superapi.eoden.es`        → 149.86.232.18 (saycu / prod)   ✅ cableado
-- `dev-api.superapi.eoden.es`    → 149.86.233.79 (saycudev / dev) ✅ cableado
-- `panel.superapi.eoden.es`      → 149.86.232.18                  ⏳ sin cablear
-- `dev-panel.superapi.eoden.es`  → 149.86.233.79                  ⏳ sin cablear
-- `www.superapi.eoden.es`        → 149.86.232.18                  ⏳ sin cablear
-- `dev-www.superapi.eoden.es`    → 149.86.233.79                  ⏳ sin cablear
+DNS creado por el cliente (Saycusoft) el 2026-06-08, mismos IPs que los
+anteriores de superapi.eoden.es:
+- `api.saycunode.saycutrans.es`        → 149.86.232.18 (saycu / prod)   ✅ cableado
+- `dev-api.saycunode.saycutrans.es`    → 149.86.233.79 (saycudev / dev) ✅ cableado
+- `panel.saycunode.saycutrans.es`      → 149.86.232.18                  ✅ cableado (sirve chofocles + pasarela por path)
+- `dev-panel.saycunode.saycutrans.es`  → 149.86.233.79                  ✅ cableado (ídem)
+- `www.saycunode.saycutrans.es`        → 149.86.232.18                  ⏳ sin cablear (DNS reservado, sin bloque Caddy)
+- `dev-www.saycunode.saycutrans.es`    → 149.86.233.79                  ⏳ sin cablear (ídem)
 
-Cuando se necesite alguno (p. ej. el panel cuando se aborde el bloque 2
-de chofocles), añadir el bloque correspondiente a
-`system-caddy/conf/Caddyfile.{dev,prod}` con el reverse_proxy adecuado.
+`www`/`dev-www` quedan reservados; cuando se necesiten, añadir el bloque
+correspondiente a `system-caddy/conf/Caddyfile.{dev,prod}`.
 
 
-CAMBIO DE DOMINIO (futuro)
---------------------------
+CAMBIO DE DOMINIO superapi.eoden.es → saycunode.saycutrans.es (en curso 2026-06-08)
+----------------------------------------------------------------------------------
 
-Cuando se asigne el dominio definitivo:
-1. Editar 1 línea en `/var/opt/saycucontrol/system-caddy/.env` (en saycu y
-   en saycudev): `BASE_DOMAIN_SUPERAPI=<nuevo-dominio>`.
-2. Recrear el contenedor `system_caddy` en ambos servidores.
-3. DNS del registrar (registros A nuevos).
-4. Recompilar APKs/frontends que lleven la URL hardcodeada por build arg.
-5. (Opcional, cosmético) renombrar la carpeta `superapitrans/` por
-   `<nuevo-nombre>/` con `mv` — no afecta a runtime.
+El dominio anterior `superapi.eoden.es` era propiedad del usuario (llor);
+se sustituye por el definitivo del grupo `saycunode.saycutrans.es`.
+
+HECHO (repo, 2026-06-08):
+- Reemplazado el dominio en todas las referencias de repo (docs, ejemplos
+  `.env-*.example`, scripts de deploy, comentarios, `src/api.ts` de la APK
+  de chofocles, `config.json`/`config.gfe.json` de NodeImport,
+  `shellConfig.js` y `ApiDocsPasarela.jsx` del admin, `monitoring.conf.example`,
+  comentarios del `docker-compose.yml` de system-caddy). El nombre de la
+  variable `BASE_DOMAIN_SUPERAPI` NO se renombra (eso es la Fase B / rename
+  a SaycuNode).
+
+PENDIENTE (servidores; bloqueado hasta que los autoritativos de
+saycutrans.es resuelvan `*.saycunode.saycutrans.es` — el 2026-06-08 aún
+devolvían NXDOMAIN):
+1. `BASE_DOMAIN_SUPERAPI=saycunode.saycutrans.es` en
+   `/var/opt/saycucontrol/system-caddy/.env` (saycu y saycudev, con backup).
+   system-caddy NO usa patrón `.env-dev`/`.env-prod`: un `.env` por servidor.
+2. `VITE_API_BASE` en `.env-prod` (saycu) y `.env-dev` (saycudev) de pasarela
+   y chofocles (NUNCA en `.env`, que es generado por el entrypoint).
+3. Recrear `system_caddy` (`up -d --force-recreate`) en ambos → Caddy emite
+   los certs Let's Encrypt de los nuevos subdominios.
+4. Recompilar/redesplegar paneles (pasarela, chofocles) y la APK de chofocles.
+5. Actualizar `config.json` de NodeImport en a3win.
+6. Actualizar monitorización en el servidor (`/etc/saycu-monitoring/monitoring.conf`).
+7. (Opcional, cosmético) renombrar la carpeta `superapitrans/` — no afecta a runtime.
 
 
 EL NODO (pasarela/)
@@ -287,7 +305,7 @@ la importación COM real. El siguiente paso es:
 4. Verificar que el albarán aparece en a3ERP (Compras → Albaranes).
 
 **Config actual en a3win (`bin\Publish\config.json`):**
-- Pasarela: `https://api.superapi.eoden.es/pasarela` | empresa GFE
+- Pasarela: `https://api.saycunode.saycutrans.es/pasarela` | empresa GFE
 - a3ERP: empresa GFE | usuario SA | password SA
 - Import: codCliA3=1 (SPORTS ABC, datos ejemplo)
 

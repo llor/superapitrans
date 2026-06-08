@@ -3,8 +3,8 @@
  * limpieza automática en 401 (excepto en el propio /login).
  *
  * VITE_API_BASE viene del build (Dockerfile) y apunta al API público:
- *   - prod: https://api.superapi.eoden.es/pasarela
- *   - dev:  https://dev-api.superapi.eoden.es/pasarela
+ *   - prod: https://api.saycunode.saycutrans.es/pasarela
+ *   - dev:  https://dev-api.saycunode.saycutrans.es/pasarela
  *   - local (dev server): "" + proxy /api/* → http://localhost:3412
  */
 
