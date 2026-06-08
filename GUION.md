@@ -90,9 +90,18 @@ HECHO (repo, 2026-06-08):
   variable `BASE_DOMAIN_SUPERAPI` NO se renombra (eso es la Fase B / rename
   a SaycuNode).
 
-PENDIENTE (servidores; bloqueado hasta que los autoritativos de
-saycutrans.es resuelvan `*.saycunode.saycutrans.es` — el 2026-06-08 aún
-devolvían NXDOMAIN):
+INCIDENCIA DNS (2026-06-08): la zona se publicó (serial SOA 2026060806) pero
+los dos autoritativos quedaron DESINCRONIZADOS: `dns1.interdominios.com`
+sirve los registros `*.saycunode` (NOERROR), `dns2.interdominios.com` sigue
+dando NXDOMAIN. Por eso Let's Encrypt falla intermitentemente al validar
+(cuando le toca dns2) y la resolución pública es inconsistente. Es del lado
+del cliente: debe forzar la replicación de la zona al autoritativo secundario.
+Se INTENTÓ el cutover de dev y se REVIRTIÓ (backups `.bak-20260608-114527`)
+porque dev de pasarela/chofocles quedaba sin cert; dev sigue en
+`superapi.eoden.es` (operativo). Rehacer cuando dns2 sirva la zona.
+
+PENDIENTE (servidores; bloqueado hasta que AMBOS autoritativos de
+saycutrans.es resuelvan `*.saycunode.saycutrans.es`):
 1. `BASE_DOMAIN_SUPERAPI=saycunode.saycutrans.es` en
    `/var/opt/saycucontrol/system-caddy/.env` (saycu y saycudev, con backup).
    system-caddy NO usa patrón `.env-dev`/`.env-prod`: un `.env` por servidor.
