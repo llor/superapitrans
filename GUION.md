@@ -90,29 +90,37 @@ HECHO (repo, 2026-06-08):
   variable `BASE_DOMAIN_SUPERAPI` NO se renombra (eso es la Fase B / rename
   a SaycuNode).
 
-INCIDENCIA DNS (2026-06-08): la zona se publicó (serial SOA 2026060806) pero
-los dos autoritativos quedaron DESINCRONIZADOS: `dns1.interdominios.com`
-sirve los registros `*.saycunode` (NOERROR), `dns2.interdominios.com` sigue
-dando NXDOMAIN. Por eso Let's Encrypt falla intermitentemente al validar
-(cuando le toca dns2) y la resolución pública es inconsistente. Es del lado
-del cliente: debe forzar la replicación de la zona al autoritativo secundario.
-Se INTENTÓ el cutover de dev y se REVIRTIÓ (backups `.bak-20260608-114527`)
-porque dev de pasarela/chofocles quedaba sin cert; dev sigue en
-`superapi.eoden.es` (operativo). Rehacer cuando dns2 sirva la zona.
+DNS (2026-06-08, resuelto): zona publicada (serial SOA 2026060806). Hubo una
+incidencia transitoria — los dos autoritativos quedaron desincronizados
+(`dns1` servía `*.saycunode`, `dns2` daba NXDOMAIN) y eso hacía fallar la
+validación de Let's Encrypt. El cliente replicó la zona a `dns2`; tras expirar
+la caché negativa de los resolvers públicos, los 6 registros resuelven en
+ambos autoritativos + 8.8.8.8/1.1.1.1/9.9.9.9.
 
-PENDIENTE (servidores; bloqueado hasta que AMBOS autoritativos de
-saycutrans.es resuelvan `*.saycunode.saycutrans.es`):
-1. `BASE_DOMAIN_SUPERAPI=saycunode.saycutrans.es` en
-   `/var/opt/saycucontrol/system-caddy/.env` (saycu y saycudev, con backup).
-   system-caddy NO usa patrón `.env-dev`/`.env-prod`: un `.env` por servidor.
-2. `VITE_API_BASE` en `.env-prod` (saycu) y `.env-dev` (saycudev) de pasarela
-   y chofocles (NUNCA en `.env`, que es generado por el entrypoint).
-3. Recrear `system_caddy` (`up -d --force-recreate`) en ambos → Caddy emite
-   los certs Let's Encrypt de los nuevos subdominios.
-4. Recompilar/redesplegar paneles (pasarela, chofocles) y la APK de chofocles.
-5. Actualizar `config.json` de NodeImport en a3win.
-6. Actualizar monitorización en el servidor (`/etc/saycu-monitoring/monitoring.conf`).
-7. (Opcional, cosmético) renombrar la carpeta `superapitrans/` — no afecta a runtime.
+DEV (HECHO y verificado, 2026-06-08):
+- `BASE_DOMAIN_SUPERAPI=saycunode.saycutrans.es` en system-caddy `.env` de
+  saycudev (con backup); `VITE_API_BASE` en `.env-dev` de pasarela y chofocles.
+- `system_caddy` recreado → certs Let's Encrypt emitidos (dev-api/dev-panel).
+- Paneles de pasarela y chofocles recompilados; el bundle apunta al dominio
+  nuevo (0 referencias al viejo). API + paneles responden 200 por `*.saycunode`.
+- Dos fixes de deploy de chofocles (commit aparte 1d6fb92): ruta saycu-theme
+  (`../` no `../../`) y carpeta `panel/public/` faltante.
+- system-caddy NO usa `.env-dev`/`.env-prod`: un `.env` por servidor.
+- Backups en saycudev: `.bak-20260608-121320`.
+
+PROD (PENDIENTE — requiere OK del usuario; recrear `system_caddy` en saycu
+afecta momentáneamente a TODOS los dominios del grupo):
+1. `BASE_DOMAIN_SUPERAPI=saycunode.saycutrans.es` en system-caddy `.env` de saycu (backup).
+2. `VITE_API_BASE` en `.env-prod` de pasarela y chofocles (NUNCA `.env`).
+3. Recrear `system_caddy` en saycu → certs de api/panel.saycunode (LE sin caché
+   negativa previa de esos nombres; debería emitir directo).
+4. Recompilar paneles: pasarela tiene `deploy-panel-prod.sh`; **chofocles NO
+   tiene deploy-panel-prod.sh** (solo dev) → crear el script o desplegar a mano.
+5. Sincronizar `Caddyfile.dev` corregido (sin `dev-saycutrans.es`) al server prod.
+6. Actualizar `config.json` de NodeImport en a3win.
+7. Actualizar monitorización (`/etc/saycu-monitoring/monitoring.conf`).
+8. APK de chofocles (recompilar con dominio nuevo).
+9. (Opcional, cosmético) renombrar la carpeta `superapitrans/` — no afecta a runtime.
 
 
 EL NODO (pasarela/)
