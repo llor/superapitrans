@@ -68,11 +68,25 @@ async function ejecutarCiclo(log) {
         await satelles.syncAll(log);
     } catch (err) {
         log(`[cron] error en satelles.syncAll: ${err.message}`);
+        errorReporter.reportError({
+            source: 'process',
+            severity: 'error',
+            message: `Pasarela cron: fallo no controlado en satelles.syncAll: ${err.message}`,
+            stack: err.stack,
+            extra: { funcion: 'ejecutarCiclo', proveedor: 'satelles' },
+        });
     }
     try {
         await pcsValencia.syncAll(log);
     } catch (err) {
         log(`[cron] error en pcs-valencia.syncAll: ${err.message}`);
+        errorReporter.reportError({
+            source: 'process',
+            severity: 'error',
+            message: `Pasarela cron: fallo no controlado en pcs-valencia.syncAll: ${err.message}`,
+            stack: err.stack,
+            extra: { funcion: 'ejecutarCiclo', proveedor: 'pcs-valencia' },
+        });
     }
 }
 

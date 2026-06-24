@@ -14,6 +14,7 @@ const { getTenantPool } = require('../../db');
 const { listCredencialesActivas, marcarSync } = require('../../auth/provider-cred');
 const { getFinishedRoutes, commitFinishedRoutes } = require('./client');
 const { mapPublication, PROVEEDOR } = require('./mapper');
+const errorReporter = require('../../utils/error-reporter-client');
 
 async function upsertPedido(pool, pedido) {
     const cols = Object.keys(pedido);
@@ -100,6 +101,22 @@ async function syncCredencial(cred, log) {
     } catch (err) {
         await marcarSync({ credencialId: cred.credencialId, ok: false, error: err.message });
         log(`[satelles] empresa=${cred.empresaCodigo} ERROR ${err.message}`);
+        // El error se traga aqui (no se relanza): sin este reporte, un corte
+        // como el de Cloudflare en ecotrans.satelles.es se quedaria solo en el
+        // log durante semanas. El receptor central dedupe por firma (1 email/h).
+        errorReporter.reportError({
+            source: 'process',
+            severity: 'error',
+            message: `Satelles: no se pudieron descargar rutas finalizadas (empresa ${cred.empresaCodigo}): ${err.message}`,
+            stack: err.stack,
+            empresa_codigo: cred.empresaCodigo,
+            extra: {
+                proveedor: 'satelles',
+                entorno: cred.entorno,
+                host_base: cred.hostBase,
+                funcion: 'syncCredencial -> getFinishedRoutes',
+            },
+        });
         return { ok: false, error: err.message };
     }
 

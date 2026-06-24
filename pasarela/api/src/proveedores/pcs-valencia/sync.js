@@ -21,6 +21,7 @@ const { getTenantPool } = require('../../db');
 const { listCredencialesActivas, marcarSync } = require('../../auth/provider-cred');
 const { listMessages, downloadMessage, deleteMessage } = require('./client');
 const { mapMessage, PROVEEDOR } = require('./mapper');
+const errorReporter = require('../../utils/error-reporter-client');
 
 async function upsertPedido(pool, pedido) {
     const cols = Object.keys(pedido);
@@ -130,6 +131,21 @@ async function syncCredencial(cred, log) {
     } catch (err) {
         await marcarSync({ credencialId: cred.credencialId, ok: false, error: err.message });
         log(`[${PROVEEDOR}] empresa=${cred.empresaCodigo} list ERROR ${err.message}`);
+        // Mismo motivo que en Satelles: el fallo de conexion/auth se traga aqui;
+        // sin reporte no avisaria. Dedup por firma en el receptor central.
+        errorReporter.reportError({
+            source: 'process',
+            severity: 'error',
+            message: `PCS Valencia: no se pudo listar mensajes (empresa ${cred.empresaCodigo}): ${err.message}`,
+            stack: err.stack,
+            empresa_codigo: cred.empresaCodigo,
+            extra: {
+                proveedor: 'pcs-valencia',
+                entorno: cred.entorno,
+                host_base: cred.hostBase,
+                funcion: 'syncCredencial -> listMessages',
+            },
+        });
         return { ok: false, error: err.message };
     }
     if (!Array.isArray(pendientes) || pendientes.length === 0) {
