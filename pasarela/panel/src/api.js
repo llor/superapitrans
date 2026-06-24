@@ -79,4 +79,11 @@ export const api = {
     },
     getPedido: (id) => request(`/api/me/pedidos/${encodeURIComponent(id)}`),
   },
+  // Preferencias de vista (toggle Tabla/Tarjetas, columnas, orden) por
+  // usuario+navegador en BD (saycu_admin.panel_vista_prefs). El navegador lo
+  // identifica el cliente con un UUID en cookie propia, enviado en `nav`.
+  getVistaPrefs: (scope, nav) =>
+    request(`/api/vista-prefs/${encodeURIComponent(scope)}?nav=${encodeURIComponent(nav || '')}`),
+  putVistaPrefs: (scope, nav, config) =>
+    request(`/api/vista-prefs/${encodeURIComponent(scope)}`, { method: 'PUT', body: { nav, config } }),
 };

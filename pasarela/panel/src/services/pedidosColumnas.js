@@ -10,8 +10,8 @@
  * - `render(p)`: función que devuelve el contenido (string o ReactNode).
  *
  * COLUMNAS_DEFAULT son las que aparecen marcadas la primera vez que el
- * usuario abre el modo tabla; después se persisten sus elecciones en
- * localStorage (via filterStorage con sub-key 'columnas').
+ * usuario abre el modo tabla; después se persisten sus elecciones en BD
+ * (saycu_admin.panel_vista_prefs) por usuario+navegador vía useVistaPrefs.
  */
 
 const fmtFecha = (s) => {

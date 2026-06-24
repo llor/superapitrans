@@ -29,6 +29,7 @@ import {
   IoTrashOutline,
 } from 'react-icons/io5';
 import { getUserFilters, setUserFilters } from '../services/filterStorage.js';
+import { useVistaPrefs } from '../utils/useVistaPrefs.js';
 import DataCards from '../components/DataCards.jsx';
 import PedidosTable from '../components/PedidosTable.jsx';
 import EditColumnasModal from '../components/EditColumnasModal.jsx';
@@ -56,13 +57,22 @@ export default function Pedidos() {
   const [filtroDelegacion, setFiltroDelegacion] = useState('todas');
   const [busqueda, setBusqueda] = useState('');
 
-  // Modo de visualización + columnas visibles + orden (modo tabla).
-  // Se persisten en localStorage por usuario.
-  const [vistaTabla, setVistaTabla] = useState(false);
-  const [columnasVisibles, setColumnasVisibles] = useState(COLUMNAS_DEFAULT);
+  // Modo de visualización (tabla/cards) + columnas visibles + orden (modo
+  // tabla). Se persisten en BD (saycu_admin.panel_vista_prefs) por usuario y
+  // navegador vía useVistaPrefs — infra común del grupo. Los FILTROS de
+  // negocio (búsqueda, estado, proveedor…) siguen en localStorage.
+  const {
+    modo, setModo,
+    columnas: columnasVisibles, setColumnas: setColumnasVisibles,
+    sortBy, sortOrder, setSort,
+    cargado: vistaPrefsCargado,
+  } = useVistaPrefs('pasarela-pedidos', {
+    columnasDefault: COLUMNAS_DEFAULT,
+    sortByDefault: 'fecha_reparto',
+    sortOrderDefault: 'DESC',
+  });
+  const vistaTabla = modo === 'tabla';
   const [editColAbierto, setEditColAbierto] = useState(false);
-  const [sortBy, setSortBy] = useState('fecha_reparto');
-  const [sortOrder, setSortOrder] = useState('DESC');
 
   const [showParadas, setShowParadas] = useState(false);
   const [verParadasModal, setVerParadasModal] = useState(false);
@@ -71,7 +81,8 @@ export default function Pedidos() {
   const [loadingDetalle, setLoadingDetalle] = useState(false);
   const [errorDetalle, setErrorDetalle] = useState(null);
 
-  // Cargar filtros y preferencias de vista guardadas (por usuario + página)
+  // Cargar filtros de negocio guardados (por usuario + página). La VISTA
+  // (modo, columnas, orden) ya no vive aquí: la gestiona useVistaPrefs (BD).
   useEffect(() => {
     if (!user?.id) return;
     const stored = getUserFilters(user.id, 'pasarela-panel-pedidos');
@@ -82,26 +93,19 @@ export default function Pedidos() {
       if (stored.filtroDelegacion) setFiltroDelegacion(stored.filtroDelegacion);
       if (stored.busqueda !== undefined) setBusqueda(stored.busqueda);
       if (stored.limit) setPagination((p) => ({ ...p, limit: stored.limit }));
-      if (typeof stored.vistaTabla === 'boolean') setVistaTabla(stored.vistaTabla);
-      if (Array.isArray(stored.columnasVisibles) && stored.columnasVisibles.length > 0) {
-        setColumnasVisibles(stored.columnasVisibles);
-      }
-      if (typeof stored.sortBy === 'string') setSortBy(stored.sortBy);
-      if (stored.sortOrder === 'ASC' || stored.sortOrder === 'DESC') setSortOrder(stored.sortOrder);
     }
     filtersLoadedRef.current = true;
   }, [user?.id]);
 
-  // Persistir filtros + preferencias de vista
+  // Persistir filtros de negocio (la vista la persiste useVistaPrefs en BD)
   useEffect(() => {
     if (!user?.id || !filtersLoadedRef.current) return;
     setUserFilters(user.id, 'pasarela-panel-pedidos', {
       filtroEstado, filtroProveedor, filtroCliente, filtroDelegacion,
       busqueda, limit: pagination.limit,
-      vistaTabla, columnasVisibles, sortBy, sortOrder,
     });
   }, [user?.id, filtroEstado, filtroProveedor, filtroCliente, filtroDelegacion,
-      busqueda, pagination.limit, vistaTabla, columnasVisibles, sortBy, sortOrder]);
+      busqueda, pagination.limit]);
 
   const limpiarFiltros = () => {
     setFiltroEstado('TODOS');
@@ -151,8 +155,8 @@ export default function Pedidos() {
   }, [pagination.page, pagination.limit, filtroEstado, filtroProveedor, filtroCliente, filtroDelegacion, busqueda, sortBy, sortOrder, applyResponse]);
 
   useEffect(() => {
-    if (filtersLoadedRef.current) cargarPedidos();
-  }, [cargarPedidos]);
+    if (filtersLoadedRef.current && vistaPrefsCargado) cargarPedidos();
+  }, [cargarPedidos, vistaPrefsCargado]);
 
   // Reset página al cambiar filtros
   useEffect(() => {
@@ -264,7 +268,7 @@ export default function Pedidos() {
         </h1>
         <button
           className="btn-refresh"
-          onClick={() => setVistaTabla((v) => !v)}
+          onClick={() => setModo(vistaTabla ? 'cards' : 'tabla')}
           title={vistaTabla ? 'Cambiar a modo cards' : 'Cambiar a modo tabla'}
           aria-label={vistaTabla ? 'Modo cards' : 'Modo tabla'}
         >
@@ -378,7 +382,7 @@ export default function Pedidos() {
               columnas={columnasVisibles}
               sortBy={sortBy}
               sortOrder={sortOrder}
-              onSortChange={(key, dir) => { setSortBy(key); setSortOrder(dir); }}
+              onSortChange={(key, dir) => setSort(key, dir)}
               onEditarColumnas={() => setEditColAbierto(true)}
               onRowClick={(p) => abrirParadas(p)}
             />

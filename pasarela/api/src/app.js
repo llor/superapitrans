@@ -36,6 +36,7 @@ function buildApp() {
     app.use('/api/datos', require('./routes/datos'));
     app.use('/api/auth', require('./routes/auth'));
     app.use('/api/me', require('./routes/me'));
+    app.use('/api/vista-prefs', require('./routes/vista-prefs'));
 
     async function healthHandler(_req, res) {
         try {
