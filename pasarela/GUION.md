@@ -1,9 +1,32 @@
 # pasarela (futuro: SaycuNode)
 
-Última actualización: 2026-06-03. Nodo de datos del grupo Saycu:
+Última actualización: 2026-06-24. Nodo de datos del grupo Saycu:
 lee APIs externas (proveedor por proveedor) y persiste lo intercambiado
 en 4 tablas canónicas multi-tenant (`saycu_pasarela_<CODIGO>`),
 exponiéndolo después por una API inbound con bearer key.
+
+Cambios 2026-06-24:
+- **Satelles bloqueado por Cloudflare desde el 22/05/2026**: el host
+  `ecotrans.satelles.es` devuelve un challenge anti-bot (HTTP 403,
+  `cf-mitigated: challenge`) a cualquier IP (probado desde el servidor y
+  desde otra red). NO es nuestra IP ni las credenciales: es un cambio en la
+  infra de Satelles. Último dato real en `saycu_pasarela_gfe`: 22/05 10:10
+  (hora Madrid). PENDIENTE operativo: pedir a Ecotrans/Satelles que metan en
+  allowlist de su Cloudflare la IP de salida del servidor (149.86.232.18) o
+  expongan la API por un host sin challenge / con bypass para `/identity` y
+  `/puba/*`.
+- **Aviso por email de fallos de sync**: `satelles/sync.js` y
+  `pcs-valencia/sync.js` reportan al receptor central en el catch donde se
+  tragaba el fallo de descarga (antes solo iba al log; por eso el corte de
+  Satelles llevaba un mes sin avisar). `cron.js` reporta también en
+  `ejecutarCiclo`. Dedup 1 email/hora. Verificado E2E en prod (email enviado
+  el 24/06 18:50).
+- **Destinatarios de avisos = lista única** en admin.saycusoft.es ->
+  Configuraciones -> Emails de aviso (tabla `security_alert_recipients`,
+  columna nueva `receive_error_reports`). Gobierna errores, chequeos del
+  servidor (watchdog admin + saycutrans) y fallos de login. Sustituye a la
+  env `ERROR_REPORTER_TO`. Los dos informes diarios "todo OK" se apagaron;
+  los watchdog avisan solo en transición (problema / recuperación).
 
 Cambios 2026-06-03:
 - **customerShipment (nº expedición)**: migración 0015, columna
