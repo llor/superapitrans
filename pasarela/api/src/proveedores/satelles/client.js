@@ -1,6 +1,6 @@
 /**
  * Cliente HTTP de Satelles ERPSYNC.
- * - OAuth 2.0 client credentials (POST /auth/connect/token).
+ * - OAuth 2.0 client credentials (POST /identity/connect/token).
  * - Token cacheado en memoria por (hostBase, clientId, scope).
  *
  * Ver: documentos/Satelles - ERPSYNC Api.pdf
