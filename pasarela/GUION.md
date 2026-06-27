@@ -38,11 +38,24 @@ Cambios 2026-06-27:
     code/name/email/idCard/placeCode/disabled) y `GET /api/erpsync/vehicles`
     200 (829 vehículos, campos code/licensePlate/type/transportTypeCode/
     disabled/compartments). Cuerpos del PUT del Postman oficial.
-  - PENDIENTE: (1) prueba E2E del PUT — escribe en el maestro REAL de GFE y
-    Satelles no expone borrado por API, requiere OK del usuario con un
-    `code` de prueba; (2) emitir la key del ERP con scopes `satelles.*`
-    (`scripts/generar-key.js <EMPRESA> <app> satelles.read,satelles.write`);
-    (3) deploy a prod (hoy solo dev). Las pruebas reales solo van por prod.
+  - DESPLEGADO A PROD el 27/06 (api pasarela + panel admin del manual) y
+    validado E2E contra GFE. La key del ERP `a3erp` se AMPLIÓ con
+    `satelles.read,satelles.write` (UPDATE de scopes, SIN tocar su secreto:
+    ya tenía datos.read/write y la usa NodeImport). OJO: NO emitir una key
+    nueva con aplicacion `a3erp` — el ON CONFLICT pisaría el secreto del ERP.
+    Una `PUT /pasarela/satelles/drivers/...` real (con key de prueba
+    temporal) llega a Satelles y proxea su respuesta → el camino
+    inbound→pasarela→Satelles funciona.
+  - CONTRATO REAL del driver verificado contra Satelles: `name`, `email`
+    (formato válido, 1-254) e `idCard` (1-20) son OBLIGATORIOS — 422 si
+    faltan. Manual corregido (estaban como opcionales). El PUT de vehicle no
+    se probó (mismo riesgo de escribir en el maestro real de un tercero); su
+    obligatoriedad la confirmará Satelles en el primer alta real.
+  - PENDIENTE: el alta real de conductores/vehículos de GFE (con code y NIF
+    reales) la hace el ERP; no se crean datos de pega en el maestro de un
+    tercero. Un PUT con idCard inventado dio 500 interno de Satelles (no es
+    bug nuestro, causa no determinable desde fuera). Decidir los 2 tests
+    preexistentes de marcar-procesado (PROCESADO vs TERMINADO, ajenos).
 
 Cambios 2026-06-24:
 - **Satelles bloqueado por Cloudflare desde el 22/05/2026**: el host
