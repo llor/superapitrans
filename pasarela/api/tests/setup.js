@@ -131,8 +131,9 @@ async function setupTestData() {
     const empresaId = await ensureEmpresaTest();
     const rawKeyRead = await regenerarApiKey(empresaId, 'test-read', ['datos.read']);
     const rawKeyRw   = await regenerarApiKey(empresaId, 'test-rw',   ['datos.read', 'datos.write']);
+    const rawKeySat  = await regenerarApiKey(empresaId, 'test-satelles', ['satelles.read', 'satelles.write']);
     const pedidoIdSeed = await ensurePedidoSeed();
-    return { empresaId, rawKeyRead, rawKeyRw, pedidoIdSeed };
+    return { empresaId, rawKeyRead, rawKeyRw, rawKeySat, pedidoIdSeed };
 }
 
 async function teardownTestData() {
@@ -142,7 +143,7 @@ async function teardownTestData() {
         `UPDATE pasarela_clientes_keys
             SET activo = false, updated_at = NOW()
           WHERE empresa_id = (SELECT id FROM empresas WHERE codigo = $1)
-            AND aplicacion IN ('test-read', 'test-rw')`,
+            AND aplicacion IN ('test-read', 'test-rw', 'test-satelles')`,
         [TEST_CODIGO]
     );
 }

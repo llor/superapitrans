@@ -18,6 +18,9 @@
  *   GET /api/datos/pedidos                               (varios casos)
  *   GET /api/datos/pedidos/:id                           (varios casos)
  *   POST /api/datos/pedidos/:id/marcar-procesado         (varios casos)
+ *   GET/PUT /api/satelles/drivers|vehicles               (auth, scope,
+ *       validación y sin_credencial — la rama feliz llama a Satelles real,
+ *       no se prueba en CI; se valida en prod contra ecotrans.satelles.es).
  */
 
 const test = require('node:test');
@@ -172,4 +175,56 @@ test('POST .../marcar-procesado/:id con id no numérico → 400 id_invalido', as
     const r = await api('POST', '/api/datos/pedidos/abc/marcar-procesado', { token: ctx.rawKeyRw });
     assert.equal(r.status, 400);
     assert.equal(r.body.error, 'id_invalido');
+});
+
+/* ─── /api/satelles — maestros (conductores y vehículos) ──────────────────
+ *
+ * La empresa TEST no tiene credencial Satelles, así que las ramas felices
+ * (GET/PUT que sí llegan a Satelles) responden 404 sin_credencial_satelles
+ * sin salir a la red. La cobertura es: auth, scope, validación de body y
+ * sin_credencial. El proxy real se valida en prod (allowlist Cloudflare).
+ */
+
+test('GET /api/satelles/drivers sin Bearer → 401 missing_bearer', async () => {
+    const r = await api('GET', '/api/satelles/drivers');
+    assert.equal(r.status, 401);
+    assert.equal(r.body.error, 'missing_bearer');
+});
+
+test('GET /api/satelles/drivers con key sin satelles.read → 403 scope_required', async () => {
+    const r = await api('GET', '/api/satelles/drivers', { token: ctx.rawKeyRead });
+    assert.equal(r.status, 403);
+    assert.equal(r.body.error, 'scope_required');
+    assert.equal(r.body.scope, 'satelles.read');
+});
+
+test('PUT /api/satelles/drivers/:code con key sin satelles.write → 403 scope_required', async () => {
+    const r = await api('PUT', '/api/satelles/drivers/SAYCU-X', { token: ctx.rawKeyRead, body: { name: 'X' } });
+    assert.equal(r.status, 403);
+    assert.equal(r.body.error, 'scope_required');
+    assert.equal(r.body.scope, 'satelles.write');
+});
+
+test('GET /api/satelles/drivers con satelles.read pero empresa sin credencial → 404 sin_credencial_satelles', async () => {
+    const r = await api('GET', '/api/satelles/drivers', { token: ctx.rawKeySat });
+    assert.equal(r.status, 404);
+    assert.equal(r.body.error, 'sin_credencial_satelles');
+});
+
+test('GET /api/satelles/vehicles con satelles.read pero empresa sin credencial → 404 sin_credencial_satelles', async () => {
+    const r = await api('GET', '/api/satelles/vehicles', { token: ctx.rawKeySat });
+    assert.equal(r.status, 404);
+    assert.equal(r.body.error, 'sin_credencial_satelles');
+});
+
+test('PUT /api/satelles/drivers/:code sin name → 400 name_requerido', async () => {
+    const r = await api('PUT', '/api/satelles/drivers/SAYCU-X', { token: ctx.rawKeySat, body: { email: 'x@y.es' } });
+    assert.equal(r.status, 400);
+    assert.equal(r.body.error, 'name_requerido');
+});
+
+test('PUT /api/satelles/vehicles/:code sin licensePlate → 400 licensePlate_requerido', async () => {
+    const r = await api('PUT', '/api/satelles/vehicles/SAYCU-X', { token: ctx.rawKeySat, body: { type: 'StraightTruck' } });
+    assert.equal(r.status, 400);
+    assert.equal(r.body.error, 'licensePlate_requerido');
 });

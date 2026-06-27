@@ -34,6 +34,7 @@ function buildApp() {
     app.use(logRequest);
 
     app.use('/api/datos', require('./routes/datos'));
+    app.use('/api/satelles', require('./routes/satelles'));
     app.use('/api/auth', require('./routes/auth'));
     app.use('/api/me', require('./routes/me'));
     app.use('/api/vista-prefs', require('./routes/vista-prefs'));

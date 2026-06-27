@@ -1,9 +1,48 @@
 # pasarela (futuro: SaycuNode)
 
-Última actualización: 2026-06-24. Nodo de datos del grupo Saycu:
+Última actualización: 2026-06-27. Nodo de datos del grupo Saycu:
 lee APIs externas (proveedor por proveedor) y persiste lo intercambiado
 en 4 tablas canónicas multi-tenant (`saycu_pasarela_<CODIGO>`),
 exponiéndolo después por una API inbound con bearer key.
+
+Cambios 2026-06-27:
+- **Satelles DESBLOQUEADO desde prod** (allowlist de la IP de salida del
+  servidor 149.86.232.18 en su Cloudflare). Verificado el 27/06: el token
+  endpoint `https://ecotrans.satelles.es/identity/connect/token` responde
+  `HTTP 400 application/json` (falta client_id, respuesta normal) desde el
+  servidor, SIN `cf-mitigated: challenge`. Desde otras IPs sigue dando
+  challenge (es allowlist por IP). CONSECUENCIA: las pruebas y el uso real
+  de Satelles solo funcionan desde PROD; dev (otra IP) sigue bloqueado.
+- **Outbound de maestros para el ERP (conductores y vehículos)**. Petición
+  expresa del N1: que el ERP del cliente pueda obtener y enviar choferes y
+  matrículas a Satelles a través de la pasarela. Implementado como proxy
+  autenticado (relay, sin persistencia):
+  - Cliente: `proveedores/satelles/client.js` añade `getDrivers/getDriver/
+    putDriver/getVehicles/getVehicle/putVehicle` (scope
+    `satelles-erpsync:write`, token cacheado, 401→refresh+reintento).
+  - Endpoints inbound: `routes/satelles.js` →
+    `GET/PUT /pasarela/satelles/drivers[/:code]` y
+    `GET/PUT /pasarela/satelles/vehicles[/:code]`. Montado en `app.js`.
+  - Scopes inbound nuevos en las keys del cliente: `satelles.read` (GET) y
+    `satelles.write` (PUT). El tenant (y su credencial Satelles) se infiere
+    de la API key, igual que en /datos. `?entorno=sandbox` opcional.
+  - Errores: `sin_credencial_satelles` (404), `satelles_upstream_error`
+    (502 con status+detail de Satelles), `name_requerido`/
+    `licensePlate_requerido` (400).
+  - Tests en `tests/api.test.js` (auth, scope, validación, sin_credencial;
+    la rama feliz llama a Satelles real y no se prueba en CI). Manual
+    ampliado en `admin.saycusoft.es/.../ApiDocsPasarela.jsx` (secciones
+    Conductores y Vehículos + scopes + errores).
+  - VERIFICADO en vivo contra GFE (prod): scope `satelles-erpsync:write`
+    concedido; `GET /api/erpsync/drivers` 200 (679 conductores, campos
+    code/name/email/idCard/placeCode/disabled) y `GET /api/erpsync/vehicles`
+    200 (829 vehículos, campos code/licensePlate/type/transportTypeCode/
+    disabled/compartments). Cuerpos del PUT del Postman oficial.
+  - PENDIENTE: (1) prueba E2E del PUT — escribe en el maestro REAL de GFE y
+    Satelles no expone borrado por API, requiere OK del usuario con un
+    `code` de prueba; (2) emitir la key del ERP con scopes `satelles.*`
+    (`scripts/generar-key.js <EMPRESA> <app> satelles.read,satelles.write`);
+    (3) deploy a prod (hoy solo dev). Las pruebas reales solo van por prod.
 
 Cambios 2026-06-24:
 - **Satelles bloqueado por Cloudflare desde el 22/05/2026**: el host

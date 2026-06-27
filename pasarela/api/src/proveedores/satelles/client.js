@@ -8,6 +8,12 @@
  */
 
 const SCOPE_FINISHED = 'satelles-publications:finished-routes';
+// Recursos maestros editables del módulo ERPSYNC (drivers, vehicles,
+// places, materials, …). Verificado en vivo el 2026-06-27 contra
+// ecotrans.satelles.es: la credencial de GFE tiene este scope concedido y
+// el servidor OAuth lo emite (también el GET de maestros lo exige; el de
+// finished-routes es solo para la cola de publicaciones).
+const SCOPE_ERPSYNC = 'satelles-erpsync:write';
 
 // Caché de tokens en memoria. Clave: hostBase + clientId + scope.
 const tokenCache = new Map();
@@ -199,4 +205,70 @@ async function downloadDocumento(cred, url) {
     };
 }
 
-module.exports = { getFinishedRoutes, commitFinishedRoutes, getDocumentosRuta, downloadDocumento };
+/* ───────────────────────────────────────────────────────────────────────────
+ * Maestros ERPSYNC (outbound): conductores y vehículos.
+ *
+ * Endpoints oficiales (manual Satelles ERPSYNC; paths y cuerpos verificados
+ * en vivo el 2026-06-27 contra ecotrans.satelles.es con la credencial de GFE):
+ *   GET /api/erpsync/drivers           lista de conductores
+ *   GET /api/erpsync/drivers/{code}    un conductor
+ *   PUT /api/erpsync/drivers/{code}    crear o actualizar (upsert por code)
+ *   GET /api/erpsync/vehicles          lista de vehículos
+ *   GET /api/erpsync/vehicles/{code}   un vehículo
+ *   PUT /api/erpsync/vehicles/{code}   crear o actualizar (upsert por code)
+ *
+ * Todos con scope satelles-erpsync:write. Token cacheado; un 401 limpia la
+ * caché y reintenta una vez. Un error HTTP de Satelles se lanza con
+ * `err.statusCode` + `err.upstream` para que el endpoint lo traduzca a 502.
+ * ─────────────────────────────────────────────────────────────────────────── */
+async function callErpsync(cred, method, path, body) {
+    const host = cred.hostBase.replace(/\/$/, '');
+    const tokenArgs = {
+        hostBase: cred.hostBase,
+        clientId: cred.client_id,
+        clientSecret: cred.client_secret,
+        scope: SCOPE_ERPSYNC,
+    };
+    const doFetch = (token) => {
+        const headers = {
+            'Accept': 'application/json',
+            'Accept-Language': 'es',
+            'Authorization': `Bearer ${token}`,
+        };
+        const opts = { method, headers };
+        if (body !== undefined) {
+            headers['Content-Type'] = 'application/json';
+            opts.body = JSON.stringify(body);
+        }
+        return fetch(`${host}${path}`, opts);
+    };
+
+    let res = await doFetch(await obtenerToken(tokenArgs));
+    if (res.status === 401) {
+        // Token caducado o inválido — limpiar caché y reintentar 1 vez.
+        tokenCache.delete(cacheKey(cred.hostBase, cred.client_id, SCOPE_ERPSYNC));
+        res = await doFetch(await obtenerToken(tokenArgs));
+    }
+    if (!res.ok) {
+        const text = await res.text().catch(() => '');
+        const err = new Error(`Satelles erpsync ${method} ${path} failed: HTTP ${res.status} ${text.slice(0, 200)}`);
+        err.statusCode = res.status;
+        err.upstream = text.slice(0, 500);
+        throw err;
+    }
+    if (res.status === 204) return null;
+    const ct = res.headers.get('content-type') || '';
+    return ct.includes('application/json') ? res.json() : res.text();
+}
+
+const getDrivers = (cred) => callErpsync(cred, 'GET', '/api/erpsync/drivers');
+const getDriver = (cred, code) => callErpsync(cred, 'GET', `/api/erpsync/drivers/${encodeURIComponent(code)}`);
+const putDriver = (cred, code, body) => callErpsync(cred, 'PUT', `/api/erpsync/drivers/${encodeURIComponent(code)}`, body);
+const getVehicles = (cred) => callErpsync(cred, 'GET', '/api/erpsync/vehicles');
+const getVehicle = (cred, code) => callErpsync(cred, 'GET', `/api/erpsync/vehicles/${encodeURIComponent(code)}`);
+const putVehicle = (cred, code, body) => callErpsync(cred, 'PUT', `/api/erpsync/vehicles/${encodeURIComponent(code)}`, body);
+
+module.exports = {
+    getFinishedRoutes, commitFinishedRoutes, getDocumentosRuta, downloadDocumento,
+    getDrivers, getDriver, putDriver, getVehicles, getVehicle, putVehicle,
+};
