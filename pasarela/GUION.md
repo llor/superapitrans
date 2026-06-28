@@ -932,3 +932,11 @@ la ingesta del PCS de Valencia.
    emitimos nosotros al PCS, no al revés. Si en algún momento se
    vuelve a redactar comunicación al cliente sobre el PCS, no atribuir
    ese fleco al puerto — es deuda nuestra.
+
+
+## Memorias de este proyecto (fuera del índice global de memoria)
+
+> Sacadas del índice global `MEMORY.md` el 2026-06-28 para aligerarlo; siguen en
+> `~/.claude/projects/-Volumes-THUND-proyectos/memory/`. Léelas al trabajar aquí:
+
+- `project_pasarela_en_espera.md` — Estado del nodo de datos (superapitrans/pasarela, futuro SaycuNode) al 2026-06-03. Ambos proveedores sincronizan en prod. chofocles separado a repo propio llor/chofocles el 2026-06-03.
