@@ -1,9 +1,33 @@
 # pasarela (futuro: SaycuNode)
 
-Última actualización: 2026-06-27. Nodo de datos del grupo Saycu:
+Última actualización: 2026-06-30. Nodo de datos del grupo Saycu:
 lee APIs externas (proveedor por proveedor) y persiste lo intercambiado
 en 4 tablas canónicas multi-tenant (`saycu_pasarela_<CODIGO>`),
 exponiéndolo después por una API inbound con bearer key.
+
+Cambios 2026-06-30:
+- **numero_pedido ampliado a VARCHAR(500)** (migración
+  `0017_tenant_numero_pedido_500.sql`). Nació VARCHAR(100) en 0002; es la
+  concatenación con ';' de las referencias de pedido de la ruta (TTNPEDI).
+  En rutas de 10-12 entregas pasa de 100 caracteres y el UPSERT fallaba con
+  "value too long", haciendo ROLLBACK: esos pedidos NO se importaban y
+  reaparecían en la cola finished de Satelles ciclo tras ciclo. El fallo se
+  quedaba SOLO en el log del bucle de publicaciones (`satelles/sync.js`,
+  catch del `for`) — NO llega al receptor de errores, por eso pasó
+  inadvertido. Detectado en GFE el 30/06: pubs 29757/29990/30491/32269
+  (109-131 chars) llevaban toda la mañana atascadas. Se iguala a
+  `albaranes_concatenados` (ya VARCHAR(500), mismo patrón). Aplicada a las 6
+  BDs tenant con tabla `pedidos` en dev y prod (aut/saycusoft no la tienen →
+  saltadas). Verificado E2E: sync GFE procesadas=4/commit=4, ciclo siguiente
+  "sin rutas pendientes", los 4 pedidos quedan en BD con numero_pedido de
+  109-131.
+- **Anti-ruido del aviso de fallo de descarga de Satelles (validado,
+  PENDIENTE de implementar)**: un 503/corte transitorio dispara hoy email
+  inmediato aunque se cure al ciclo siguiente. Acordado reportar al receptor
+  solo si el corte PERSISTE al siguiente ciclo (transitorio → solo log; el
+  log ya queda). Las llamadas en vivo (maestros drivers/vehicles) ya
+  devuelven el error al cliente como 502; esto solo afecta al cron, que no
+  tiene usuario delante.
 
 Cambios 2026-06-27:
 - **Satelles DESBLOQUEADO desde prod** (allowlist de la IP de salida del
@@ -156,9 +180,12 @@ Estado proveedores (2026-05-18):
   histórica de JSR (1001 pedidos) se drenó el 2026-05-18; a partir de
   ahí cada ciclo solo entrega los mensajes nuevos.
 
-Cron: `* * * * *` (cada minuto desde 2026-05-18, antes `*/5`). Si no hay
-mensajes nuevos, cada proveedor devuelve lista vacía y retorna inmediato:
-el ciclo es prácticamente gratuito.
+Cron: configurable en caliente (clave `cron_expr`, ver abajo). Valor vigente
+verificado en logs el 2026-06-30 = **cada 5 min** (`*/5`). Histórico: `*/5`
+→ `* * * * *` (cada minuto) el 2026-05-18 → de nuevo cada 5 min. La
+frecuencia real es la que haya en `pasarela_config`, no un literal fijo. Si
+no hay mensajes nuevos, cada proveedor devuelve lista vacía y retorna
+inmediato: el ciclo es prácticamente gratuito.
 
 La expresión vive en `saycu_admin.pasarela_config` (clave `cron_expr`),
 no en `.env`. El pasarela_api la lee al arrancar y revisa esa tabla cada
