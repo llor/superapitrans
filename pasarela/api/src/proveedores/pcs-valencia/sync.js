@@ -22,6 +22,19 @@ const { listCredencialesActivas, marcarSync } = require('../../auth/provider-cre
 const { listMessages, downloadMessage, deleteMessage } = require('./client');
 const { mapMessage, PROVEEDOR } = require('./mapper');
 const errorReporter = require('../../utils/error-reporter-client');
+const { crearRastreadorFallos } = require('../../utils/fallo-persistente');
+
+// Anti-ruido (mismo criterio que satelles/sync.js): un fallo del cron solo se
+// reporta al receptor si PERSISTE este nº de ciclos consecutivos; el 1er fallo
+// aislado se queda en el log. Tres ámbitos por proceso:
+//  - listado: el GET de pendientes falla (clave = credencialId).
+//  - mensaje: un mensaje concreto falla al descargar/mapear/guardar
+//    (clave = `${credencialId}:${msgId}`).
+//  - ack: el DELETE de ack al portal falla (clave = credencialId).
+const UMBRAL_CICLOS_FALLO = 2;
+const fallosListado = crearRastreadorFallos(UMBRAL_CICLOS_FALLO);
+const fallosMensaje = crearRastreadorFallos(UMBRAL_CICLOS_FALLO);
+const fallosAck = crearRastreadorFallos(UMBRAL_CICLOS_FALLO);
 
 async function upsertPedido(pool, pedido) {
     const cols = Object.keys(pedido);
@@ -128,28 +141,40 @@ async function syncCredencial(cred, log) {
     let pendientes;
     try {
         pendientes = await listMessages(cred);
+        const rec = fallosListado.ok(cred.credencialId);
+        if (rec.recuperado) {
+            log(`[${PROVEEDOR}] empresa=${cred.empresaCodigo} listado RECUPERADO tras ${rec.fallos} ciclos fallando`);
+        }
     } catch (err) {
         await marcarSync({ credencialId: cred.credencialId, ok: false, error: err.message });
         log(`[${PROVEEDOR}] empresa=${cred.empresaCodigo} list ERROR ${err.message}`);
-        // Mismo motivo que en Satelles: el fallo de conexion/auth se traga aqui;
-        // sin reporte no avisaria. Dedup por firma en el receptor central.
-        errorReporter.reportError({
-            source: 'process',
-            severity: 'error',
-            message: `PCS Valencia: no se pudo listar mensajes (empresa ${cred.empresaCodigo}): ${err.message}`,
-            stack: err.stack,
-            empresa_codigo: cred.empresaCodigo,
-            extra: {
-                proveedor: 'pcs-valencia',
-                entorno: cred.entorno,
-                host_base: cred.hostBase,
-                funcion: 'syncCredencial -> listMessages',
-            },
-        });
+        // Anti-ruido: el 1er fallo solo va al log (un corte transitorio del
+        // portal se cura al ciclo siguiente). Reportar solo si PERSISTE
+        // UMBRAL_CICLOS_FALLO ciclos seguidos, una vez por racha.
+        const l = fallosListado.fallo(cred.credencialId);
+        if (l.reportar) {
+            errorReporter.reportError({
+                source: 'process',
+                severity: 'error',
+                message: `PCS Valencia: no se pudo listar mensajes (empresa ${cred.empresaCodigo}) de forma persistente (${l.fallos} ciclos consecutivos): ${err.message}`,
+                stack: err.stack,
+                empresa_codigo: cred.empresaCodigo,
+                extra: {
+                    proveedor: 'pcs-valencia',
+                    entorno: cred.entorno,
+                    host_base: cred.hostBase,
+                    funcion: 'syncCredencial -> listMessages',
+                    ciclos_consecutivos: l.fallos,
+                },
+            });
+        }
         return { ok: false, error: err.message };
     }
     if (!Array.isArray(pendientes) || pendientes.length === 0) {
         await marcarSync({ credencialId: cred.credencialId, ok: true, error: null });
+        // Cola vacía: ningún mensaje vivo y nada que ackear → cerrar rachas.
+        fallosMensaje.purgar(`${cred.credencialId}:`, new Set());
+        fallosAck.ok(cred.credencialId);
         log(`[${PROVEEDOR}] empresa=${cred.empresaCodigo} sin mensajes pendientes`);
         return { ok: true, processed: 0 };
     }
@@ -162,7 +187,10 @@ async function syncCredencial(cred, log) {
     let errores = 0;
     let ackOk = 0;
     let ackErr = 0;
+    const msgsVivos = new Set();
     for (const meta of pendientes) {
+        const msgKey = `${cred.credencialId}:${meta.id}`;
+        msgsVivos.add(msgKey);
         try {
             const xml = await downloadMessage(cred, meta.id);
             const mapMeta = { ...meta, tenantCodigo: cred.empresaCodigo };
@@ -190,6 +218,10 @@ async function syncCredencial(cred, log) {
             }
             await tenantPool.query('COMMIT');
             procesadas++;
+            const rec = fallosMensaje.ok(msgKey);
+            if (rec.recuperado) {
+                log(`[${PROVEEDOR}] empresa=${cred.empresaCodigo} ${meta.id} RECUPERADO tras ${rec.fallos} ciclos fallando`);
+            }
             // Ack al portal SOLO tras COMMIT correcto. Si falla el DELETE, no
             // pasa nada crítico: la idempotencia del upsert por
             // (proveedor_codigo, proveedor_publication_id) absorbe el reintento.
@@ -204,7 +236,56 @@ async function syncCredencial(cred, log) {
             errores++;
             try { await tenantPool.query('ROLLBACK'); } catch (_) { /* ignorar */ }
             log(`[${PROVEEDOR}] empresa=${cred.empresaCodigo} ${meta.id} tipo=${meta.messageType} ERROR ${err.message}`);
+            // Anti-ruido (igual que satelles): un mensaje que falla al
+            // descargar/mapear/guardar solo se reporta si PERSISTE varios
+            // ciclos. Antes este catch era mudo.
+            const m = fallosMensaje.fallo(msgKey);
+            if (m.reportar) {
+                errorReporter.reportError({
+                    source: 'process',
+                    severity: 'error',
+                    message: `PCS Valencia: el mensaje ${meta.id} (tipo ${meta.messageType}, empresa ${cred.empresaCodigo}) falla al procesarse de forma persistente (${m.fallos} ciclos consecutivos): ${err.message}`,
+                    stack: err.stack,
+                    empresa_codigo: cred.empresaCodigo,
+                    extra: {
+                        proveedor: 'pcs-valencia',
+                        entorno: cred.entorno,
+                        publication_id: meta.id,
+                        message_type: meta.messageType,
+                        funcion: 'syncCredencial -> procesar mensaje',
+                        ciclos_consecutivos: m.fallos,
+                    },
+                });
+            }
         }
+    }
+    // Olvidar rachas de mensajes de ESTA credencial que ya no están en la cola
+    // (procesados o retirados por el portal), para no acumular.
+    fallosMensaje.purgar(`${cred.credencialId}:`, msgsVivos);
+    // Ack al portal: reportar solo si los acks fallan de forma persistente (la
+    // cola no se drena → se re-procesa lo mismo cada ciclo). Si no hubo intentos
+    // (dry-run o todos los mensajes fallaron antes), no se toca la racha.
+    if (ackErr > 0) {
+        const a = fallosAck.fallo(cred.credencialId);
+        if (a.reportar) {
+            errorReporter.reportError({
+                source: 'process',
+                severity: 'error',
+                message: `PCS Valencia: el ack (borrado) al portal (empresa ${cred.empresaCodigo}) falla de forma persistente: ${ackErr} de ${ackOk + ackErr} en el último ciclo, ${a.fallos} ciclos seguidos con fallos.`,
+                empresa_codigo: cred.empresaCodigo,
+                extra: {
+                    proveedor: 'pcs-valencia',
+                    entorno: cred.entorno,
+                    host_base: cred.hostBase,
+                    funcion: 'syncCredencial -> deleteMessage (ack)',
+                    ack_err: ackErr,
+                    ack_ok: ackOk,
+                    ciclos_consecutivos: a.fallos,
+                },
+            });
+        }
+    } else if (ackOk > 0) {
+        fallosAck.ok(cred.credencialId);
     }
 
     await marcarSync({ credencialId: cred.credencialId, ok: errores === 0, error: errores ? `${errores} errores` : null });

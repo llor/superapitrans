@@ -23,12 +23,14 @@ const { crearRastreadorFallos } = require('../../utils/fallo-persistente');
 // Es la "2ª ronda": con el cron a 5 min, ~5-10 min de fallo sostenido.
 const UMBRAL_CICLOS_FALLO = 2;
 
-// Estado por proceso (el cron es de larga duración). Dos ámbitos:
+// Estado por proceso (el cron es de larga duración). Tres ámbitos:
 //  - descarga: el GET finished falla (clave = credencialId).
 //  - publicacion: una publicación concreta falla al guardarse en BD
 //    (clave = `${credencialId}:${pubId}`).
+//  - commit: el POST finished/commit falla (clave = credencialId).
 const fallosDescarga = crearRastreadorFallos(UMBRAL_CICLOS_FALLO);
 const fallosPublicacion = crearRastreadorFallos(UMBRAL_CICLOS_FALLO);
+const fallosCommit = crearRastreadorFallos(UMBRAL_CICLOS_FALLO);
 
 async function upsertPedido(pool, pedido) {
     const cols = Object.keys(pedido);
@@ -224,8 +226,32 @@ async function syncCredencial(cred, log) {
         try {
             await commitFinishedRoutes(cred, procesadasOk);
             committed = procesadasOk.length;
+            const rec = fallosCommit.ok(cred.credencialId);
+            if (rec.recuperado) {
+                log(`[satelles] empresa=${cred.empresaCodigo} commit RECUPERADO tras ${rec.fallos} ciclos fallando`);
+            }
         } catch (err) {
             log(`[satelles] empresa=${cred.empresaCodigo} commit ERROR ${err.message}`);
+            // Anti-ruido: un commit fallido no pierde datos (la publicación se
+            // re-descarga y el UPSERT es idempotente), pero si PERSISTE la cola
+            // de Satelles no se drena nunca. Reportar solo si persiste.
+            const c = fallosCommit.fallo(cred.credencialId);
+            if (c.reportar) {
+                errorReporter.reportError({
+                    source: 'process',
+                    severity: 'error',
+                    message: `Satelles: el commit de rutas finalizadas (empresa ${cred.empresaCodigo}) falla de forma persistente (${c.fallos} ciclos consecutivos): ${err.message}`,
+                    stack: err.stack,
+                    empresa_codigo: cred.empresaCodigo,
+                    extra: {
+                        proveedor: 'satelles',
+                        entorno: cred.entorno,
+                        host_base: cred.hostBase,
+                        funcion: 'syncCredencial -> commitFinishedRoutes',
+                        ciclos_consecutivos: c.fallos,
+                    },
+                });
+            }
         }
     } else if (procesadasOk.length && dryRun) {
         log(`[satelles] empresa=${cred.empresaCodigo} DRY_RUN: omitido commit de ${procesadasOk.length} publicaciones`);

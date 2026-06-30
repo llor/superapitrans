@@ -34,8 +34,10 @@ Cambios 2026-06-30:
   un reinicio reinicia el contador (margen de 1 ciclo, aceptable). Las
   llamadas en vivo (maestros drivers/vehicles) ya devuelven el error al
   cliente como 502; esto solo afecta al cron, sin usuario delante. Desplegado
-  dev+prod el 30/06. PENDIENTE menor (si se quiere): mismo criterio en
-  pcs-valencia y en el catch del commit a Satelles, hoy también mudos.
+  dev+prod el 30/06. Mismo criterio extendido al **commit de Satelles** y a
+  **pcs-valencia** en sus tres ámbitos (listado, mensaje y ack/borrado del
+  portal) — todos eran reporte inmediato o catch mudo; ahora solo avisan si
+  el fallo persiste 2 ciclos.
 
 Cambios 2026-06-27:
 - **Satelles DESBLOQUEADO desde prod** (allowlist de la IP de salida del
