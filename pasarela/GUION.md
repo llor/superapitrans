@@ -21,13 +21,21 @@ Cambios 2026-06-30:
   saltadas). Verificado E2E: sync GFE procesadas=4/commit=4, ciclo siguiente
   "sin rutas pendientes", los 4 pedidos quedan en BD con numero_pedido de
   109-131.
-- **Anti-ruido del aviso de fallo de descarga de Satelles (validado,
-  PENDIENTE de implementar)**: un 503/corte transitorio dispara hoy email
-  inmediato aunque se cure al ciclo siguiente. Acordado reportar al receptor
-  solo si el corte PERSISTE al siguiente ciclo (transitorio → solo log; el
-  log ya queda). Las llamadas en vivo (maestros drivers/vehicles) ya
-  devuelven el error al cliente como 502; esto solo afecta al cron, que no
-  tiene usuario delante.
+- **Anti-ruido del aviso de fallo de Satelles (IMPLEMENTADO)**: un fallo del
+  cron solo se reporta al receptor si PERSISTE 2 ciclos consecutivos
+  (`UMBRAL_CICLOS_FALLO` en `satelles/sync.js`); el 1er fallo aislado se
+  queda solo en el log (un corte transitorio del proveedor se cura al ciclo
+  siguiente). Cubre los DOS casos con el mismo criterio: (a) corte de
+  descarga (GET finished falla) y (b) una publicación que falla al guardarse
+  en BD repetidamente — ese 2º catch antes era mudo, por eso el
+  value-too-long de hoy estuvo toda la mañana sin avisar. Helper reutilizable
+  `utils/fallo-persistente.js` (rastreador de rachas por clave + test
+  `tests/fallo-persistente.test.js`, 7 casos). Estado en memoria del proceso;
+  un reinicio reinicia el contador (margen de 1 ciclo, aceptable). Las
+  llamadas en vivo (maestros drivers/vehicles) ya devuelven el error al
+  cliente como 502; esto solo afecta al cron, sin usuario delante. Desplegado
+  dev+prod el 30/06. PENDIENTE menor (si se quiere): mismo criterio en
+  pcs-valencia y en el catch del commit a Satelles, hoy también mudos.
 
 Cambios 2026-06-27:
 - **Satelles DESBLOQUEADO desde prod** (allowlist de la IP de salida del

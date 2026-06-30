@@ -15,6 +15,20 @@ const { listCredencialesActivas, marcarSync } = require('../../auth/provider-cre
 const { getFinishedRoutes, commitFinishedRoutes } = require('./client');
 const { mapPublication, PROVEEDOR } = require('./mapper');
 const errorReporter = require('../../utils/error-reporter-client');
+const { crearRastreadorFallos } = require('../../utils/fallo-persistente');
+
+// Anti-ruido: un fallo de Satelles solo se reporta al receptor si PERSISTE
+// este nº de ciclos consecutivos del cron. El 1er fallo aislado se queda en
+// el log (un corte transitorio del proveedor se cura en el ciclo siguiente).
+// Es la "2ª ronda": con el cron a 5 min, ~5-10 min de fallo sostenido.
+const UMBRAL_CICLOS_FALLO = 2;
+
+// Estado por proceso (el cron es de larga duración). Dos ámbitos:
+//  - descarga: el GET finished falla (clave = credencialId).
+//  - publicacion: una publicación concreta falla al guardarse en BD
+//    (clave = `${credencialId}:${pubId}`).
+const fallosDescarga = crearRastreadorFallos(UMBRAL_CICLOS_FALLO);
+const fallosPublicacion = crearRastreadorFallos(UMBRAL_CICLOS_FALLO);
 
 async function upsertPedido(pool, pedido) {
     const cols = Object.keys(pedido);
@@ -98,36 +112,51 @@ async function syncCredencial(cred, log) {
     let publications = [];
     try {
         publications = await getFinishedRoutes(cred);
+        const rec = fallosDescarga.ok(cred.credencialId);
+        if (rec.recuperado) {
+            log(`[satelles] empresa=${cred.empresaCodigo} descarga RECUPERADA tras ${rec.fallos} ciclos fallando`);
+        }
     } catch (err) {
         await marcarSync({ credencialId: cred.credencialId, ok: false, error: err.message });
         log(`[satelles] empresa=${cred.empresaCodigo} ERROR ${err.message}`);
-        // El error se traga aqui (no se relanza): sin este reporte, un corte
-        // como el de Cloudflare en ecotrans.satelles.es se quedaria solo en el
-        // log durante semanas. El receptor central dedupe por firma (1 email/h).
-        errorReporter.reportError({
-            source: 'process',
-            severity: 'error',
-            message: `Satelles: no se pudieron descargar rutas finalizadas (empresa ${cred.empresaCodigo}): ${err.message}`,
-            stack: err.stack,
-            empresa_codigo: cred.empresaCodigo,
-            extra: {
-                proveedor: 'satelles',
-                entorno: cred.entorno,
-                host_base: cred.hostBase,
-                funcion: 'syncCredencial -> getFinishedRoutes',
-            },
-        });
+        // Anti-ruido: el 1er fallo solo va al log (un corte transitorio del
+        // proveedor —p.ej. 503/Cloudflare— se cura en el ciclo siguiente).
+        // Solo se reporta al receptor si PERSISTE UMBRAL_CICLOS_FALLO ciclos
+        // seguidos, una vez por racha. Un corte largo (el de Cloudflare de
+        // mayo, un mes) se sigue detectando; el hipo de un ciclo, no molesta.
+        const d = fallosDescarga.fallo(cred.credencialId);
+        if (d.reportar) {
+            errorReporter.reportError({
+                source: 'process',
+                severity: 'error',
+                message: `Satelles: corte persistente al descargar rutas finalizadas (empresa ${cred.empresaCodigo}): ${d.fallos} ciclos consecutivos fallando. Último error: ${err.message}`,
+                stack: err.stack,
+                empresa_codigo: cred.empresaCodigo,
+                extra: {
+                    proveedor: 'satelles',
+                    entorno: cred.entorno,
+                    host_base: cred.hostBase,
+                    funcion: 'syncCredencial -> getFinishedRoutes',
+                    ciclos_consecutivos: d.fallos,
+                },
+            });
+        }
         return { ok: false, error: err.message };
     }
 
     if (!Array.isArray(publications) || publications.length === 0) {
         await marcarSync({ credencialId: cred.credencialId, ok: true, error: null });
+        // Cola vacía: ninguna publicación viva → olvidar rachas de esta credencial.
+        fallosPublicacion.purgar(`${cred.credencialId}:`, new Set());
         log(`[satelles] empresa=${cred.empresaCodigo} sin rutas pendientes`);
         return { ok: true, processed: 0 };
     }
 
     const procesadasOk = [];
+    const pubsVivas = new Set();
     for (const pub of publications) {
+        const pubKey = `${cred.credencialId}:${pub.id}`;
+        pubsVivas.add(pubKey);
         try {
             const { pedido, albaranes, paradas } = mapPublication(pub, {
                 tenantCodigo: cred.empresaCodigo,
@@ -150,11 +179,40 @@ async function syncCredencial(cred, log) {
             }
             await tenantPool.query('COMMIT');
             procesadasOk.push(pub.id);
+            const rec = fallosPublicacion.ok(pubKey);
+            if (rec.recuperado) {
+                log(`[satelles] empresa=${cred.empresaCodigo} pub=${pub.id} RECUPERADA tras ${rec.fallos} ciclos fallando`);
+            }
         } catch (err) {
             try { await tenantPool.query('ROLLBACK'); } catch (_) { /* ignorar */ }
             log(`[satelles] empresa=${cred.empresaCodigo} pub=${pub.id} ERROR ${err.message}`);
+            // Anti-ruido (igual criterio que la descarga): una publicación que
+            // falla al guardarse solo se reporta si PERSISTE varios ciclos.
+            // Antes este catch era mudo y un fallo permanente (p.ej. el
+            // value-too-long de numero_pedido del 30/06) quedaba atascado sin
+            // avisar nunca.
+            const p = fallosPublicacion.fallo(pubKey);
+            if (p.reportar) {
+                errorReporter.reportError({
+                    source: 'process',
+                    severity: 'error',
+                    message: `Satelles: la publicación ${pub.id} (empresa ${cred.empresaCodigo}) falla al guardarse de forma persistente (${p.fallos} ciclos consecutivos): ${err.message}`,
+                    stack: err.stack,
+                    empresa_codigo: cred.empresaCodigo,
+                    extra: {
+                        proveedor: 'satelles',
+                        entorno: cred.entorno,
+                        publication_id: pub.id,
+                        funcion: 'syncCredencial -> procesar publicación',
+                        ciclos_consecutivos: p.fallos,
+                    },
+                });
+            }
         }
     }
+    // Olvidar rachas de publicaciones de ESTA credencial que ya no están en la
+    // cola (procesadas OK o retiradas por el proveedor), para no acumular.
+    fallosPublicacion.purgar(`${cred.credencialId}:`, pubsVivas);
 
     // Commit en Satelles solo de las que han pasado por BD OK.
     // PASARELA_DRY_RUN=true salta el commit: las publicaciones quedan en
