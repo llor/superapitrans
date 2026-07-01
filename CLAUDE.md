@@ -1,10 +1,9 @@
-DIRECTRICES — superapitrans
+# DIRECTRICES — superapitrans
 Complementan las directrices globales del CLAUDE.md de /proyectos/
 y las directrices de grupo en el CLAUDE.md de /proyectos/saycu/
 
 
-NATURALEZA DEL PROYECTO
------------------------
+## NATURALEZA DEL PROYECTO
 
 superapitrans es un servicio API en `debian.saycusoft.es` consumido por
 varios tipos de clientes (web, app móvil, sub-servicios, terceros). Es el
@@ -15,8 +14,7 @@ Sub-proyectos dentro de esta carpeta:
 - (otros, pendiente de especificación).
 
 
-SERVIDOR Y ENTORNO
-------------------
+## SERVIDOR Y ENTORNO
 
 - Servidor: `debian.saycusoft.es` (mismos alias del grupo: `saycu` prod,
   `saycudev` dev).
@@ -28,8 +26,7 @@ SERVIDOR Y ENTORNO
   ni `docker compose` manual.
 
 
-BBDD
-----
+## BBDD
 
 - Patrón Saycu: PostgreSQL multi-tenant. `saycu_admin` como catálogo
   maestro compartido; una BD por empresa por producto cuando aplique
@@ -39,8 +36,7 @@ BBDD
   `saycu`.
 
 
-COHERENCIA CON saycutrans
--------------------------
+## COHERENCIA CON saycutrans
 
 - Reutilizar el sistema de auth de saycutrans (JWT, claves env, formato de
   payload) salvo decisión explícita en contra.
@@ -49,8 +45,7 @@ COHERENCIA CON saycutrans
   cuando sea aplicable.
 
 
-FRONTAL CADDY = system-caddy GLOBAL
------------------------------------
+## FRONTAL CADDY = system-caddy GLOBAL
 
 superapitrans NO tiene Caddy propio. Se registra como bloque dentro del
 frontal único del servidor (`system-caddy`, en
@@ -67,8 +62,7 @@ Tras tocar lo anterior: validar Caddyfile (`caddy validate`), rsync a
 saycudev/saycu y recrear el contenedor `system_caddy`.
 
 
-DOMINIOS Y SUBDOMINIOS
-----------------------
+## DOMINIOS Y SUBDOMINIOS
 
 **Variable única `BASE_DOMAIN_SUPERAPI`** en el `.env` de system-caddy.
 Único punto de cambio cuando se asigne el dominio definitivo. Hoy
@@ -102,8 +96,7 @@ Cuando se cambie el dominio definitivo:
 - Actualizar monitorización Saycu (ACCESS_URLS, HEALTH_URLS).
 
 
-RED DOCKER `superapitrans_network`
-----------------------------------
+## RED DOCKER `superapitrans_network`
 
 Red externa compartida entre `system_caddy` y los sub-servicios de
 superapitrans. Debe existir antes de arrancar `system_caddy`. Crear una
@@ -115,8 +108,7 @@ Cada sub-servicio (chofocles, futuros) la declara como `external: true`
 en su propio `docker-compose.yml` y conecta su contenedor backend a ella.
 
 
-REGLA DE ALCANCE
-----------------
+## REGLA DE ALCANCE
 
 Aplican íntegramente las reglas inviolables del CLAUDE.md global y del
 CLAUDE.md del grupo Saycu:
