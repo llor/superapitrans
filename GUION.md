@@ -37,8 +37,11 @@ superapitrans no tiene Caddy propio. La carpeta contiene:
 - `_scripts/detect_env.sh` (utilidad para deploys).
 - GUION.md y CLAUDE.md.
 
-chofocles se separó a su propio repo el 2026-06-03: `llor/chofocles`
-(local: `saycu/chofocles/`). Ya no vive aquí.
+chofocles se separó a su propio repo el 2026-06-03: `llor/chofocles`.
+El 2026-07-02 se APARTÓ del grupo Saycu (congelado, sin usuarios):
+contenedores retirados de prod y dev, BD demo borrada con backup, rutas
+Caddy retiradas e integración del admin eliminada. Repo local movido a
+`/Volumes/THUND/proyectos/chofocles`; detalle en su GUION.md.
 
 
 CONEXIONES Y ACCESOS
@@ -66,7 +69,7 @@ DNS creado por el cliente (Saycusoft) el 2026-06-08, mismos IPs que los
 anteriores de superapi.eoden.es:
 - `api.saycunode.saycutrans.es`        → 149.86.232.18 (saycu / prod)   ✅ cableado
 - `dev-api.saycunode.saycutrans.es`    → 149.86.233.79 (saycudev / dev) ✅ cableado
-- `panel.saycunode.saycutrans.es`      → 149.86.232.18                  ✅ cableado (sirve chofocles + pasarela por path)
+- `panel.saycunode.saycutrans.es`      → 149.86.232.18                  ✅ cableado (sirve pasarela por path)
 - `dev-panel.saycunode.saycutrans.es`  → 149.86.233.79                  ✅ cableado (ídem)
 - `www.saycunode.saycutrans.es`        → 149.86.232.18                  ⏳ sin cablear (DNS reservado, sin bloque Caddy)
 - `dev-www.saycunode.saycutrans.es`    → 149.86.233.79                  ⏳ sin cablear (ídem)

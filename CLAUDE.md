@@ -10,8 +10,9 @@ varios tipos de clientes (web, app móvil, sub-servicios, terceros). Es el
 contenedor común de servicios API del grupo saycutrans.
 
 Sub-proyectos dentro de esta carpeta:
-- `chofocles/` (extracción de órdenes de transporte por email).
-- (otros, pendiente de especificación).
+- `pasarela/` (sistema de API con keys + tabla canónica + proveedores).
+- (chofocles fue sub-servicio hasta el 2026-07-02: apartado del grupo y
+  congelado; su repo vive ahora en `/Volumes/THUND/proyectos/chofocles`.)
 
 
 ## SERVIDOR Y ENTORNO
@@ -70,7 +71,7 @@ saycudev/saycu y recrear el contenedor `system_caddy`.
 
 Subdominios cableados:
 - PROD: `api.${BASE_DOMAIN_SUPERAPI}`     → todos los sub-servicios por
-  path (`/chofocles/...`, futuros).
+  path (`/pasarela/...`, futuros).
 - DEV : `dev-api.${BASE_DOMAIN_SUPERAPI}` → ídem.
 
 Path-routing por sub-servicio (Caddy `handle_path /<servicio>/*` +
@@ -104,7 +105,7 @@ sola vez por servidor:
 
     docker network create superapitrans_network
 
-Cada sub-servicio (chofocles, futuros) la declara como `external: true`
+Cada sub-servicio (pasarela, futuros) la declara como `external: true`
 en su propio `docker-compose.yml` y conecta su contenedor backend a ella.
 
 
