@@ -1,4 +1,4 @@
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
 import { api, auth } from '../api.js';
 
 const AuthContext = createContext(null);
@@ -24,6 +24,23 @@ export function AuthProvider({ children }) {
     auth.clear();
     setUser(null);
   }
+
+  // Nombre de la empresa activa → variable CSS global --empresa-actual, que las
+  // cabeceras de los modales muestran (reglas .modal/.ecm-modal/.paradas-modal
+  // ::before). Se pide a /api/me/empresa al haber sesión; se retira al salir.
+  useEffect(() => {
+    const root = document.documentElement;
+    if (!user) { root.style.removeProperty('--empresa-actual'); return; }
+    let cancelled = false;
+    api.me.getEmpresa()
+      .then((emp) => {
+        if (!cancelled && emp && emp.nombre) {
+          root.style.setProperty('--empresa-actual', JSON.stringify(emp.nombre));
+        }
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [user]);
 
   return (
     <AuthContext.Provider value={{ user, loading, login, logout, isAuthenticated: !!user }}>

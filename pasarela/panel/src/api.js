@@ -78,6 +78,7 @@ export const api = {
       return request(`/api/me/pedidos${tail ? `?${tail}` : ''}`);
     },
     getPedido: (id) => request(`/api/me/pedidos/${encodeURIComponent(id)}`),
+    getEmpresa: () => request('/api/me/empresa'),
   },
   // Preferencias de vista (toggle Tabla/Tarjetas, columnas, orden) por
   // usuario+navegador en BD (saycu_admin.panel_vista_prefs). El navegador lo
