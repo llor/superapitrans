@@ -890,6 +890,47 @@ docker exec pasarela_api node /app/scripts/set-satelles-cred.js \
 El cron lo recoge en su próximo tick (≤5 min) sin reiniciar.
 
 
+PANEL DE PAGO (frontal cliente) — CAMBIOS EN RAMA feature (2026-07-12)
+---------------------------------------------------------------------
+
+⚠️ Estos dos cambios viven en la rama `feature/empresa-nombre-modales`
+del worktree, **NO están desplegados a prod**. El proyecto sigue EN
+ESPERA de credenciales externas; leer esto antes de retomar la deuda del
+panel para no chocar.
+
+1. **Rutas del cliente `panel/src/api.js` alineadas al patrón del
+   proyecto (sin `/api`).** El panel estaba a medias: `api.js` anteponía
+   `/api` a TODAS las rutas (`/api/auth/login`, `/api/me/…`,
+   `/api/vista-prefs/…`). Pero el frontal ya reescribe: system-caddy
+   hace `handle_path /pasarela/* + rewrite * /api{path}`, así que
+   duplicaba el prefijo → `…/pasarela/api/api/…` → 404 contra Caddy
+   (funcionaba SOLO en el dev-server local de vite, que no reescribe).
+   Era el mismo patrón que ya documenta la sección "ROUTING EXTERNO" y
+   que `/pasarela/health` ya respetaba (backend en `/api/health`).
+   - **CORREGIDO** para seguir ese patrón: el cliente pide rutas LIMPIAS
+     (`/auth/login`, `/me/…`, `/vista-prefs/…`); el `/api` lo pone Caddy
+     en dev/prod y el proxy de `vite.config.js` en local
+     (`^/(auth|me|vista-prefs)` → `rewrite path → /api${path}`).
+   - **Verificado correcto** contra el backend: `api/src/app.js` monta
+     los routers en `/api/auth`, `/api/me`, `/api/vista-prefs` y expone
+     `/api/health` (el visible tras el rewrite). El comentario de cabecera
+     de `api.js` y el de `vite.config.js` lo explican en el propio código.
+   - **REGLA para la continuación:** todo endpoint NUEVO del panel se
+     añade con ruta limpia en el cliente (sin `/api`) y su router en
+     `/api/<x>` en el backend. Si se añade un prefijo nuevo (aparte de
+     auth/me/vista-prefs), incluirlo también en el `proxy` de
+     `vite.config.js` para que funcione el dev-server local.
+
+2. **Nombre de la empresa activa en la cabecera de los modales.** Norma
+   nueva del grupo (ver `/saycu/CLAUDE.md` → "NOMBRE DE LA EMPRESA ACTIVA
+   EN LOS MODALES"). En este panel: `AuthContext` fija la variable CSS
+   global `--empresa-actual` (nombre vía `GET /me/empresa`) al haber
+   sesión y la retira al salir; la regla `::before` está en el CSS del
+   panel sobre las clases de modal de modificación (`.modal`,
+   `.ecm-modal`, `.paradas-modal`). Modales meramente informativos
+   excluidos. Endpoint `/me/empresa` ya existente (ruta limpia, punto 1).
+
+
 PROBLEMAS RESUELTOS
 -------------------
 
