@@ -20,10 +20,14 @@ export default defineConfig({
         port: 5174,
         host: true,
         proxy: {
-            // En desarrollo local, redirigir /api/* al backend Node.
-            '/api': {
+            // En desarrollo local, el cliente pide rutas "limpias" (/auth, /me,
+            // /vista-prefs) igual que detrás de system-caddy; aquí las reenviamos
+            // al backend Node anteponiéndoles /api (pasarela_api monta sus routers
+            // bajo /api/*). En dev/prod ese /api lo añade el rewrite de Caddy.
+            '^/(auth|me|vista-prefs)(/|$)': {
                 target: process.env.VITE_API_BASE || 'http://localhost:3412',
                 changeOrigin: true,
+                rewrite: (path) => `/api${path}`,
             },
         },
     },

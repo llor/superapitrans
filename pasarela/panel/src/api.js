@@ -2,10 +2,16 @@
  * Cliente HTTP del panel pasarela. Bearer token del login en localStorage,
  * limpieza automática en 401 (excepto en el propio /login).
  *
+ * Las rutas se piden "limpias" (sin /api): /auth/login, /me/…, /vista-prefs/…
+ * Detrás de system-caddy, `handle_path /pasarela/* + rewrite * /api{path}` les
+ * antepone /api antes de llegar a pasarela_api (que monta sus routers en /api/*);
+ * en el dev server local, el proxy de vite.config hace ese mismo /api. Anteponer
+ * /api aquí duplicaba el prefijo (…/pasarela/api/api/… → 404).
+ *
  * VITE_API_BASE viene del build (Dockerfile) y apunta al API público:
  *   - prod: https://api.saycunode.saycutrans.es/pasarela
  *   - dev:  https://dev-api.saycunode.saycutrans.es/pasarela
- *   - local (dev server): "" + proxy /api/* → http://localhost:3412
+ *   - local (dev server): "" + proxy (vite.config) → http://localhost:3412/api/*
  */
 
 const API_BASE = (import.meta.env.VITE_API_BASE || '').replace(/\/$/, '');
@@ -45,7 +51,7 @@ async function request(path, { method = 'GET', body, headers = {} } = {}) {
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
-    const esLogin = path.startsWith('/api/auth/login');
+    const esLogin = path.startsWith('/auth/login');
     if (res.status === 401 && !esLogin) {
       auth.clear();
       if (typeof window !== 'undefined' && !window.location.pathname.endsWith('/login')) {
@@ -62,12 +68,12 @@ async function request(path, { method = 'GET', body, headers = {} } = {}) {
 
 export const api = {
   login: (usuario, password, empresa_codigo, extra = {}) =>
-    request('/api/auth/login', { method: 'POST', body: { usuario, password, empresa_codigo, ...extra } }),
+    request('/auth/login', { method: 'POST', body: { usuario, password, empresa_codigo, ...extra } }),
   // Forgot/reset password: pendientes (ver TODO en pasarela_api/routes/auth.js).
   // forgotPassword: (email, empresa_codigo) =>
-  //   request('/api/auth/forgot-password', { method: 'POST', body: { email, empresa_codigo } }),
+  //   request('/auth/forgot-password', { method: 'POST', body: { email, empresa_codigo } }),
   // resetPassword: (token, password, empresa_codigo) =>
-  //   request('/api/auth/reset-password', { method: 'POST', body: { token, password, empresa_codigo } }),
+  //   request('/auth/reset-password', { method: 'POST', body: { token, password, empresa_codigo } }),
   me: {
     listPedidos: (params = {}) => {
       const qs = new URLSearchParams();
@@ -75,16 +81,16 @@ export const api = {
         if (v !== undefined && v !== null && v !== '') qs.set(k, v);
       }
       const tail = qs.toString();
-      return request(`/api/me/pedidos${tail ? `?${tail}` : ''}`);
+      return request(`/me/pedidos${tail ? `?${tail}` : ''}`);
     },
-    getPedido: (id) => request(`/api/me/pedidos/${encodeURIComponent(id)}`),
-    getEmpresa: () => request('/api/me/empresa'),
+    getPedido: (id) => request(`/me/pedidos/${encodeURIComponent(id)}`),
+    getEmpresa: () => request('/me/empresa'),
   },
   // Preferencias de vista (toggle Tabla/Tarjetas, columnas, orden) por
   // usuario+navegador en BD (saycu_admin.panel_vista_prefs). El navegador lo
   // identifica el cliente con un UUID en cookie propia, enviado en `nav`.
   getVistaPrefs: (scope, nav) =>
-    request(`/api/vista-prefs/${encodeURIComponent(scope)}?nav=${encodeURIComponent(nav || '')}`),
+    request(`/vista-prefs/${encodeURIComponent(scope)}?nav=${encodeURIComponent(nav || '')}`),
   putVistaPrefs: (scope, nav, config) =>
-    request(`/api/vista-prefs/${encodeURIComponent(scope)}`, { method: 'PUT', body: { nav, config } }),
+    request(`/vista-prefs/${encodeURIComponent(scope)}`, { method: 'PUT', body: { nav, config } }),
 };

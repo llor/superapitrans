@@ -27,7 +27,7 @@ export function AuthProvider({ children }) {
 
   // Nombre de la empresa activa → variable CSS global --empresa-actual, que las
   // cabeceras de los modales muestran (reglas .modal/.ecm-modal/.paradas-modal
-  // ::before). Se pide a /api/me/empresa al haber sesión; se retira al salir.
+  // ::before). Se pide a /me/empresa al haber sesión; se retira al salir.
   useEffect(() => {
     const root = document.documentElement;
     if (!user) { root.style.removeProperty('--empresa-actual'); return; }
