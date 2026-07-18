@@ -2,6 +2,14 @@
 
 Última actualización: 2026-06-03.
 
+## [2026-07-18] Contraste texto/fondo en los 6 temas (EN DEV, prod pendiente de OK)
+
+Repaso transversal del grupo (encargo del usuario). Cambios de este
+proyecto en la rama `hotfix/contraste-temas-panel`, desplegados a DEV y
+verificados en el bundle servido. Detalle del bloque, método y parejas de
+variables: GUION general del grupo y GUION de saycutrans (2026-07-18).
+
+
 
 OBJETIVO
 --------
