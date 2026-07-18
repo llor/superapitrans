@@ -41,7 +41,7 @@ chofocles se separó a su propio repo el 2026-06-03: `llor/chofocles`.
 El 2026-07-02 se APARTÓ del grupo Saycu (congelado, sin usuarios):
 contenedores retirados de prod y dev, BD demo borrada con backup, rutas
 Caddy retiradas e integración del admin eliminada. Repo local movido a
-`/Volumes/THUND/proyectos/chofocles`; detalle en su GUION.md.
+`/home/llor/proyectos/chofocles`; detalle en su GUION.md.
 
 
 CONEXIONES Y ACCESOS
@@ -49,7 +49,7 @@ CONEXIONES Y ACCESOS
 
 - **Servidor:** debian.saycusoft.es. Alias SSH: `saycu` (prod),
   `saycudev` (dev).
-- **Carpeta local:** `/Volumes/THUND/proyectos/saycu/superapitrans/`.
+- **Carpeta local:** `/home/llor/proyectos/saycu/superapitrans/`.
 - **Carpeta remota:** `/var/opt/superapitrans/` (en saycudev y saycu).
 - **Subdominio público de API**:
   - PROD: `api.saycunode.saycutrans.es`
