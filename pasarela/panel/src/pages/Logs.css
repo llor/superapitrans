@@ -39,10 +39,11 @@
   gap: 8px;
   padding: 10px 20px;
   background: var(--erp-button);
-  /* Blanco fijo: el fondo --erp-button es siempre oscuro en todos los
-     temas (azul / rojo / verde). El tema white redefine --text-inverse
-     a gris oscuro, lo que dejaba este botón con texto ilegible. */
-  color: #fff;
+  /* Pareja de --erp-button: en el tema white ese fondo se aclara a
+     #e5e7eb y --text-inverse se invierte a oscuro; en el resto el fondo
+     es de color y --text-inverse es blanco. Un blanco fijo aqui era
+     invisible en white. */
+  color: var(--text-inverse);
   border: none;
   border-radius: 8px;
   font-size: 14px;
@@ -647,7 +648,7 @@
   margin: 0 0 14px 0;
   font-size: 14px;
   font-weight: 700;
-  color: var(--text-inverse);
+  color: var(--text-heading);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -898,14 +899,14 @@
 
 .ip-modal-header h3 {
   margin: 0;
-  color: var(--text-inverse);
+  color: var(--text-on-primary);
   font-size: 16px;
 }
 
 .ip-modal-header .btn-close {
   background: none;
   border: none;
-  color: var(--text-inverse);
+  color: var(--text-on-primary);
   font-size: 24px;
   cursor: pointer;
   display: flex;
@@ -1074,7 +1075,7 @@
   padding: 12px;
   background: var(--erp-primary);
   border: none;
-  color: var(--text-inverse);
+  color: var(--text-on-primary);
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
