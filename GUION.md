@@ -2,12 +2,14 @@
 
 Última actualización: 2026-06-03.
 
-## [2026-07-18] Contraste texto/fondo en los 6 temas (EN DEV, prod pendiente de OK)
+## [2026-07-18] Contraste texto/fondo en los 6 temas (EN PROD)
 
-Repaso transversal del grupo (encargo del usuario). Cambios de este
-proyecto en la rama `hotfix/contraste-temas-panel`, desplegados a DEV y
-verificados en el bundle servido. Detalle del bloque, método y parejas de
-variables: GUION general del grupo y GUION de saycutrans (2026-07-18).
+Repaso transversal del grupo (encargo del usuario). Cambios del visor de
+logs de la pasarela en la rama `hotfix/contraste-temas-panel`, desplegados
+a DEV, verificados y PROMOCIONADOS a prod el mismo día (espejo rsync
+limpio antes del merge 6ae401f — main == prod en código; solo diferían
+GUION local y el theme con el fix). Copia pasarela/saycu-theme
+sincronizada. Detalle: GUION general del grupo y GUION de saycutrans.
 
 
 
