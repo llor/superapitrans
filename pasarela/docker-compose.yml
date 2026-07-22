@@ -20,7 +20,7 @@ services:
     env_file:
       - .env
     ports:
-      - "${PORT}:${PORT}"
+      - "127.0.0.1:${PORT}:${PORT}"
     networks:
       - pasarela_net
       - postgres_net
