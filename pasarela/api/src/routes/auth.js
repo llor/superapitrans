@@ -116,7 +116,7 @@ router.post('/login', async (req, res, next) => {
         const empRes = await adminPool.query(
             `SELECT codigo, servicios::text[] AS servicios
                FROM empresas
-              WHERE UPPER(codigo) = $1 AND activo = TRUE
+              WHERE UPPER(codigo) = $1 AND activo = TRUE AND deleted_at IS NULL
               LIMIT 1`,
             [empresaCodigoUpper]
         );

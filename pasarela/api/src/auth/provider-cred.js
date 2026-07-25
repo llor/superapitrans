@@ -40,7 +40,8 @@ async function listCredencialesActivas() {
          FROM pasarela_proveedores_credenciales c
          JOIN pasarela_proveedores p ON p.id = c.proveedor_id
          JOIN empresas e ON e.id = c.empresa_id
-         WHERE c.activo = TRUE AND p.activo = TRUE`
+         WHERE c.activo = TRUE AND p.activo = TRUE
+           AND e.activo = TRUE AND e.deleted_at IS NULL`
     );
     return rows.map((r) => ({
         credencialId: r.credencial_id,

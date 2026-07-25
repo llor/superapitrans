@@ -31,7 +31,7 @@ async function ensureEmpresaConPasarela(empresaCodigo) {
         `SELECT codigo, nombre, servicios::text[] AS servicios
            FROM empresas
           WHERE UPPER(codigo) = UPPER($1)
-            AND activo = TRUE`,
+            AND activo = TRUE AND deleted_at IS NULL`,
         [empresaCodigo]
     );
     if (!r.rowCount) {
