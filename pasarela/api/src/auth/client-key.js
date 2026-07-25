@@ -40,6 +40,7 @@ function requireKey(requiredScopes = []) {
                  FROM pasarela_clientes_keys k
                  JOIN empresas e ON e.id = k.empresa_id
                  WHERE k.key_prefix = $1
+                   AND e.activo = TRUE AND e.deleted_at IS NULL
                  LIMIT 1`,
                 [prefix]
             );
