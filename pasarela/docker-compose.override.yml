@@ -1,0 +1,18 @@
+# Hora LOCAL en todos los contenedores (norma del usuario: NADA en UTC;
+# barrido 2026-08-03, deuda 13 del grupo). Override aditivo sobre el
+# compose principal: zona horaria + relojes del host montados — las
+# imágenes alpine no llevan tzdata y sin el zoneinfo del host caerían a
+# UTC aunque TZ esté definida.
+services:
+  api:
+    environment:
+      TZ: Europe/Madrid
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /usr/share/zoneinfo:/usr/share/zoneinfo:ro
+  panel:
+    environment:
+      TZ: Europe/Madrid
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /usr/share/zoneinfo:/usr/share/zoneinfo:ro

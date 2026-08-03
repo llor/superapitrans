@@ -12,7 +12,7 @@ contenedor común de servicios API del grupo saycutrans.
 Sub-proyectos dentro de esta carpeta:
 - `pasarela/` (sistema de API con keys + tabla canónica + proveedores).
 - (chofocles fue sub-servicio hasta el 2026-07-02: apartado del grupo y
-  congelado; su repo vive ahora en `/Volumes/THUND/proyectos/chofocles`.)
+  congelado; su repo vive ahora en `/home/llor/proyectos/chofocles`.)
 
 
 ## SERVIDOR Y ENTORNO
