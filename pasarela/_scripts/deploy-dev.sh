@@ -37,3 +37,17 @@ sleep 3
 ssh "$REMOTE_HOST" "docker ps --filter name=pasarela_api --format 'table {{.Names}}\t{{.Status}}'"
 
 log "OK. Probar:  https://dev-api.saycunode.saycutrans.es/pasarela/health"
+
+# ─── Reflejo de la estructura de la BD ──────────────────────────────────
+# Vuelca la estructura de la base de datos a ESTRUCTURA-BD.md para que un
+# cambio de tablas llegue al otro ordenador: los datos viven en Docker y
+# nunca se copian. Norma del usuario (2026-08-07). Nunca aborta el deploy.
+_ebd_proy="$(cd "$(dirname "$0")/../.." && pwd)"
+_ebd_raiz="$_ebd_proy"
+while [ "$_ebd_raiz" != "/" ] && [ ! -f "$_ebd_raiz/_scripts/reflejar-estructura-bd.sh" ]; do
+  _ebd_raiz="$(dirname "$_ebd_raiz")"
+done
+if [ -f "$_ebd_raiz/_scripts/reflejar-estructura-bd.sh" ]; then
+  bash "$_ebd_raiz/_scripts/reflejar-estructura-bd.sh" "$_ebd_proy" || true
+fi
+# ────────────────────────────────────────────────────────────────────────
