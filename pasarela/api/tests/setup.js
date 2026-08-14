@@ -24,6 +24,15 @@ const { getAdminPool, getTenantPool } = require('../src/db');
 const TEST_CODIGO = 'TEST';
 const TEST_DBNAME = 'saycu_pasarela_test';
 const DEMO_DBNAME = 'saycu_pasarela_demo';
+// db_name de la FICHA de saycu_admin: por convención del grupo es siempre la BD
+// de TRANSPORTE (saycutrans_empresa_<codigo>), la ponga quien la ponga y
+// contrate el servicio que contrate — así la rellena el alta oficial del panel
+// de administración. La pasarela NO lo usa: compone su BD con su prefijo
+// (saycu_pasarela_<codigo>), igual que saycucontrol con el suyo; el único
+// servicio que lee db_name es saycutrans. Poniendo aquí la BD de la pasarela,
+// cualquier petición de transporte con esta empresa buscaba esa BD en el
+// clúster de transporte, no la encontraba y devolvía 500 (dev, 2026-08-13).
+const EMPRESA_DBNAME = `saycutrans_empresa_${TEST_CODIGO.toLowerCase()}`;
 
 async function ensureTenantDb() {
     const adminPool = new Pool({
@@ -62,9 +71,10 @@ async function ensureEmpresaTest() {
          VALUES ($1, 'Empresa TEST (auto)', $2, ARRAY['pasarela']::servicio_tipo[], true)
          ON CONFLICT (codigo) DO UPDATE
             SET activo = true,
+                db_name = EXCLUDED.db_name,
                 servicios = (SELECT array_agg(DISTINCT s) FROM unnest(empresas.servicios || ARRAY['pasarela']::servicio_tipo[]) s)
          RETURNING id`,
-        [TEST_CODIGO, TEST_DBNAME]
+        [TEST_CODIGO, EMPRESA_DBNAME]
     );
     return r.rows[0].id;
 }
