@@ -1,4 +1,4 @@
-# FUNCIONES — superapitrans (Nodo API / pasarela)
+# FUNCIONES — superapitrans (Nodo API)
 
 Mapa de funciones del proyecto (convención: `docs/rules/mapa-funciones.md`
 del workspace). Consultarlo ANTES de buscar o crear una función; si existe
@@ -8,14 +8,14 @@ la misma sesión que cualquier alta/cambio/retirada.
 Componentes: `pasarela/api/` (Express: sincroniza pedidos/albaranes de
 proveedores externos hacia la BD del tenant) · `pasarela/panel/` (React:
 visor de pedidos) · `A3/NodeImport/` (WinForms C# que importa
-pasarela → a3ERP vía COM ActiveX; Satelles→albaranes, PCS→pedidos) ·
+superapitrans → a3ERP vía COM ActiveX; Satelles→albaranes, PCS→pedidos) ·
 `pasarela/db/` · `_scripts/`. Mapa sobre main (722b148, 2026-07-10).
 
 ## Pantallas
 
 (`pasarela/panel/src/App.jsx`)
 - `/login` — `pages/Login.jsx`; `/pedidos` — `pages/Pedidos.jsx` — visor
-  de pedidos/documentos de la pasarela (tabla con columnas elegibles).
+  de pedidos/documentos de superapitrans (tabla con columnas elegibles).
 
 ## Endpoints API
 
@@ -68,7 +68,7 @@ Panel (`pasarela/panel/src/`):
 NodeImport (`A3/NodeImport/`, WinForms .NET x86):
 - `Program.cs` — entrada; `MainForm.cs` — ventana principal;
   `A3ErpService.cs` — importación a a3ERP vía COM ActiveX;
-  `PasarelaApi.cs` — cliente HTTP de la pasarela; `Config.cs` — config
+  `PasarelaApi.cs` — cliente HTTP de superapitrans; `Config.cs` — config
   local (`config.json`; `config.gfe.json` de ejemplo por empresa);
   `Registro.cs` — modelo de registro; `ErrorHelper.cs`, `Logger.cs`;
   `Instalador/` — Inno Setup.

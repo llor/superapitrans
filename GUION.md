@@ -5,7 +5,7 @@
 ## [2026-07-18] Contraste texto/fondo en los 6 temas (EN PROD)
 
 Repaso transversal del grupo (encargo del usuario). Cambios del visor de
-logs de la pasarela en la rama `hotfix/contraste-temas-panel`, desplegados
+logs de superapitrans en la rama `hotfix/contraste-temas-panel`, desplegados
 a DEV, verificados y PROMOCIONADOS a prod el mismo día (espejo rsync
 limpio antes del merge 6ae401f — main == prod en código; solo diferían
 GUION local y el theme con el fix). Copia pasarela/saycu-theme
@@ -198,13 +198,13 @@ NODEIMPORT (A3/ — Cliente C# Windows)
 Última actualización: 2026-06-04.
 
 **Qué es:** Programa C# WinForms (.NET 10, x86) que importa datos de la
-API pasarela a a3ERP. Se integra en el menú de a3ERP como aplicación
+API de superapitrans a a3ERP. Se integra en el menú de a3ERP como aplicación
 externa, igual que SaycuImport de DataControl.
 
 **Nombre:** NodeImport (sin prefijo "Saycu", es un programa oculto/interno).
 
 **Arquitectura:** Clonada de `datacontrol/A3/SaycuImportV2/`:
-- Lee datos de la Pasarela API por HTTP (Bearer API key).
+- Lee datos de la API de superapitrans por HTTP (Bearer API key).
 - Escribe en a3ERP por COM ActiveX (`a3ERPActiveX.dll`).
 - No crea tablas propias en SQL Server; usa las nativas de a3ERP.
 - Marca lo importado con prefijo en REFERENCIA (`NI-{id}`) para
@@ -225,7 +225,7 @@ externa, igual que SaycuImport de DataControl.
 Solo campos comerciales estándar (REFERENCIA, CODCLI/CODPRO, CODART,
 DESCLIN, CANTIDAD, PRECIO, CENTROCOSTE, OBSERVACIONES). El detalle
 logístico (GPS, tiempos, contenedor, BL, firmas) queda en la API
-pasarela. Si el N1 necesita más campos en a3ERP en el futuro, se
+de superapitrans. Si el N1 necesita más campos en a3ERP en el futuro, se
 pueden añadir vía el diccionario de a3ERP (tablas/campos personalizados).
 
 **Distinción pedidos vs albaranes:**
@@ -257,7 +257,7 @@ ECOTRANS, S.L.) que es la que tiene datos de Satelles. La empresa
 real del N1 es TRANSCOLLADO (BD ya creada en SQL Server de
 SRV-SAYC00-009). Pendiente: darle permisos al usuario Windows.
 
-**API key pasarela para GFE:** creada en prod el 2026-06-04.
+**API key de superapitrans para GFE:** creada en prod el 2026-06-04.
 Prefijo `pas_live_b2cb99b`, scopes `datos.read` + `datos.write`.
 Empresa admin id=12 (GFE). La key completa está en el config.json
 de la carpeta Publish de a3win.
@@ -329,7 +329,7 @@ el mismo `saycuwmodelos.menu`).
   en el mismo .menu.
 
 **ESTADO ACTUAL — Aparcado 2026-06-04:**
-El programa está compilado, consulta albaranes de GFE desde la pasarela
+El programa está compilado, consulta albaranes de GFE desde superapitrans
 y los muestra en el grid (199 albaranes PENDIENTE verificados). La empresa
 GFE se ha creado en a3ERP (SQL Server) con datos de ejemplo. Falta probar
 la importación COM real. El siguiente paso es:
@@ -340,7 +340,7 @@ la importación COM real. El siguiente paso es:
 4. Verificar que el albarán aparece en a3ERP (Compras → Albaranes).
 
 **Config actual en a3win (`bin\Publish\config.json`):**
-- Pasarela: `https://api.saycunode.saycutrans.es/pasarela` | empresa GFE
+- superapitrans: `https://api.saycunode.saycutrans.es/pasarela` | empresa GFE
 - a3ERP: empresa GFE | usuario SA | password SA
 - Import: codCliA3=1 (SPORTS ABC, datos ejemplo)
 

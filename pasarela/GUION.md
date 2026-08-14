@@ -1,4 +1,4 @@
-# pasarela (futuro: SaycuNode)
+# superapitrans — el nodo, carpeta `pasarela/` (futuro: SaycuNode)
 
 Última actualización: 2026-06-30. Nodo de datos del grupo Saycu:
 lee APIs externas (proveedor por proveedor) y persiste lo intercambiado
@@ -49,7 +49,7 @@ Cambios 2026-06-27:
   de Satelles solo funcionan desde PROD; dev (otra IP) sigue bloqueado.
 - **Outbound de maestros para el ERP (conductores y vehículos)**. Petición
   expresa del N1: que el ERP del cliente pueda obtener y enviar choferes y
-  matrículas a Satelles a través de la pasarela. Implementado como proxy
+  matrículas a Satelles a través de superapitrans. Implementado como proxy
   autenticado (relay, sin persistencia):
   - Cliente: `proveedores/satelles/client.js` añade `getDrivers/getDriver/
     putDriver/getVehicles/getVehicle/putVehicle` (scope
@@ -79,7 +79,7 @@ Cambios 2026-06-27:
     nueva con aplicacion `a3erp` — el ON CONFLICT pisaría el secreto del ERP.
     Una `PUT /pasarela/satelles/drivers/...` real (con key de prueba
     temporal) llega a Satelles y proxea su respuesta → el camino
-    inbound→pasarela→Satelles funciona.
+    inbound→superapitrans→Satelles funciona.
   - CONTRATO REAL del driver verificado contra Satelles: `name`, `email`
     (formato válido, 1-254) e `idCard` (1-20) son OBLIGATORIOS — 422 si
     faltan. Manual corregido (estaban como opcionales). El PUT de vehicle no
@@ -400,14 +400,14 @@ GOTCHAS — CUIDADO
   hará commit a Satelles y las publicaciones desaparecen de su cola.
 - **Migración 0002 con `psql -U postgres`**: aunque la BD sea owned por
   saycutrans, las tablas que crea quedan con owner postgres y la
-  pasarela falla con "permission denied". Desde 06-may la migración
+  superapitrans falla con "permission denied". Desde 06-may la migración
   termina con `ALTER ... OWNER TO saycutrans` idempotente.
-- **PASARELA_SECRETS_KEY entre admin y pasarela**: deben coincidir EN
+- **PASARELA_SECRETS_KEY entre admin y superapitrans**: deben coincidir EN
   RUNTIME (printenv dentro del contenedor, no solo en el `.env`). Si
   cambia la del admin después de cifrar credenciales, se vuelven
   indescifrables → borrar y volver a guardarlas desde la UI.
-- **Formato AES-GCM**: el admin (`utils/pasarela-secrets.js`) y la
-  pasarela (`api/src/secrets.js`) deben usar `[iv | tag | ciphertext]`
+- **Formato AES-GCM**: el admin (`utils/pasarela-secrets.js`) y
+  superapitrans (`api/src/secrets.js`) deben usar `[iv | tag | ciphertext]`
   (formato compatible byte a byte). Si divergen, descifrado falla con
   "Unsupported state or unable to authenticate data".
 
@@ -445,7 +445,7 @@ GESTIÓN DE CATÁLOGO Y CREDENCIALES (UI desde admin.saycusoft.es)
   campos del descriptor, prerrellenados si ya hay credenciales. Cada
   cuadro lleva su switch "Activo" y, si existen, su botón "Borrar"
   individual. Guardar cierra el modal.
-- Para que la pasarela API (cuando se ejecute outbound desde
+- Para que la API de superapitrans (cuando se ejecute outbound desde
   `superapitrans/pasarela`) pueda descifrar lo que guardó el admin, su
   `.env` debe tener la **misma `PASARELA_SECRETS_KEY` por entorno**.
 
@@ -469,7 +469,7 @@ Valencia) las maneja el Express del propio `pasarela_api`.
 OBJETIVO
 --------
 
-Sub-servicio de superapitrans que actúa como **pasarela entre clientes
+Sub-servicio de superapitrans que actúa como **intermediario entre clientes
 externos y proveedores externos**, persistiendo todo lo intercambiado en
 4 tablas canónicas multi-tenant. Esa misma tabla la puede consumir
 chofocles (entrada por correo) y, cuando el cliente final tenga un ERP
@@ -565,7 +565,7 @@ KEYS — DOS DIMENSIONES
   sus propias credenciales del proveedor (no globales).
 - Almacenamiento: `saycu_admin.pasarela_proveedores_credenciales`,
   cifradas AES-256-GCM (mismo patrón que chofocles `secrets.js`). Clave
-  de cifrado en `.env` de la pasarela, no en BBDD.
+  de cifrado en `.env` de superapitrans, no en BBDD.
 - Por proveedor: 1 ficha en `pasarela_proveedores` (nombre, host base,
   versión API) + N credenciales (sandbox/prod, scopes documentados).
 
@@ -613,7 +613,7 @@ en nuestra tabla, el origen Satelles propuesto, y la decisión.
 | TTNPEDI     | `numero_pedido`                        | `delivery.order.reference`                         | varchar(50) |
 | TTNALB      | `albaranes_concatenados`               | (resumen de `albaranes.numero`)                    | varchar(500), separador `;`. Referencia rápida; los albaranes detallados van en su propia tabla |
 | TTTIPO      | `tipo`                                 | derivado                                           | enum `'PEDIDO'`, `'ALBARAN'` |
-| TTESTA      | `estado`                               | interno                                            | enum `'PENDIENTE'`, `'PROCESADO'`. Lo gestiona la pasarela y el módulo de transporte del usuario |
+| TTESTA      | `estado`                               | interno                                            | enum `'PENDIENTE'`, `'PROCESADO'`. Lo gestiona superapitrans y el módulo de transporte del usuario |
 
 ### `albaranes` (1 pedido → 0..N)
 
@@ -742,7 +742,7 @@ Por cada elemento del array que devuelve `/puba/routes/finished`:
 SEPARACIÓN chofocles vs NO-CHOFOCLES
 -------------------------------------
 
-Por **path** dentro de la pasarela, no por key:
+Por **path** dentro de superapitrans, no por key:
 
 - `/utilidades/chofocles/...` — solo para clientes con scope chofocles.
 - `/utilidades/general/...`   — para los demás flujos.
@@ -894,7 +894,7 @@ PROBLEMAS RESUELTOS
 -------------------
 
 - **Caddy local en superapitrans/ → conflicto con system_caddy.**
-  Eliminado. Pasarela se registra como bloque dentro del frontal global
+  Eliminado. Superapitrans se registra como bloque dentro del frontal global
   `system-caddy` (saycucontrol/), igual que chofocles.
 - **404 en `/pasarela/health` durante el primer despliegue.** Caddy
   reescribe `/pasarela/<path>` a `/api{path}`, así que los handlers
@@ -903,7 +903,7 @@ PROBLEMAS RESUELTOS
   tras el rewrite).
 - **`permission denied for table pedidos` con `DB_USER=saycuadmin`.**
   Las BBDD tenant se auto-provisionan con owner `saycutrans`. El
-  `.env` de pasarela ahora usa `DB_USER=saycutrans` por defecto.
+  `.env` de superapitrans ahora usa `DB_USER=saycutrans` por defecto.
 - **`docker compose restart` no recarga `.env`.** Tras editar
   variables, usar `docker compose up -d --force-recreate api`.
 
