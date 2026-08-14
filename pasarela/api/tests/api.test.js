@@ -152,23 +152,23 @@ test('POST .../marcar-procesado con key sin scope datos.write → 403 scope_requ
     assert.equal(r.body.scope, 'datos.write');
 });
 
-test('POST .../marcar-procesado con key write → 200 estado=PROCESADO', async () => {
+test('POST .../marcar-procesado con key write → 200 estado=TERMINADO', async () => {
     const r = await api('POST', `/api/datos/pedidos/${ctx.pedidoIdSeed}/marcar-procesado`, { token: ctx.rawKeyRw });
     assert.equal(r.status, 200);
     assert.equal(r.body.ok, true);
     assert.equal(r.body.data.id, ctx.pedidoIdSeed);
-    assert.equal(r.body.data.estado, 'PROCESADO');
+    assert.equal(r.body.data.estado, 'TERMINADO');
     // Confirma persistencia leyendo BD directamente.
     const db = await getTenantPool(TEST_CODIGO).query(
         'SELECT estado FROM pedidos WHERE id = $1', [ctx.pedidoIdSeed]
     );
-    assert.equal(db.rows[0].estado, 'PROCESADO');
+    assert.equal(db.rows[0].estado, 'TERMINADO');
 });
 
-test('POST .../marcar-procesado sobre pedido ya procesado → 404 no_encontrado_o_ya_procesado', async () => {
+test('POST .../marcar-procesado sobre pedido ya terminado → 404 no_encontrado_o_ya_terminado', async () => {
     const r = await api('POST', `/api/datos/pedidos/${ctx.pedidoIdSeed}/marcar-procesado`, { token: ctx.rawKeyRw });
     assert.equal(r.status, 404);
-    assert.equal(r.body.error, 'no_encontrado_o_ya_procesado');
+    assert.equal(r.body.error, 'no_encontrado_o_ya_terminado');
 });
 
 test('POST .../marcar-procesado/:id con id no numérico → 400 id_invalido', async () => {
