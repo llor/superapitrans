@@ -1,5 +1,32 @@
 # superapitrans — el nodo, carpeta `pasarela/` (futuro: SaycuNode)
 
+## [2026-08-15] Aviso de recuperación («CORREJIDO») y avisos sin la palabra «pasarela» — EN DEV
+
+El corte de Satelles del 14/08 (HTTP 522 de Cloudflare, empresa GFE, 21:45 a
+21:55) avisó por email y se curó solo 3 min 43 s después, pero de eso no avisó
+nadie: la recuperación solo iba al log del contenedor. Incumplía la norma de
+avisar del arreglo por la misma vía que del error.
+
+Cambiado: los seis rastreadores de racha del nodo (Satelles: descarga,
+guardado de publicación y commit; PCS Valencia: listado, mensaje y ack) mandan
+`reportRecovery` al recuperarse. El rastreador (`utils/fallo-persistente.js`)
+guarda ahora el payload con el que avisó —se le pasa una función que lo
+construye— para poder repetirlo: el receptor identifica el error por su firma.
+El receptor (`admin.saycusoft.es`) guarda el asunto enviado (`email_subject`) y
+marca `resolved_at`; con eso manda «CORREJIDO: <asunto original>» y no repite
+el aviso si la racha ya estaba cerrada.
+
+El nombre del proyecto en los avisos pasa de `pasarela-api` a
+`superapitrans-nodo-api` (etiqueta `[PROCESS][SUPERAPITRANS-NODO]`), norma del
+usuario: ningún aviso debe llamarse «pasarela», que se confunde con la pasarela
+de pagos. ControlGlobal sigue registrando `pasarela-api` (es el catálogo de
+versiones, no un aviso).
+
+Probado en dev de punta a punta el 15/08: ciclo real del cron con la descarga
+forzada a fallar → email de error al 2º ciclo → al volver, «CORREJIDO» con el
+mismo asunto; entrega verificada en el mail.log (dsn=2.0.0).
+LIMITACIÓN: en PROD sin desplegar.
+
 Última actualización: 2026-06-30. Nodo de datos del grupo Saycu:
 lee APIs externas (proveedor por proveedor) y persiste lo intercambiado
 en 4 tablas canónicas multi-tenant (`saycu_pasarela_<CODIGO>`),

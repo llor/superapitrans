@@ -117,6 +117,10 @@ async function syncCredencial(cred, log) {
         const rec = fallosDescarga.ok(cred.credencialId);
         if (rec.recuperado) {
             log(`[satelles] empresa=${cred.empresaCodigo} descarga RECUPERADA tras ${rec.fallos} ciclos fallando`);
+            errorReporter.reportRecovery({
+                ...rec.payload,
+                extra: { ...rec.payload.extra, ciclos_hasta_recuperar: rec.fallos },
+            });
         }
     } catch (err) {
         await marcarSync({ credencialId: cred.credencialId, ok: false, error: err.message });
@@ -126,22 +130,22 @@ async function syncCredencial(cred, log) {
         // Solo se reporta al receptor si PERSISTE UMBRAL_CICLOS_FALLO ciclos
         // seguidos, una vez por racha. Un corte largo (el de Cloudflare de
         // mayo, un mes) se sigue detectando; el hipo de un ciclo, no molesta.
-        const d = fallosDescarga.fallo(cred.credencialId);
+        const d = fallosDescarga.fallo(cred.credencialId, (ciclos) => ({
+            source: 'process',
+            severity: 'error',
+            message: `Satelles: corte persistente al descargar rutas finalizadas (empresa ${cred.empresaCodigo}): ${ciclos} ciclos consecutivos fallando. Último error: ${err.message}`,
+            stack: err.stack,
+            empresa_codigo: cred.empresaCodigo,
+            extra: {
+                proveedor: 'satelles',
+                entorno: cred.entorno,
+                host_base: cred.hostBase,
+                funcion: 'syncCredencial -> getFinishedRoutes',
+                ciclos_consecutivos: ciclos,
+            },
+        }));
         if (d.reportar) {
-            errorReporter.reportError({
-                source: 'process',
-                severity: 'error',
-                message: `Satelles: corte persistente al descargar rutas finalizadas (empresa ${cred.empresaCodigo}): ${d.fallos} ciclos consecutivos fallando. Último error: ${err.message}`,
-                stack: err.stack,
-                empresa_codigo: cred.empresaCodigo,
-                extra: {
-                    proveedor: 'satelles',
-                    entorno: cred.entorno,
-                    host_base: cred.hostBase,
-                    funcion: 'syncCredencial -> getFinishedRoutes',
-                    ciclos_consecutivos: d.fallos,
-                },
-            });
+            errorReporter.reportError(d.payload);
         }
         return { ok: false, error: err.message };
     }
@@ -184,6 +188,10 @@ async function syncCredencial(cred, log) {
             const rec = fallosPublicacion.ok(pubKey);
             if (rec.recuperado) {
                 log(`[satelles] empresa=${cred.empresaCodigo} pub=${pub.id} RECUPERADA tras ${rec.fallos} ciclos fallando`);
+                errorReporter.reportRecovery({
+                    ...rec.payload,
+                    extra: { ...rec.payload.extra, ciclos_hasta_recuperar: rec.fallos },
+                });
             }
         } catch (err) {
             try { await tenantPool.query('ROLLBACK'); } catch (_) { /* ignorar */ }
@@ -193,22 +201,22 @@ async function syncCredencial(cred, log) {
             // Antes este catch era mudo y un fallo permanente (p.ej. el
             // value-too-long de numero_pedido del 30/06) quedaba atascado sin
             // avisar nunca.
-            const p = fallosPublicacion.fallo(pubKey);
+            const p = fallosPublicacion.fallo(pubKey, (ciclos) => ({
+                source: 'process',
+                severity: 'error',
+                message: `Satelles: la publicación ${pub.id} (empresa ${cred.empresaCodigo}) falla al guardarse de forma persistente (${ciclos} ciclos consecutivos): ${err.message}`,
+                stack: err.stack,
+                empresa_codigo: cred.empresaCodigo,
+                extra: {
+                    proveedor: 'satelles',
+                    entorno: cred.entorno,
+                    publication_id: pub.id,
+                    funcion: 'syncCredencial -> procesar publicación',
+                    ciclos_consecutivos: ciclos,
+                },
+            }));
             if (p.reportar) {
-                errorReporter.reportError({
-                    source: 'process',
-                    severity: 'error',
-                    message: `Satelles: la publicación ${pub.id} (empresa ${cred.empresaCodigo}) falla al guardarse de forma persistente (${p.fallos} ciclos consecutivos): ${err.message}`,
-                    stack: err.stack,
-                    empresa_codigo: cred.empresaCodigo,
-                    extra: {
-                        proveedor: 'satelles',
-                        entorno: cred.entorno,
-                        publication_id: pub.id,
-                        funcion: 'syncCredencial -> procesar publicación',
-                        ciclos_consecutivos: p.fallos,
-                    },
-                });
+                errorReporter.reportError(p.payload);
             }
         }
     }
@@ -229,28 +237,32 @@ async function syncCredencial(cred, log) {
             const rec = fallosCommit.ok(cred.credencialId);
             if (rec.recuperado) {
                 log(`[satelles] empresa=${cred.empresaCodigo} commit RECUPERADO tras ${rec.fallos} ciclos fallando`);
+                errorReporter.reportRecovery({
+                    ...rec.payload,
+                    extra: { ...rec.payload.extra, ciclos_hasta_recuperar: rec.fallos },
+                });
             }
         } catch (err) {
             log(`[satelles] empresa=${cred.empresaCodigo} commit ERROR ${err.message}`);
             // Anti-ruido: un commit fallido no pierde datos (la publicación se
             // re-descarga y el UPSERT es idempotente), pero si PERSISTE la cola
             // de Satelles no se drena nunca. Reportar solo si persiste.
-            const c = fallosCommit.fallo(cred.credencialId);
+            const c = fallosCommit.fallo(cred.credencialId, (ciclos) => ({
+                source: 'process',
+                severity: 'error',
+                message: `Satelles: el commit de rutas finalizadas (empresa ${cred.empresaCodigo}) falla de forma persistente (${ciclos} ciclos consecutivos): ${err.message}`,
+                stack: err.stack,
+                empresa_codigo: cred.empresaCodigo,
+                extra: {
+                    proveedor: 'satelles',
+                    entorno: cred.entorno,
+                    host_base: cred.hostBase,
+                    funcion: 'syncCredencial -> commitFinishedRoutes',
+                    ciclos_consecutivos: ciclos,
+                },
+            }));
             if (c.reportar) {
-                errorReporter.reportError({
-                    source: 'process',
-                    severity: 'error',
-                    message: `Satelles: el commit de rutas finalizadas (empresa ${cred.empresaCodigo}) falla de forma persistente (${c.fallos} ciclos consecutivos): ${err.message}`,
-                    stack: err.stack,
-                    empresa_codigo: cred.empresaCodigo,
-                    extra: {
-                        proveedor: 'satelles',
-                        entorno: cred.entorno,
-                        host_base: cred.hostBase,
-                        funcion: 'syncCredencial -> commitFinishedRoutes',
-                        ciclos_consecutivos: c.fallos,
-                    },
-                });
+                errorReporter.reportError(c.payload);
             }
         }
     } else if (procesadasOk.length && dryRun) {

@@ -17,6 +17,9 @@
  *     ...
  *   }
  *
+ *   // Y cuando ese mismo error deja de ocurrir (mismo payload):
+ *   errorReporter.reportRecovery({ message, stack, extra: { ciclos } });
+ *
  * Por defecto activado (enabled=true). Apagar con ERROR_REPORTER_ENABLED=false.
  * Si el endpoint receptor está caído o no configurado, los fallos se loguean
  * localmente pero no rompen la app (fire-and-forget).
@@ -156,6 +159,22 @@ async function reportError(input) {
 }
 
 /**
+ * Avisa de que un error del que YA se informó ha dejado de ocurrir. El receptor
+ * lo manda como «CORREJIDO: <asunto del email de error>».
+ *
+ * Hay que pasarle el MISMO payload con el que se reportó el error (message y
+ * stack incluidos): el receptor calcula la firma con esos datos para localizar
+ * el aviso original. En `extra` se puede añadir el desenlace (cuántos ciclos
+ * estuvo fallando, etc.) sin que afecte a la firma.
+ *
+ * Si de ese error nunca salió email, o su racha ya estaba cerrada, el receptor
+ * no manda nada.
+ */
+async function reportRecovery(input) {
+  return sendError({ ...(input || {}), recuperado: true });
+}
+
+/**
  * Envuelve un Pool de pg para que cualquier query que falle reporte el error
  * antes de propagarlo al caller. No cambia el comportamiento (re-lanza el error).
  *
@@ -229,6 +248,8 @@ async function sendError(input) {
       user_agent: input.user_agent,
       request_payload: input.request_payload,
       extra: input.extra,
+      // true solo en los avisos de reportRecovery (el error ya no ocurre).
+      recuperado: input.recuperado === true ? true : undefined,
     };
     const ctrl = new AbortController();
     const t = setTimeout(() => ctrl.abort(), config.timeoutMs);
@@ -244,4 +265,4 @@ async function sendError(input) {
   }
 }
 
-module.exports = { install, attachExpress, reportError, wrapPg, patchExpressLayer };
+module.exports = { install, attachExpress, reportError, reportRecovery, wrapPg, patchExpressLayer };
