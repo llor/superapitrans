@@ -24,8 +24,15 @@ versiones, no un aviso).
 
 Probado en dev de punta a punta el 15/08: ciclo real del cron con la descarga
 forzada a fallar → email de error al 2º ciclo → al volver, «CORREJIDO» con el
-mismo asunto; entrega verificada en el mail.log (dsn=2.0.0).
-LIMITACIÓN: en PROD sin desplegar.
+mismo asunto; entrega verificada en el mail.log (dsn=2.0.0). EN PROD desde el
+15/08 (primero el receptor, después el nodo: al revés, un receptor viejo habría
+tratado el aviso de recuperación como un error nuevo). Verificado en prod el
+circuito del receptor con un aviso marcado de prueba, con entrega comprobada.
+
+`npm test` no arrancaba con Node 22 (`node --test tests/` ya no acepta un
+directorio); se le pasa el patrón de ficheros, que vale también con el Node 20
+del contenedor. Los de integración necesitan BD: 43/43 en verde dentro del
+contenedor de dev.
 
 Última actualización: 2026-06-30. Nodo de datos del grupo Saycu:
 lee APIs externas (proveedor por proveedor) y persiste lo intercambiado
