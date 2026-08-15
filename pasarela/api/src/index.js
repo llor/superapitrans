@@ -11,8 +11,14 @@ const cronScheduler = require('./cron');
 const errorReporter = require('./utils/error-reporter-client');
 const controlGlobal = require('./utils/control-global-client');
 
+// El nombre del proyecto es el que sale en el ASUNTO y en el cuerpo de los
+// emails de aviso, y de él deriva la etiqueta del causante ([PROCESS][…]).
+// Norma del usuario (2026-08-15): ningún aviso puede llamarse «pasarela», que
+// se confunde con la pasarela de PAGOS; este componente es el nodo de datos de
+// superapitrans. Los nombres propios que ya existen (carpeta, contenedor, ruta
+// pública, BD de inquilino) siguen igual: aquí solo cambia lo que se lee.
 errorReporter.install({
-    project: 'pasarela-api',
+    project: 'superapitrans-nodo-api',
     url: process.env.ERROR_REPORTER_URL,
     environment: process.env.NODE_ENV || 'production',
     captureUncaught: false,
