@@ -1,1013 +1,224 @@
-# superapitrans — el nodo, carpeta `pasarela/` (futuro: SaycuNode)
-
-## [2026-08-15] Aviso de recuperación («CORREJIDO») y avisos sin la palabra «pasarela» — EN DEV
-
-El corte de Satelles del 14/08 (HTTP 522 de Cloudflare, empresa GFE, 21:45 a
-21:55) avisó por email y se curó solo 3 min 43 s después, pero de eso no avisó
-nadie: la recuperación solo iba al log del contenedor. Incumplía la norma de
-avisar del arreglo por la misma vía que del error.
-
-Cambiado: los seis rastreadores de racha del nodo (Satelles: descarga,
-guardado de publicación y commit; PCS Valencia: listado, mensaje y ack) mandan
-`reportRecovery` al recuperarse. El rastreador (`utils/fallo-persistente.js`)
-guarda ahora el payload con el que avisó —se le pasa una función que lo
-construye— para poder repetirlo: el receptor identifica el error por su firma.
-El receptor (`admin.saycusoft.es`) guarda el asunto enviado (`email_subject`) y
-marca `resolved_at`; con eso manda «CORREJIDO: <asunto original>» y no repite
-el aviso si la racha ya estaba cerrada.
-
-El nombre del proyecto en los avisos pasa de `pasarela-api` a
-`superapitrans-nodo-api` (etiqueta `[PROCESS][SUPERAPITRANS-NODO]`), norma del
-usuario: ningún aviso debe llamarse «pasarela», que se confunde con la pasarela
-de pagos. ControlGlobal sigue registrando `pasarela-api` (es el catálogo de
-versiones, no un aviso).
-
-Probado en dev de punta a punta el 15/08: ciclo real del cron con la descarga
-forzada a fallar → email de error al 2º ciclo → al volver, «CORREJIDO» con el
-mismo asunto; entrega verificada en el mail.log (dsn=2.0.0). EN PROD desde el
-15/08 (primero el receptor, después el nodo: al revés, un receptor viejo habría
-tratado el aviso de recuperación como un error nuevo). Verificado en prod el
-circuito del receptor con un aviso marcado de prueba, con entrega comprobada.
-
-`npm test` no arrancaba con Node 22 (`node --test tests/` ya no acepta un
-directorio); se le pasa el patrón de ficheros, que vale también con el Node 20
-del contenedor. Los de integración necesitan BD: 43/43 en verde dentro del
-contenedor de dev.
-
-Última actualización: 2026-06-30. Nodo de datos del grupo Saycu:
-lee APIs externas (proveedor por proveedor) y persiste lo intercambiado
-en 4 tablas canónicas multi-tenant (`saycu_pasarela_<CODIGO>`),
-exponiéndolo después por una API inbound con bearer key.
-
-Cambios 2026-06-30:
-- **numero_pedido ampliado a VARCHAR(500)** (migración
-  `0017_tenant_numero_pedido_500.sql`). Nació VARCHAR(100) en 0002; es la
-  concatenación con ';' de las referencias de pedido de la ruta (TTNPEDI).
-  En rutas de 10-12 entregas pasa de 100 caracteres y el UPSERT fallaba con
-  "value too long", haciendo ROLLBACK: esos pedidos NO se importaban y
-  reaparecían en la cola finished de Satelles ciclo tras ciclo. El fallo se
-  quedaba SOLO en el log del bucle de publicaciones (`satelles/sync.js`,
-  catch del `for`) — NO llega al receptor de errores, por eso pasó
-  inadvertido. Detectado en GFE el 30/06: pubs 29757/29990/30491/32269
-  (109-131 chars) llevaban toda la mañana atascadas. Se iguala a
-  `albaranes_concatenados` (ya VARCHAR(500), mismo patrón). Aplicada a las 6
-  BDs tenant con tabla `pedidos` en dev y prod (aut/saycusoft no la tienen →
-  saltadas). Verificado E2E: sync GFE procesadas=4/commit=4, ciclo siguiente
-  "sin rutas pendientes", los 4 pedidos quedan en BD con numero_pedido de
-  109-131.
-- **Anti-ruido del aviso de fallo de Satelles (IMPLEMENTADO)**: un fallo del
-  cron solo se reporta al receptor si PERSISTE 2 ciclos consecutivos
-  (`UMBRAL_CICLOS_FALLO` en `satelles/sync.js`); el 1er fallo aislado se
-  queda solo en el log (un corte transitorio del proveedor se cura al ciclo
-  siguiente). Cubre los DOS casos con el mismo criterio: (a) corte de
-  descarga (GET finished falla) y (b) una publicación que falla al guardarse
-  en BD repetidamente — ese 2º catch antes era mudo, por eso el
-  value-too-long de hoy estuvo toda la mañana sin avisar. Helper reutilizable
-  `utils/fallo-persistente.js` (rastreador de rachas por clave + test
-  `tests/fallo-persistente.test.js`, 7 casos). Estado en memoria del proceso;
-  un reinicio reinicia el contador (margen de 1 ciclo, aceptable). Las
-  llamadas en vivo (maestros drivers/vehicles) ya devuelven el error al
-  cliente como 502; esto solo afecta al cron, sin usuario delante. Desplegado
-  dev+prod el 30/06. Mismo criterio extendido al **commit de Satelles** y a
-  **pcs-valencia** en sus tres ámbitos (listado, mensaje y ack/borrado del
-  portal) — todos eran reporte inmediato o catch mudo; ahora solo avisan si
-  el fallo persiste 2 ciclos.
-
-Cambios 2026-06-27:
-- **Satelles DESBLOQUEADO desde prod** (allowlist de la IP de salida del
-  servidor 149.86.232.18 en su Cloudflare). Verificado el 27/06: el token
-  endpoint `https://ecotrans.satelles.es/identity/connect/token` responde
-  `HTTP 400 application/json` (falta client_id, respuesta normal) desde el
-  servidor, SIN `cf-mitigated: challenge`. Desde otras IPs sigue dando
-  challenge (es allowlist por IP). CONSECUENCIA: las pruebas y el uso real
-  de Satelles solo funcionan desde PROD; dev (otra IP) sigue bloqueado.
-- **Outbound de maestros para el ERP (conductores y vehículos)**. Petición
-  expresa del N1: que el ERP del cliente pueda obtener y enviar choferes y
-  matrículas a Satelles a través de superapitrans. Implementado como proxy
-  autenticado (relay, sin persistencia):
-  - Cliente: `proveedores/satelles/client.js` añade `getDrivers/getDriver/
-    putDriver/getVehicles/getVehicle/putVehicle` (scope
-    `satelles-erpsync:write`, token cacheado, 401→refresh+reintento).
-  - Endpoints inbound: `routes/satelles.js` →
-    `GET/PUT /pasarela/satelles/drivers[/:code]` y
-    `GET/PUT /pasarela/satelles/vehicles[/:code]`. Montado en `app.js`.
-  - Scopes inbound nuevos en las keys del cliente: `satelles.read` (GET) y
-    `satelles.write` (PUT). El tenant (y su credencial Satelles) se infiere
-    de la API key, igual que en /datos. `?entorno=sandbox` opcional.
-  - Errores: `sin_credencial_satelles` (404), `satelles_upstream_error`
-    (502 con status+detail de Satelles), `name_requerido`/
-    `licensePlate_requerido` (400).
-  - Tests en `tests/api.test.js` (auth, scope, validación, sin_credencial;
-    la rama feliz llama a Satelles real y no se prueba en CI). Manual
-    ampliado en `admin.saycusoft.es/.../ApiDocsPasarela.jsx` (secciones
-    Conductores y Vehículos + scopes + errores).
-  - VERIFICADO en vivo contra GFE (prod): scope `satelles-erpsync:write`
-    concedido; `GET /api/erpsync/drivers` 200 (679 conductores, campos
-    code/name/email/idCard/placeCode/disabled) y `GET /api/erpsync/vehicles`
-    200 (829 vehículos, campos code/licensePlate/type/transportTypeCode/
-    disabled/compartments). Cuerpos del PUT del Postman oficial.
-  - DESPLEGADO A PROD el 27/06 (api pasarela + panel admin del manual) y
-    validado E2E contra GFE. La key del ERP `a3erp` se AMPLIÓ con
-    `satelles.read,satelles.write` (UPDATE de scopes, SIN tocar su secreto:
-    ya tenía datos.read/write y la usa NodeImport). OJO: NO emitir una key
-    nueva con aplicacion `a3erp` — el ON CONFLICT pisaría el secreto del ERP.
-    Una `PUT /pasarela/satelles/drivers/...` real (con key de prueba
-    temporal) llega a Satelles y proxea su respuesta → el camino
-    inbound→superapitrans→Satelles funciona.
-  - CONTRATO REAL del driver verificado contra Satelles: `name`, `email`
-    (formato válido, 1-254) e `idCard` (1-20) son OBLIGATORIOS — 422 si
-    faltan. Manual corregido (estaban como opcionales). El PUT de vehicle no
-    se probó (mismo riesgo de escribir en el maestro real de un tercero); su
-    obligatoriedad la confirmará Satelles en el primer alta real.
-  - PENDIENTE: el alta real de conductores/vehículos de GFE (con code y NIF
-    reales) la hace el ERP; no se crean datos de pega en el maestro de un
-    tercero. Un PUT con idCard inventado dio 500 interno de Satelles (no es
-    bug nuestro, causa no determinable desde fuera). Decidir los 2 tests
-    preexistentes de marcar-procesado (PROCESADO vs TERMINADO, ajenos).
-
-Cambios 2026-06-24:
-- **Satelles bloqueado por Cloudflare desde el 22/05/2026**: el host
-  `ecotrans.satelles.es` devuelve un challenge anti-bot (HTTP 403,
-  `cf-mitigated: challenge`) a cualquier IP (probado desde el servidor y
-  desde otra red). NO es nuestra IP ni las credenciales: es un cambio en la
-  infra de Satelles. Último dato real en `saycu_pasarela_gfe`: 22/05 10:10
-  (hora Madrid). PENDIENTE operativo: pedir a Ecotrans/Satelles que metan en
-  allowlist de su Cloudflare la IP de salida del servidor (149.86.232.18) o
-  expongan la API por un host sin challenge / con bypass para `/identity` y
-  `/puba/*`.
-- **Aviso por email de fallos de sync**: `satelles/sync.js` y
-  `pcs-valencia/sync.js` reportan al receptor central en el catch donde se
-  tragaba el fallo de descarga (antes solo iba al log; por eso el corte de
-  Satelles llevaba un mes sin avisar). `cron.js` reporta también en
-  `ejecutarCiclo`. Dedup 1 email/hora. Verificado E2E en prod (email enviado
-  el 24/06 18:50).
-- **Destinatarios de avisos = lista única** en admin.saycusoft.es ->
-  Configuraciones -> Emails de aviso (tabla `security_alert_recipients`,
-  columna nueva `receive_error_reports`). Gobierna errores, chequeos del
-  servidor (watchdog admin + saycutrans) y fallos de login. Sustituye a la
-  env `ERROR_REPORTER_TO`. Los dos informes diarios "todo OK" se apagaron;
-  los watchdog avisan solo en transición (problema / recuperación).
-
-Cambios 2026-06-03:
-- **customerShipment (nº expedición)**: migración 0015, columna
-  `pedidos.expedicion VARCHAR(200)`. Mapper Satelles extrae
-  `delivery.customerShipment`, concatena con `;`. Aplicada a todas las
-  BDs tenant en dev y prod. Visor admin actualizado.
-- **chofocles separado**: ya no vive en este repo. Repo propio
-  `llor/chofocles` (local: `saycu/chofocles/`).
-- **PDF API Satelles v1.8.0**: guardado en `documentos/satelles/`.
-
-ALCANCE POR PROVEEDOR — DECISIÓN DEL N1 (2026-06-03)
------------------------------------------------------
-- **Satelles**: SOLO datos para facturación. No nos interesa nada más
-  porque solo podemos hacer lo que Satelles nos deja hacer. Campos de la
-  API 1.7.0/1.8.0 no implementados (modos de reparto, CRUD pedidos,
-  legs/odómetros, shippingActions) salvo petición expresa del N1.
-- **PCS Valencia**: alcance más amplio, nos dejan hacer más cosas.
-  Extensible (outbound, más tipos de mensaje) cuando toque.
-
-SIGUIENTE PASO — CLIENTE C# EN SERVIDOR WINDOWS
-------------------------------------------------
-Montar programa C# en el servidor Windows (acceso vía proyecto Guindon,
-ver `proyectos/guindon/`) que consuma la API de SaycuNode. Previsto
-para 2026-06-04.
-
-Cambios 2026-05-26:
-- Migración 0014 aplicada a `saycu_pasarela_test` en prod (faltaba; el
-  comentario inicial del fichero la circunscribía a tenants con PCS
-  Valencia, pero el endpoint
-  `admin.saycusoft.es/api/admin/pasarela-datos/empresas/:cod/pedidos`
-  consulta `pedidos_pcs_extra.terminal_devolucion_codigo` para CUALQUIER
-  tenant con `pasarela` activo y reventaba con 500 al abrir TEST). Tras
-  el fix, la columna existe en DEMO/GFE/JSR/TEST (los 4 tenants con
-  servicio pasarela). Regla efectiva: la 0014 (y todas las `*_tenant_*`)
-  se aplican a TODOS los `saycu_pasarela_<CODIGO>` con `pasarela` en
-  `saycu_admin.empresas.servicios`, no solo a los con PCS Valencia.
-- Auditoría de drift de schema tenant unificada en el script general
-  del grupo: `saycu/_scripts/audit-tenant-schema.sh [dev|prod] [pasarela]`.
-  Crea BD efímera, aplica las `*_tenant*.sql` del repo en orden, diffea
-  el schema de cada BD tenant contra la canónica y manda email al
-  receptor del ErrorReporter (project `audit-tenant-schema`) si hay
-  drift. Sustituye al script específico que estuvo brevemente en
-  `pasarela/_scripts/audit-tenant-schema.sh` (eliminado).
-
-Cambios 2026-05-19:
-- **Terminal de devolución del contenedor vacío** (PCS Valencia, DUT):
-  migración 0014 añade 7 columnas `terminal_devolucion_*` a
-  `pedidos_pcs_extra` (codigo, nombre, cif, direccion, ciudad,
-  codigo_postal, unlocode). El mapper extrae
-  `<Containers><AcceptanceDetails><AcceptanceCompany>`. Si el DUT no
-  trae Orden de Entrega (caso TIBA26051800052093), los campos quedan
-  NULL y el panel muestra "no incluida". Nueva sección en el modal de
-  detalle (panel pasarela + admin DatosPasarela) y badge "Indicada /
-  No indicada" en la card.
-- **Frecuencia configurable por número de minutos**:
-  `pasarela_config.cron_expr` acepta también el formato `every:Nm`
-  (cada N minutos vía setInterval), además de cron estándar. Lo usa el
-  selector simplificado del modal "Configuración Nodo API" del admin
-  con la lista cerrada 1/2/3/4/5/10/15/20/30/40/50/60/90/120/150/180/
-  210 minutos · 4/5/6 horas. Validador del admin backend y del
-  pasarela_api watcher reconocen ambos formatos.
-
-Estado proveedores (2026-05-18):
-- **Satelles** ✅ operativo en prod. Sync: GET /puba/routes/finished →
-  upsert pedido/albaranes/paradas → POST /puba/routes/finished/commit.
-  El commit es el equivalente al "ACK": las rutas ya procesadas dejan
-  de aparecer en el siguiente GET. Sin documentos de destino: la API
-  los soporta (GET /api/erpsync/routes/.../documents, scope
-  satelles-erpsync:write) pero GFE no los está cargando todavía;
-  cliente preparado para activarse en cuanto aparezcan.
-- **PCS Valencia** ✅ operativo en prod. Sync: GET /messages/download/{box}
-  (pendingStatus=pending por defecto) → downloadMessage → upsert pedido/
-  paradas/pedidos_pcs_extra → **DELETE /messages/download/{box}/{id}**
-  (ack, 202 idempotente, 404 = ya borrado por plazo de gracia). La cola
-  histórica de JSR (1001 pedidos) se drenó el 2026-05-18; a partir de
-  ahí cada ciclo solo entrega los mensajes nuevos.
-
-Cron: configurable en caliente (clave `cron_expr`, ver abajo). Valor vigente
-verificado en logs el 2026-06-30 = **cada 5 min** (`*/5`). Histórico: `*/5`
-→ `* * * * *` (cada minuto) el 2026-05-18 → de nuevo cada 5 min. La
-frecuencia real es la que haya en `pasarela_config`, no un literal fijo. Si
-no hay mensajes nuevos, cada proveedor devuelve lista vacía y retorna
-inmediato: el ciclo es prácticamente gratuito.
-
-La expresión vive en `saycu_admin.pasarela_config` (clave `cron_expr`),
-no en `.env`. El pasarela_api la lee al arrancar y revisa esa tabla cada
-60s; si cambia, reprograma en caliente sin redespliegue. El operador
-edita el valor desde la web admin → "Datos Nodo API" → icono ⚙️.
-Validación regex sencilla en admin; la estricta la hace el watcher con
-`node-cron.validate`. Si la expresión guardada es semánticamente
-inválida, el watcher mantiene la anterior y reporta el incidente por
-email. Estado en dev desde 2026-05-18; pendiente subir a prod.
-
-Tests automatizados (node:test) cubriendo los 5 endpoints inbound,
-17/17 OK en dev y prod. Visor de logs + manual API desplegados. El ERP
-del cliente se conectará previsiblemente con un programa intermedio en
-C entre el ERP y la API inbound.
-
-Este GUION describe **el framework**, no los clientes concretos. Las
-empresas y sus credenciales viven en BD y en la UI de admin, no aquí.
-
-
-TESTS AUTOMATIZADOS DEL pasarela_api
-------------------------------------
-
-Suite en `pasarela/api/tests/` con `node:test` (built-in en Node 20+, sin
-deps). Cobertura completa de los 5 endpoints actuales y todas las ramas
-de error (`missing_bearer`, `invalid_key`, `scope_required`, `id_invalido`,
-`no_encontrado`, `no_encontrado_o_ya_procesado`, `not_found`).
-
-Ejecutar:
-  docker exec -w /app pasarela_api npm test
-
-Estado en dev y prod a 2026-05-10: 17/17 OK, ~1.3s.
-
-Datos de test (idempotentes, se preparan en `tests/setup.js`):
-  - Empresa `TEST` en saycu_admin (servicio `pasarela`).
-  - BD `saycu_pasarela_test` clonada de `saycu_pasarela_demo`.
-  - 2 API keys: `test-read` (scopes `datos.read`) y `test-rw`
-    (`datos.read,datos.write`). Se regeneran cada ejecución.
-  - 1 pedido seed (`id_ruta_externa='TEST-SEED-1'`) con 1 albarán y
-    2 paradas. Se borra y recrea cada ejecución (CASCADE arrastra hijos).
-
-REGLA OPERATIVA — leer al tocar el API:
-  Si añades un endpoint nuevo, hay que tocar TRES sitios a la vez:
-    1. `pasarela/api/src/routes/...` (código del endpoint).
-    2. `pasarela/api/tests/api.test.js` (caso feliz + ramas de error).
-    3. `admin.saycusoft.es/panel/src/pages/ApiDocsPasarela.jsx`
-       (manual visible en Dashboard → Manuales → Nodo API).
-  Si modificas el contrato (path, body, response, error_code), los tres
-  archivos deben actualizarse en la misma sesión. La regla está repetida
-  como cabecera en `tests/api.test.js` y `src/app.js`.
-
-Para que los tests sean ejecutables dentro del contenedor, el Dockerfile
-incluye `COPY api/tests ./tests`. Son ~7 KB y no participan en runtime.
-
-
-QUÉ NOS HARÁ FALTA DE VALENCIAPORTPCS (decisión SOAP vs REST)
--------------------------------------------------------------
-
-Para arrancar la integración real con valenciaportpcs.net hay que
-elegir uno de los dos protocolos. Los dos cubren los mensajes
-necesarios para un perfil transportista: inbound DUTv2, ReleaseOrderv2,
-AcceptanceOrderv2, ReleaseConfirmationv2, AcceptanceConfirmationv2,
-Acknowledgementv2 + outbound InlandTransportDetailsv2. Lo que cambia
-es el coste de implementar y las cosas que hay que pedir al proveedor.
-
-REST (recomendado por el manual oficial para desarrollos nuevos):
-- Endpoint: `https://api.valenciaportpcs.net/messaging` (PROD) ·
-  `https://testapi.valenciaportpcs.net/messaging` (TEST). 3 paths en el
-  swagger: `/messages/download/{box}` (list), `/messages/download/{box}/{id}` (get) y
-  `/messages/upload/{box}` (post).
-- Auth: OAuth2 client_credentials. Token URL en swagger
-  (`/oauth/connect/token` en PROD, mismo path en TEST).
-- Necesitamos que el operador titular nos dé: par `client_id` +
-  `client_secret` distinto del usuario humano del portal, y que su
-  organización + el usuario tengan asignados los roles efectivos del
-  servicio MESSG (MESSGAPISR/MESSGOAUTH) en su plano de autorización
-  (no solo a nivel organización).
-- Pros: schemas de mensajes vienen referenciados desde el swagger
-  (`application/json` y `application/xml`); JSON conviene si tiramos
-  por programa C intermedio porque su parsing es más manejable; el
-  manual lo recomienda explícitamente.
-- Contras: Bearer token con TTL corto (renovación cada hora típica) →
-  pequeño extra en el cliente para la cache.
-
-SOAP (transportservice.asmx, plan B si la REST sigue bloqueada):
-- Endpoint: `https://www.valenciaportpcs.net/services/transportservice.asmx`
-  (PROD) y `https://test.valenciaportpcs.net/services/transportservice.asmx`
-  (TEST). 10 operaciones (Upload/UploadZippedMessage/UploadZippedFile,
-  ListMessages, ListMessagesByService, ListMessagesByDate,
-  ListMessagesByMessageType, Download/DownloadZippedMessage/
-  DownloadZippedFile).
-- Auth: usuario+password en `login.asmx` → TicketGUID por sesión, que
-  se pasa como `SessionTicket` en cada llamada.
-- Necesitamos: usuario y password del portal **y** permisos efectivos
-  del usuario sobre el servicio TRANS en su plano de autorización (no
-  basta con que la organización los tenga).
-- Necesitamos también: los XSD de cada mensaje (DUTv2, ReleaseOrderv2,
-  etc.). El WSDL describe la envolvente SOAP pero NO el schema del
-  mensaje que viaja como ByteArray base64. PCS los tiene como ficheros
-  aparte; hay que pedírselos junto con las credenciales.
-- Pros: cliente SOAP en C viable con cualquier lib de XML.
-- Contras: el manual desaconseja para desarrollos nuevos; XML más
-  verboso; TicketGUID con TTL no documentado (medir con CheckSession y
-  re-login en bucle).
-
-Lista que pedir al proveedor PCS cuando contesten (en este orden):
-1. Confirmación de qué protocolo dan permisos (REST u ambos). Si REST:
-   par `client_id`/`client_secret` para PROD y para TEST, y asignación
-   de roles MESSGAPISR/MESSGOAUTH a nivel usuario (no solo
-   organización). Si SOAP: asignación de roles
-   TRANS{SNDTI,RCVTI,RVWTI,…} al usuario PROD y un usuario TEST
-   funcional.
-2. Schemas XSD de los mensajes del servicio TRANS (solo si tiramos
-   SOAP). En REST vienen del swagger.
-3. Buzón a usar (`box`): el manual dice `default` salvo indicación
-   contraria; confirmar.
-4. Volumen estimado de mensajes por día y SLA esperado, para calibrar
-   polling vs webhook (REST no expone webhook según el swagger; tiraremos
-   por polling cada N minutos).
-
-Cuando lleguen los puntos 1 y 2, decidir REST si está limpio (recomendado
-por manual + JSON cómodo para C intermedio). Si solo se desbloquea SOAP,
-tirar por SOAP.
-
-
-EN ESPERA (2026-05-10)
-----------------------
-
-Solo queda un frente abierto, **bloqueado externamente** (no depende
-de nosotros). El bloque Satelles está cerrado y operativo en prod.
-
-1. **PCS Valencia** — bloqueado por par OAuth real.
-
-   Las credenciales facilitadas hasta ahora son las del **usuario
-   humano del portal SOAP** (`login.asmx`), NO un par
-   `client_id`/`client_secret` OAuth. Resumen del diagnóstico:
-   - SOAP PROD `login.asmx` con el usuario humano: HTTP 200, devuelve
-     TicketGUID y datos de la organización con roles `MESSGAPISR` y
-     `MESSGOAUTH` activos. El usuario PROD del portal **funciona** para
-     login pero NO para invocar el servicio de mensajería: con
-     TicketGUID válido, `transportservice.asmx ListMessages` devuelve
-     SOAP fault «El usuario no tiene permisos suficientes».
-   - SOAP TEST `login.asmx` con el usuario UAT: HTTP 500 «Invalid
-     Login. … login inactive or organization is inactive». El usuario
-     TEST del portal **no entra**.
-   - OAuth REST PROD `/oauth/connect/token` con `client_id` igual al
-     usuario humano: HTTP 400 `invalid_client / you do not have
-     access`.
-   - OAuth REST TEST equivalente: HTTP 400 `invalid_client / wrong
-     username or password`.
-
-   Diagnóstico: el `client_id` PROD existe pero no tiene acceso
-   habilitado; el `client_id` TEST directamente no existe. La
-   organización tiene los roles MESSGAPISR/MESSGOAUTH a nivel
-   organización, pero al usuario no le han asignado los roles efectivos
-   del servicio MESSG ni en SOAP ni en REST. Falta que ValenciaportPCS
-   emita un par OAuth válido **y** asigne los roles efectivos al
-   usuario.
-
-   Bonus: el swagger en PROD ya carga sin login.
-   `https://api.valenciaportpcs.net/messaging/swagger/v1/swagger.json`
-   (3 paths: `/messages/download/{box}`, `/messages/download/{box}/{id}`,
-   `/messages/upload/{box}`). TEST equivalente en
-   `testapi.valenciaportpcs.net` también responde. El `tokenUrl`
-   declarado en la spec coincide con el probado arriba. Ya no hace
-   falta pedir acceso autenticado al swagger; solo el par OAuth y,
-   idealmente, un usuario TEST activo.
-
-   Estado del código: migración `0006_admin_pcs_valencia.sql` aplicada
-   en dev y prod (alta del proveedor `pcs-valencia` con descriptor
-   `[user, pass, oauth_url, api_base]`). Stubs en
-   `api/src/proveedores/pcs-valencia/` (client/mapper/sync) marcados
-   como pendientes — no conectan con nada todavía. Cuando lleguen las
-   credenciales OAuth, sustituir descriptor del proveedor por
-   `[client_id, client_secret, token_url, api_base]` con migración
-   nueva. Ver `proveedores/pcs-valencia/README.md`.
-
-
-VERSIONES DEL MANUAL SATELLES
------------------------------
-
-- **v1.7.0** (06-may-2026, vigente): añade `areaCodes` (array) en
-  `delegations`, endpoints nuevos `PUT/GET /api/erpsync/delivery-modes`,
-  `GET /api/erpsync/countries`, `GET /api/erpsync/languages`. PDF en
-  `superapitrans/documentos/satelles/Satelles - ERPSYNC Api.pdf`.
-- **v1.6.0** (23-jul-2025, anterior): conservada como backup en
-  `Satelles - ERPSYNC Api v1.6.0 (2025-07-23).pdf` por si surge alguna
-  diferencia de comportamiento.
-- El sync actual (`GET /puba/routes/finished` + commit) no se ve
-  afectado por la nueva versión. Solo si en el futuro sincronizamos
-  maestros desde Satelles (`delegations`, etc.) habrá que adaptar el
-  cliente al nuevo modelo `areaCodes`.
-
-
-GOTCHAS — CUIDADO
------------------
-
-- **`docker compose restart` NO recarga env_file**. Si tocas `.env` y
-  haces `restart`, el contenedor sigue con los valores anteriores en
-  silencio. Usar siempre `up -d --force-recreate api`, o el helper
-  `_scripts/restart-with-env-reload.sh [--dev|--prod]`. **Importante para
-  PASARELA_DRY_RUN**: si crees que está activo y no lo está, el sync
-  hará commit a Satelles y las publicaciones desaparecen de su cola.
-- **Migración 0002 con `psql -U postgres`**: aunque la BD sea owned por
-  saycutrans, las tablas que crea quedan con owner postgres y la
-  superapitrans falla con "permission denied". Desde 06-may la migración
-  termina con `ALTER ... OWNER TO saycutrans` idempotente.
-- **PASARELA_SECRETS_KEY entre admin y superapitrans**: deben coincidir EN
-  RUNTIME (printenv dentro del contenedor, no solo en el `.env`). Si
-  cambia la del admin después de cifrar credenciales, se vuelven
-  indescifrables → borrar y volver a guardarlas desde la UI.
-- **Formato AES-GCM**: el admin (`utils/pasarela-secrets.js`) y
-  superapitrans (`api/src/secrets.js`) deben usar `[iv | tag | ciphertext]`
-  (formato compatible byte a byte). Si divergen, descifrado falla con
-  "Unsupported state or unable to authenticate data".
-
-
-GESTIÓN DE CATÁLOGO Y CREDENCIALES (UI desde admin.saycusoft.es)
----------------------------------------------------------------
-
-- **Catálogo** (tabla `saycu_admin.pasarela_proveedores`): es **cerrado**.
-  Cada proveedor nuevo se da de alta por **migración SQL** (junto con el
-  cliente HTTP y el mapeo a tablas canónicas). NO se edita desde UI; el
-  backend solo expone `GET /api/proveedores` (lista).
-- **Descriptor de campos por proveedor**: columna
-  `pasarela_proveedores.campos_credenciales` (JSONB, lista de
-  `{clave, label, secreto, ayuda}`). Pinta el formulario de credenciales
-  con inputs tipados (label visible, `type=password` si `secreto`), sin
-  pedir al usuario las claves técnicas. Migración
-  `0004_admin_campos_credenciales.sql` añade la columna y pre-rellena
-  Satelles; `0005_admin_satelles_quitar_scopes.sql` quita `scopes`
-  porque son fijos (irán hardcoded en el cliente HTTP).
-- **Credenciales por empresa** (`saycu_admin.pasarela_proveedores_credenciales`):
-  cifradas AES-256-GCM con `PASARELA_SECRETS_KEY` (32 bytes en base64)
-  por la capa de aplicación del backend de admin.saycusoft.es. Una clave
-  distinta por entorno (dev != prod), ya en los `.env` reales. Cada
-  proveedor lleva sus campos:
-  - Satelles: `client_id`, `client_secret` (scopes hardcoded en cliente)
-  - PCS Valencia: por definir cuando entre en migración 0006
-- **Endpoints backend** (en admin.saycusoft.es):
-  - `GET /api/proveedores`, `GET /api/proveedores/:id` (solo lectura)
-  - `GET /api/empresas/:id/proveedor-credenciales` (lista; sólo metadatos + nombres de claves)
-  - `GET /api/empresas/:id/proveedor-credenciales/:credId` (con `credencial` descifrada para edición)
-  - `POST/PUT/DELETE /api/empresas/:id/proveedor-credenciales[/:credId]`
-- **UX**: tile "Proveedores de datos" en `EmpresaActionsModal` (sección
-  "Panel de Empresa") → abre `ProveedoresEmpresaModal` con selector de
-  proveedor arriba; al elegir, dos cuadros (Sandbox + Producción) con los
-  campos del descriptor, prerrellenados si ya hay credenciales. Cada
-  cuadro lleva su switch "Activo" y, si existen, su botón "Borrar"
-  individual. Guardar cierra el modal.
-- Para que la API de superapitrans (cuando se ejecute outbound desde
-  `superapitrans/pasarela`) pueda descifrar lo que guardó el admin, su
-  `.env` debe tener la **misma `PASARELA_SECRETS_KEY` por entorno**.
-
-
-ROUTING EXTERNO (system-caddy) — SE COMPARTE PARA TODOS LOS PROVEEDORES
-----------------------------------------------------------------------
-
-El `system_caddy` enruta `https://[dev-]api.saycunode.saycutrans.es/pasarela/*`
-al contenedor `pasarela_api:3412` con `rewrite * /api{path}`. Es decir,
-cualquier sub-ruta cae automáticamente:
-
-- `/pasarela/health` → `pasarela_api:3412/api/health`
-- `/pasarela/satelles/...` → `pasarela_api:3412/api/satelles/...`
-- `/pasarela/pcs-vlc/...` (cuando se programe) → idem
-
-NO hace falta tocar `system-caddy/conf/Caddyfile.{dev,prod}` para añadir
-un proveedor nuevo. Las rutas internas (incluidos webhooks de PCS
-Valencia) las maneja el Express del propio `pasarela_api`.
-
-
-OBJETIVO
---------
-
-Sub-servicio de superapitrans que actúa como **intermediario entre clientes
-externos y proveedores externos**, persistiendo todo lo intercambiado en
-4 tablas canónicas multi-tenant. Esa misma tabla la puede consumir
-chofocles (entrada por correo) y, cuando el cliente final tenga un ERP
-con campos `TT*` de a3ERP, un programa intermedio que lea por la API
-inbound y vuelque a sus columnas TT*.
-
-Dos flujos:
-
-1. **INBOUND** — un cliente externo llama a nuestra API con su key:
-   a. Consulta datos almacenados.
-   b. Nos envía datos para almacenar.
-   c. Dispara una utilidad (chofocles o general).
-
-2. **OUTBOUND** — nosotros llamamos a APIs de terceros (cada una con su
-   credencial propia) para:
-   a. Obtener datos que volcamos en la tabla canónica.
-   b. (Futuro) Enviar datos a terceros.
-
-Ambos flujos comparten las mismas tablas canónicas. El consumidor final
-(programa intermedio del cliente) toma los campos que necesita y los
-mapea a sus columnas `TT*` (esquema a3ERP).
-
-
-DOCUMENTOS DE REFERENCIA
-------------------------
-
-Todos viven en `superapitrans/documentos/`:
-
-- **`campos.pdf`** — proyecto AUTONOMOS Saycusoft (Mayo-2026, v1.0).
-  Define los campos `TT*` que el módulo de transporte del usuario espera
-  encontrar (cabecera + repartos). Son campos de a3ERP (prefijo `TT`),
-  pero **nuestra tabla canónica usa nombres limpios sin prefijo**: la
-  tabla es nuestra y guardamos más información de la que pide a3ERP.
-
-- **`Satelles - ERPSYNC Api.pdf`** — manual técnico del primer proveedor
-  externo (`novossistemas.satelles.es`, ERPSYNC v1.6.0). OAuth 2.0
-  client credentials, recursos maestros editables (delegations, zones,
-  measure-units, transport-types, vehicle-types, vehicles, drivers,
-  customers, places, materials) y cola de rutas finalizadas
-  (`/puba/routes/finished` + commit por `publicationIds`).
-
-- **`Satelles API ERP SYNC.postman_collection.json`** —
-  colección Postman con ejemplos reales de llamadas (cuerpos JSON
-  válidos para PUT, query strings de GET, etc.). Útil para validar el
-  cliente HTTP que generemos.
-
-
-ENCAJE EN LA ARQUITECTURA
--------------------------
-
-```
-[Cliente externo]                                    [Proveedor externo]
-       │                                                       ▲
-   key │                                          credencial   │
-       ▼                                          cifrada      │
-  ┌────────────────── system-caddy (api.{BASE_DOMAIN}) ──────────────┐
-  │   handle_path /chofocles/*  → chofocles_api                       │
-  │   handle_path /pasarela/*   → pasarela_api ─────────┐             │
-  │   handle /health            → 200                   │             │
-  └─────────────────────────────────────────────────────┼─────────────┘
-                                                        │
-                                                        ▼
-                              ┌──────────────────────────────────┐
-                              │  pasarela_api (Node.js)          │
-                              │   - middleware key cliente       │
-                              │   - lectura/escritura tablas     │
-                              │   - sincronizador outbound       │
-                              │     (cron por proveedor)         │
-                              │   - utilidades chofocles/general │
-                              └─────────────┬────────────────────┘
-                                            │
-                          ┌─────────────────┼──────────────────────┐
-                          ▼                 ▼                      ▼
-                    saycu_admin       saycu_pasarela_*        chofocles_api
-                    (catálogos +      (4 tablas canónicas     (utilidades
-                    keys + creds)      por tenant)             chofocles)
-```
-
-
-KEYS — DOS DIMENSIONES
-----------------------
-
-**Por CLIENTE (inbound)**
-- Granularidad: por **empresa-tenant + aplicación**. Una empresa puede
-  tener N keys (una por integración propia).
-- Almacenamiento: `saycu_admin.pasarela_clientes_keys` (hash bcrypt,
-  nunca plaintext).
-- Formato: prefijo identificable + secreto aleatorio
-  (`pas_live_xxxxxxxxxxxx`).
-
-**Por PROVEEDOR EXTERNO (outbound)**
-- Granularidad: **por (empresa, proveedor)**. Cada cliente Saycu trae
-  sus propias credenciales del proveedor (no globales).
-- Almacenamiento: `saycu_admin.pasarela_proveedores_credenciales`,
-  cifradas AES-256-GCM (mismo patrón que chofocles `secrets.js`). Clave
-  de cifrado en `.env` de superapitrans, no en BBDD.
-- Por proveedor: 1 ficha en `pasarela_proveedores` (nombre, host base,
-  versión API) + N credenciales (sandbox/prod, scopes documentados).
-
-
-MODELO DE DATOS — 4 TABLAS CANÓNICAS POR TENANT
-------------------------------------------------
-
-Multi-tenant: una BBDD por empresa (`saycu_pasarela_<CODIGO>`), patrón
-Saycu. Cada BBDD del tenant contiene 4 tablas relacionadas, ninguna
-excluyente:
-
-1. **`pedidos`** — cabecera del pedido / orden de carga.
-2. **`albaranes`** — albaranes del pedido. Un pedido tiene 0..N.
-3. **`facturas`** — facturas del pedido. Un pedido tiene 0..N.
-4. **`paradas`** — orígenes y destinos del pedido (carga / descarga).
-   Un pedido tiene 0..N. FK obligatoria a pedido + FK opcional a
-   albarán (cuando el documento lo indique claramente).
-
-Ejemplo: 1 pedido con 3 orígenes y 4 destinos = 1 fila en `pedidos` +
-7 filas en `paradas`. Si los albaranes vienen claros, se vinculan;
-si no, las paradas quedan con `albaran_id IS NULL`.
-
-
-CAMPOS DECIDIDOS — DETALLE Y RAZÓN
------------------------------------
-
-Para cada campo del PDF `campos.pdf` (prefijo `TT`), el nombre que usamos
-en nuestra tabla, el origen Satelles propuesto, y la decisión.
-
-### `pedidos` (cabecera)
-
-| Campo a3ERP | Campo nuestro                          | Origen Satelles                                    | Decisión |
-|-------------|----------------------------------------|----------------------------------------------------|----------|
-| TTIDVI      | `id_viaje`                             | `route.id`                                         | bigint, no null |
-| TTCLIE      | `cliente_codigo` + `cliente_cif`       | (no es Satelles) — viene del tenant Saycu          | confirmado: TTCLIE = empresa-tenant Saycu (= `saycu_admin.empresas`) |
-| TTDELE      | `delegacion_codigo`                    | `route.delegation.code`                            | varchar(20) |
-| TTCORR      | `email_chofer` + `email_remitente`     | `drivers.email` / del documento                    | dos campos sin TT — el remitente del email (chofocles) o del PDF |
-| TTIDRU      | `id_ruta_externa`                      | (no Satelles) — del documento del operador         | nullable. Lo rellena chofocles si el PDF lo trae |
-| TTFECH      | `fecha_plan` + `fecha_reparto`         | `route.planDate` / `delivery.deliveryDate`         | ambas nullable. El consumidor decide cuál usar |
-| TTCHOP      | `chofer_principal_codigo` + `..._cif`  | `route.driver.code` + `idCard`                     | dos campos |
-| TTCHOS      | `chofer_secundario_codigo` + `..._cif` | (no obvio en Satelles)                             | nullable |
-| TTTERC      | `tercero_codigo` + `tercero_cif`       | `delivery.order.customer.code` + `taxCode`         | proveedor / operador logístico que paga el viaje |
-| TTCABE      | `matricula_tractor`                    | `route.tractor.licensePlate`                       | varchar(20) |
-| TTPLAT      | `matricula_remolque`                   | `route.trailer.licensePlate`                       | varchar(20) |
-| TTNPEDI     | `numero_pedido`                        | `delivery.order.reference`                         | varchar(50) |
-| TTNALB      | `albaranes_concatenados`               | (resumen de `albaranes.numero`)                    | varchar(500), separador `;`. Referencia rápida; los albaranes detallados van en su propia tabla |
-| TTTIPO      | `tipo`                                 | derivado                                           | enum `'PEDIDO'`, `'ALBARAN'` |
-| TTESTA      | `estado`                               | interno                                            | enum `'PENDIENTE'`, `'PROCESADO'`. Lo gestiona superapitrans y el módulo de transporte del usuario |
-
-### `albaranes` (1 pedido → 0..N)
-
-Por cada `shippingManifest` distinto que aparezca en una ruta de Satelles:
-
-| Campo nuestro            | Origen Satelles                                          |
-|--------------------------|----------------------------------------------------------|
-| `id` (interno)           | UUID nuestro                                             |
-| `pedido_id`              | FK a `pedidos.id`                                        |
-| `numero`                 | `shippingManifest.documentNumber`                        |
-| `fecha`                  | `shippingManifest.manifestDate`                          |
-| `lugar_carga_codigo`     | `shippingManifest.loadingPlace.code`                     |
-| `unidad_medida`          | `shippingManifest.measureUnit.code`                      |
-| `satelles_id`            | `shippingManifest.id` (idempotencia)                     |
-
-### `facturas` (1 pedido → 0..N)
-
-Vacía de momento — Satelles no expone facturas. Se llenará cuando llegue
-información de facturación por otra vía (chofocles, manual, otro
-proveedor). Estructura mínima:
-`id`, `pedido_id`, `numero`, `fecha`, `total`, `estado`, `created_at`.
-
-### `paradas` (1 pedido → 0..N)
-
-Una fila por cada `destination` de la ruta Satelles:
-
-| Campo a3ERP | Campo nuestro          | Origen Satelles                                  | Decisión |
-|-------------|------------------------|--------------------------------------------------|----------|
-| TTIDVI      | `pedido_id`            | FK a `pedidos.id`                                | not null |
-| (nuevo)     | `albaran_id`           | FK a `albaranes.id`                              | nullable |
-| TTIDRE      | `reparto_id_externo`   | `delivery.id`                                    | bigint |
-| TTTIPO      | `tipo`                 | `action.type` (0=carga, 1=descarga)              | enum `'CARGA'`, `'DESCARGA'` |
-| TTORDE      | `orden`                | derivado de tipo                                 | enum `'ORIGEN'`, `'DESTINO'` |
-| TTFABR      | `tipo_lugar`           | `place.name` o `place.type` si existe            | texto libre, nullable |
-| TTDIR1      | `direccion1`           | `place.address1`                                 | varchar(200) |
-| TTDIR2      | `direccion2`           | `place.address2`                                 | varchar(200) |
-| TTCOPO      | `codigo_postal`        | `place.postalCode`                               | varchar(10) |
-| TTMUNI      | `municipio`            | `place.municipality`                             | varchar(100) |
-| TTPROV      | `provincia`            | `place.province`                                 | varchar(100) |
-| TTPAIS      | `pais`                 | `place.country`                                  | varchar(50) |
-| TTTELE      | `telefono`             | `place.phone`                                    | varchar(30) |
-| TTPCON      | `persona_contacto`     | `place.contact`                                  | varchar(100) |
-| TTMERC      | `producto`             | `cargo.material.name`                            | varchar(200) |
-| TTCANT      | `cantidad`             | `cargo.quantity`                                 | numeric(14,3) |
-|             | `unidad_medida`        | `cargo.measureUnit.code`                         | varchar(10) |
-| TTKMRE      | `kms_tramo`            | calculado por `legs` o `trip.distance`           | numeric(10,2). Por tramo, no total — la suma se calcula cuando haga falta |
-
-
-PROVEEDOR #1 — SATELLES ERPSYNC
---------------------------------
-
-Manual: `documentos/Satelles - ERPSYNC Api.pdf` (v1.6.0).
-Postman: `documentos/Satelles API ERP SYNC.postman_collection.json`.
-
-- **Host base:** `https://novossistemas.satelles.es`
-- **Auth:** OAuth 2.0 Client Credentials. POST a `/auth/connect/token`
-  con `grant_type=client_credentials`, `client_id`+`client_secret`
-  (Basic auth o cuerpo), y `scope` separado por espacios.
-- **Scopes:**
-  - `satelles-erpsync:write` — recursos maestros (delegations, zones,
-    measure-units, transport-types, vehicle-types, vehicles, drivers,
-    customers, places, materials).
-  - `satelles-publications:finished-routes` — leer cola de rutas
-    finalizadas y marcarlas como procesadas.
-- **Bearer token** TTL 3600 s.
-
-### Endpoint clave que usaremos: rutas finalizadas
-
-- `GET /puba/routes/finished` — devuelve la cola de rutas terminadas
-  (con `id` de publicación + objeto `route` anidado: destinations,
-  actions, deliveries, cargo, shippingManifest, events, legs, trips).
-- `POST /routes/finished/commit` — body `{ "publicationIds": [...] }`.
-  Marca como procesados.
-
-### Mapeo Satelles → tablas canónicas (resumen)
-
-Por cada elemento del array que devuelve `/puba/routes/finished`:
-
-1. Crear/actualizar 1 fila en `pedidos` con:
-   - `id_viaje = route.id`
-   - `delegacion_codigo = route.delegation.code`
-   - `chofer_principal_codigo = route.driver.code`,
-     `chofer_principal_cif = route.driver.idCard`
-   - `tercero_codigo = delivery.order.customer.code` (si hay un único
-     cliente en la ruta) — si hay varios, se usa el de la primera
-     entrega
-   - `matricula_tractor = route.tractor.licensePlate`
-   - `matricula_remolque = route.trailer.licensePlate`
-   - `numero_pedido = delivery.order.reference` (si hay varios pedidos
-     en la ruta, se concatenan con `;`)
-   - `fecha_plan = route.planDate`
-   - `fecha_reparto = route.startedOn` (o `delivery.deliveryDate` si
-     prefieres)
-   - `tipo = 'ALBARAN'` (porque la ruta ya está finalizada — si fuera
-     el caso de pedidos sin ejecutar, llegarían por otra vía)
-   - `estado = 'PENDIENTE'`
-   - `albaranes_concatenados = <todos los documentNumber distintos
-     juntos con ';'>`
-
-2. Por cada `shippingManifest` distinto: crear/actualizar fila en
-   `albaranes`.
-
-3. Por cada `destination`: crear/actualizar fila en `paradas`. Si todas
-   las cargas de ese destino apuntan al mismo `shippingManifest`, se
-   pone `albaran_id`. Si apuntan a varios, se deja NULL (caso ambiguo).
-
-4. **Idempotencia:** clave única
-   `(proveedor='satelles', satelles_publication_id)` en `pedidos`. Si la
-   publicación ya está procesada, no se duplica; se actualiza.
-
-5. **Tras procesar OK:** llamar a `POST /routes/finished/commit` con
-   los `publicationIds` que han pasado por nuestra BD sin errores.
-
-### Sincronizador
-
-- **Cadencia:** cron interno cada N minutos (configurable, defecto 5).
-- **Por cada credencial activa** en `pasarela_proveedores_credenciales`
-  con `proveedor_id = satelles`: pedir token, llamar a
-  `/puba/routes/finished`, mapear, persistir, commit. Token cacheado en
-  memoria mientras dure el TTL.
-- **Reintentos:** backoff exponencial en errores 5xx; ignorar 401
-  (token expirado: refrescar y reintentar una vez); fallar en 403
-  (scope mal). Logs por cada ciclo.
-
-
-SEPARACIÓN chofocles vs NO-CHOFOCLES
--------------------------------------
-
-Por **path** dentro de superapitrans, no por key:
-
-- `/utilidades/chofocles/...` — solo para clientes con scope chofocles.
-- `/utilidades/general/...`   — para los demás flujos.
-- `/datos/...`                — lectura/escritura de las 4 tablas
-  canónicas; filtrado automático por tenant según la key.
-
-Una misma key puede tener scope múltiple (`scopes: ["chofocles",
-"general"]`). El middleware comprueba scope vs path.
-
-**Pendiente con el usuario:** lista exacta de utilidades de cada
-categoría (lo dará con los manuales o cuando lo necesite).
-
-
-ESTRUCTURA DE CARPETAS
-----------------------
-
-```
-superapitrans/
-├── chofocles/                ← ya existe
-└── pasarela/
-    ├── GUION.md              ← este documento
-    ├── api/
-    │   ├── Dockerfile
-    │   ├── package.json
-    │   └── src/
-    │       ├── index.js
-    │       ├── db.js
-    │       ├── secrets.js              ← AES-GCM (compatible con chofocles)
-    │       ├── auth/
-    │       │   ├── client-key.js       ← middleware key cliente (inbound)
-    │       │   └── provider-cred.js    ← obtención cred. proveedor (outbound)
-    │       ├── routes/
-    │       │   ├── datos.js
-    │       │   ├── utilidades-chofocles.js
-    │       │   └── utilidades-general.js
-    │       ├── proveedores/
-    │       │   └── satelles/
-    │       │       ├── client.js       ← OAuth + HTTP
-    │       │       ├── mapper.js       ← Satelles route → 4 tablas
-    │       │       └── sync.js         ← finished routes + commit
-    │       └── cron.js                  ← scheduler interno
-    ├── db/
-    │   └── migrations/
-    │       ├── 0001_admin.sql           ← keys cliente + proveedores + creds
-    │       └── 0002_tenant.sql          ← pedidos, albaranes, facturas, paradas
-    ├── docker-compose.yml               ← solo servicio api
-    ├── .env-dev.example
-    ├── .env-prod.example
-    └── _scripts/
-        └── deploy-dev.sh
-```
-
-
-SUBDOMINIO Y CADDY
-------------------
-
-Mismo subdominio `api.{BASE_DOMAIN_SUPERAPI}` que ya existe. Hay que
-añadir un bloque a `system-caddy/conf/Caddyfile.dev` y `Caddyfile.prod`:
-
-```caddy
-api.{$BASE_DOMAIN_SUPERAPI} {
-    handle_path /chofocles/* { ... }    # ya cableado
-    handle_path /pasarela/* {            # PENDIENTE
-        rewrite * /api{path}
-        reverse_proxy pasarela_api:3412
-    }
-}
-```
-
-Puerto interno propuesto: **3412** (chofocles usa 3411).
-
-
-ESTADO ACTUAL
--------------
-
-Desplegado y verificado en dev y prod:
-
-- ✅ Migración `0001_admin.sql` aplicada en `saycu_admin`: ENUM
-  `servicio_tipo` con valor `'pasarela'`, tabla `pasarela_proveedores`
-  con seed Satelles, `pasarela_proveedores_credenciales`, y
-  `pasarela_clientes_keys`.
-- ✅ Auto-provisionadas las BBDD tenant con migración `0002_tenant.sql`
-  para cada empresa con servicio `pasarela` (4 tablas: pedidos,
-  albaranes, facturas, paradas).
-- ✅ `pasarela_api` corriendo en ambos entornos (puerto interno 3412),
-  conectado a `system_postgres_net`, `superapitrans_network` y
-  `pasarela_network`. Healthcheck OK.
-- ✅ `system-caddy` enrutando `https://api.saycunode.saycutrans.es/pasarela/*`
-  (prod) y `https://dev-api.saycunode.saycutrans.es/pasarela/*` (dev).
-- ✅ Auth bearer (`pas_live_<32hex>`) verificada con curl real en ambos
-  entornos: `GET /pasarela/datos/pedidos?empresa=<CODIGO>` con scope
-  `datos.read` devuelve 200; sin Authorization devuelve 401.
-- ✅ Script `api/scripts/generar-key.js` para emitir keys inbound
-  (recibe empresa-código, aplicación, scopes CSV; imprime el secreto una
-  sola vez).
-- ✅ Cron Satelles activo: cuando hay credenciales en
-  `pasarela_proveedores_credenciales` para una empresa con servicio
-  `pasarela`, el cron tira `*/5 min` y sincroniza. Sin credenciales
-  loguea "sin credenciales activas" y sale en milisegundos.
-
-
-CREDENCIALES BD (referencia operativa)
----------------------------------------
-
-`pasarela_api` conecta como `saycutrans` (mismo usuario que
-`SVC_PGUSER` del admin api) porque el auto-provisioning de BBDD tenant
-crea las BBDD con ese owner. El usuario `saycuadmin` tendría permisos
-en `saycu_admin` pero no en las tablas tenant. Documentado en los
-`.env-{dev,prod}.example` con `DB_USER=saycutrans`.
-
-
-CÓMO EMITIR UNA KEY DE CLIENTE
-------------------------------
-
-```bash
-ssh saycudev   # o saycu para prod
-docker exec pasarela_api node scripts/generar-key.js \
-    <CODIGO_EMPRESA> <aplicacion> <scope1,scope2,...> [expira_dias]
-```
-
-Ejemplo:
-```bash
-docker exec pasarela_api node scripts/generar-key.js \
-    <CODIGO_EMPRESA> a3erp datos.read,datos.write,utilidades.chofocles,utilidades.general
-```
-
-El secreto se imprime una sola vez. Si se pierde, hay que rotarla
-(borrar fila y volver a generar).
-
-
-CÓMO INSERTAR CREDENCIAL DE SATELLES
-------------------------------------
-
-Lo normal es hacerlo desde la UI de admin.saycusoft.es: ficha de
-empresa → "Proveedores de datos" → seleccionar Satelles → rellenar
-`client_id`/`client_secret` en sandbox o prod → Guardar. La UI cifra
-y persiste en `saycu_admin.pasarela_proveedores_credenciales`.
-
-Vía script (alternativa CLI):
-```bash
-docker exec pasarela_api node /app/scripts/set-satelles-cred.js \
-    --empresa <CODIGO> --client-id <X> --client-secret <Y> --entorno prod
-```
-
-El cron lo recoge en su próximo tick (≤5 min) sin reiniciar.
-
-
-PROBLEMAS RESUELTOS
--------------------
-
-- **Caddy local en superapitrans/ → conflicto con system_caddy.**
-  Eliminado. Superapitrans se registra como bloque dentro del frontal global
-  `system-caddy` (saycucontrol/), igual que chofocles.
-- **404 en `/pasarela/health` durante el primer despliegue.** Caddy
-  reescribe `/pasarela/<path>` a `/api{path}`, así que los handlers
-  Express deben existir en `/api/health`. Solución: registrar tanto
-  `/health` (interno, healthcheck Docker) como `/api/health` (externo,
-  tras el rewrite).
-- **`permission denied for table pedidos` con `DB_USER=saycuadmin`.**
-  Las BBDD tenant se auto-provisionan con owner `saycutrans`. El
-  `.env` de superapitrans ahora usa `DB_USER=saycutrans` por defecto.
-- **`docker compose restart` no recarga `.env`.** Tras editar
-  variables, usar `docker compose up -d --force-recreate api`.
-
-
-DEUDA TÉCNICA — PENDIENTE DE COMPROBAR / MÁS INFORMACIÓN
----------------------------------------------------------
-
-Notas tomadas el 2026-05-13. No son tareas a ejecutar todavía; son
-puntos abiertos que hay que tener en cuenta antes de hacer cambios en
-la ingesta del PCS de Valencia.
-
-1. **Consulta por fechas en el PCS REST: funciona.** Verificado en
-   vivo contra `https://api.valenciaportpcs.net/messaging` con la
-   credencial JSR de producción el 2026-05-13:
-   - `GET /messages/download/{box}?fromDate=YYYY-MM-DD&toDate=YYYY-MM-DD`
-     filtra correctamente.
-   - `toDate` se comporta como exclusivo (o se interpreta como
-     `T00:00:00`): `fromDate=X&toDate=X` devuelve `0`. Para cubrir un
-     día hay que usar `toDate=X+1` o `toDate=X T23:59:59`.
-   - Acepta también `fromDate=2026-05-04T00:00:00&toDate=...T23:59:59`.
-   - La respuesta tiene un techo de 1000 items (sin filtro, devuelve
-     exactamente 1000). No comprobado si admite `offset`/`limit` ni si
-     hay una forma de pedir "siguientes 1000".
-   Consecuencia útil: el sync se puede refactorizar para tirar por
-   ventana móvil con dedup por `(proveedor_codigo,
-   proveedor_publication_id)` y dejar de depender del ack. Antes de
-   tocarlo conviene confirmar la paginación.
-
-2. **Acknowledgementv2 al PCS: tenemos permiso, no está implementado.**
-   Verificado en vivo el 2026-05-13:
-   - `POST /messages/upload/{box}` con `Content-Type: application/xml`
-     devuelve `400 "The File field is required."` → la cuenta entra al
-     endpoint; lo que rechaza es el formato.
-   - Con `multipart/form-data` y campo `File` devuelve `400 "Unknown
-     interchange type"` → el servidor parsea el archivo y rechaza por
-     contenido, no por permisos.
-   En ningún caso devuelve `401`/`403`. La cuenta JSR puede escribir.
-   Pendiente para implementarlo:
-   - Cambiar `pcs-valencia/client.js:123-137` (`uploadMessage`) para
-     que envíe `multipart/form-data` con campo `File`, no
-     `application/xml` directo.
-   - Conseguir el sample real del `Acknowledgementv2` (no está en
-     `documentos/pcs-valencia/samples/`, solo están los otros 5; en
-     `mapper.js:557-565` se marca como `_unhandled`). Habría que
-     pedirlo a Arantxa Nebot o sacarlo de la doc del puerto.
-
-3. **Política de retención / acumulación en el PCS: desconocida.** El
-   manual `pcs11-mbase004` no regula expiración, caducidad ni cuota de
-   mensajes pendientes. El bloqueo previo de abril 2026 se resolvió el
-   2026-05-12 con un reset de perfiles de `messaging.JSRO`; no quedó
-   registrada la causa raíz. Pendiente: preguntar a Arantxa Nebot
-   "¿qué hacéis con los pendientes acumulados, los caducáis o los
-   conserváis? ¿Hay un máximo a partir del cual la cuenta se ve
-   afectada?". Según la respuesta:
-   - Si los conservan sin caducar → sync por fechas (punto 1) basta,
-     el ack queda como mejora opcional.
-   - Si los caducan → hay que priorizar el Acknowledgementv2 (punto
-     2) para no perder mensajes antiguos.
-
-4. **Texto del correo del 2026-05-13 a José Miguel.** Inicialmente
-   redacté que "queda un fleco del lado del puerto: que reconozcan que
-   ya hemos consumido cada mensaje". Es **incorrecto**: el ack lo
-   emitimos nosotros al PCS, no al revés. Si en algún momento se
-   vuelve a redactar comunicación al cliente sobre el PCS, no atribuir
-   ese fleco al puerto — es deuda nuestra.
-
-
-## Memorias de este proyecto (fuera del índice global de memoria)
-
-> Sacadas del índice global `MEMORY.md` el 2026-06-28 para aligerarlo; siguen en
-> `~/.claude/projects/-Volumes-THUND-proyectos/memory/`. Léelas al trabajar aquí:
-
-- `project_pasarela_en_espera.md` — Estado del nodo de datos (superapitrans/pasarela, futuro SaycuNode) al 2026-06-03. Ambos proveedores sincronizan en prod. chofocles separado a repo propio llor/chofocles el 2026-06-03.
+# GUION — nodo de datos de superapitrans (carpeta `pasarela/`)
+
+Última actualización: 2026-08-20 (reescrito como guion según la norma
+«GUION.md — UN GUION DE VERDAD» del CLAUDE.md global; la crónica vive en el
+historial de git y los errores en ERRORES_SOLVENTADOS.md).
+
+## OBJETIVO
+
+Nodo de datos del grupo Saycu, sub-servicio de superapitrans («pasarela» es
+solo el nombre propio de la carpeta `pasarela/` y de sus artefactos):
+intermediario entre clientes externos y proveedores externos. OUTBOUND:
+sincroniza por cron los datos de cada proveedor (Satelles, PCS Valencia) y
+los persiste en tablas canónicas multi-tenant (`saycu_pasarela_<CODIGO>`).
+INBOUND: los expone por API con bearer key; el consumidor final (NodeImport,
+ver GUION de superapitrans) los vuelca a las columnas TT* de a3ERP. Este
+guion describe el framework: las empresas y sus credenciales viven en BD y
+en la UI de admin.saycusoft.es, no aquí.
+
+## MÉTODO VIGENTE
+
+Routing (system-caddy, `BASE_DOMAIN_SUPERAPI`, red Docker): CLAUDE.md de
+superapitrans. El frontal enruta `[dev-]api.<dominio>/pasarela/*` al
+contenedor `pasarela_api:3412` con `rewrite * /api{path}`: cualquier
+sub-ruta cae sola (no se toca Caddy para añadir un proveedor); por eso el
+código registra `/health` (healthcheck Docker) y `/api/health` (externo).
+
+- Piezas (estructura real): `api/` (Express `pasarela_api`: `auth/`,
+  `routes/` — auth, datos, me, satelles, vista-prefs —, `proveedores/
+  {satelles,pcs-valencia}/` con client+mapper+sync, `cron.js`, `secrets.js`,
+  `utils/fallo-persistente.js` + clientes ErrorReporter/ControlGlobal);
+  `panel/` (panel web del nodo, React + `saycu-theme`, servido en
+  `[dev-]panel.<dominio>`); `db/migrations/` (0001…0017); `_scripts/`
+  (deploy-dev/prod, deploy-panel-dev/prod, restart-with-env-reload.sh,
+  bootstrap-env.sh).
+
+- KEYS, dos dimensiones:
+  - INBOUND, por empresa+aplicación: `saycu_admin.pasarela_clientes_keys`
+    (hash bcrypt, formato `pas_live_<32hex>`). Emitir: `docker exec
+    pasarela_api node scripts/generar-key.js <EMPRESA> <aplicacion>
+    <scopes,csv> [expira_dias]` — el secreto se imprime UNA vez; si se
+    pierde, se rota. El tenant se infiere de la key. Scopes: `datos.read`,
+    `datos.write`, `satelles.read`, `satelles.write`.
+  - OUTBOUND, por (empresa, proveedor):
+    `saycu_admin.pasarela_proveedores_credenciales`, cifradas AES-256-GCM
+    con `PASARELA_SECRETS_KEY` (una clave por entorno). Se meten desde la
+    UI del admin (ficha de empresa → «Proveedores de datos»: selector de
+    proveedor + cuadros Sandbox/Producción con switch Activo, campos
+    pintados por el descriptor) o por CLI (`scripts/set-satelles-cred.js`,
+    `scripts/set-pcs-valencia-cred.js`). El cron las recoge en su próximo
+    tick sin reiniciar.
+
+- CATÁLOGO de proveedores CERRADO (`saycu_admin.pasarela_proveedores`):
+  cada proveedor nuevo entra por migración SQL junto con su cliente HTTP y
+  su mapper; no se edita desde UI (el backend solo expone lectura). El
+  descriptor `campos_credenciales` (JSONB `{clave,label,secreto,ayuda}`)
+  pinta el formulario de credenciales del admin.
+
+- MODELO DE DATOS por tenant (`saycu_pasarela_<CODIGO>`): 4 tablas
+  canónicas — `pedidos` (cabecera), `albaranes` (0..N), `facturas` (0..N,
+  vacía: ningún proveedor las expone aún), `paradas` (0..N, FK a pedido +
+  FK opcional a albarán; si el albarán es ambiguo, NULL) — más auxiliares
+  por migración (`pedidos_pcs_extra` con el terminal de devolución del
+  contenedor, `paradas_documentos`). Nombres limpios SIN prefijo TT (la
+  tabla es nuestra y guarda más de lo que pide a3ERP). Tipos y constraints
+  exactos: `db/migrations/`; extracción real: `proveedores/*/mapper.js`.
+  Correspondencia a3ERP → campo nuestro (cabecera): TTIDVI=`id_viaje`,
+  TTCLIE=empresa-tenant Saycu (`cliente_codigo`+`cliente_cif`),
+  TTDELE=`delegacion_codigo`, TTCORR=`email_chofer`/`email_remitente`,
+  TTIDRU=`id_ruta_externa`, TTFECH=`fecha_plan`+`fecha_reparto`,
+  TTCHOP/TTCHOS=`chofer_principal/secundario_codigo`+`_cif`,
+  TTTERC=`tercero_codigo`+`_cif`, TTCABE=`matricula_tractor`,
+  TTPLAT=`matricula_remolque`, TTNPEDI=`numero_pedido` (VARCHAR(500),
+  concatenación con `;`), TTNALB=`albaranes_concatenados` (ídem),
+  TTTIPO=`tipo` (ALBARAN|PEDIDO), TTESTA=`estado` (5 valores: PENDIENTE,
+  LEIDO, ACEPTADO, INICIADO, TERMINADO). En paradas: TTIDRE=
+  `reparto_id_externo`, tipo CARGA|DESCARGA, dirección/CP/municipio/
+  provincia/país/teléfono/contacto, producto+cantidad+unidad. Kms reales
+  del viaje en cabecera: `km_total`/`km_vacio`/`km_cargado` (suma de
+  `trips[].summary` de Satelles). Nº expedición: `pedidos.expedicion`
+  (customerShipment concatenado). Toda migración `*_tenant_*` se aplica a
+  TODOS los tenants con el servicio en `saycu_admin.empresas.servicios`,
+  no solo a los del proveedor que la motivó; el drift lo vigila
+  `saycu/_scripts/audit-tenant-schema.sh`.
+
+- PROVEEDOR SATELLES (ERPSYNC): OAuth2 client_credentials (token TTL
+  3600 s cacheado; 401 → refresh + reintento; host base en la ficha del
+  proveedor — el real verificado es `ecotrans.satelles.es`). Scopes
+  outbound: `satelles-publications:finished-routes` (cola) y
+  `satelles-erpsync:write` (maestros). Sync: `GET /puba/routes/finished` →
+  upsert pedido/albaranes/paradas → `POST …/commit` con los
+  `publicationIds` procesados sin error (el commit ES el ack: lo
+  commiteado deja de aparecer). Idempotencia: clave única
+  (proveedor, publication_id) — reprocesar actualiza, no duplica.
+  RELAY de maestros para el ERP (sin persistencia):
+  `GET/PUT /pasarela/satelles/drivers[/:code]` y `…/vehicles[/:code]`
+  (scopes inbound `satelles.read`/`satelles.write`; errores
+  `sin_credencial_satelles` 404, `satelles_upstream_error` 502 con
+  status+detail, `name_requerido`/`licensePlate_requerido` 400;
+  `?entorno=sandbox` opcional). Contrato real del driver: `name`, `email`
+  (1-254) e `idCard` (1-20) OBLIGATORIOS (422 si faltan). Satelles solo
+  funciona DESDE PROD: su Cloudflare tiene en allowlist la IP de salida
+  del servidor (149.86.232.18); desde dev u otra IP responde challenge.
+
+- PROVEEDOR PCS VALENCIA (REST messaging): OAuth2 client_credentials.
+  Sync: `GET /messages/download/{box}` (pendientes) → downloadMessage →
+  upsert pedido/paradas/`pedidos_pcs_extra` → `DELETE /messages/download/
+  {box}/{id}` (ack; 202 idempotente, 404 = ya borrado por plazo de
+  gracia). Si el DUT no trae Orden de Entrega, los campos
+  `terminal_devolucion_*` quedan NULL y el panel muestra «no incluida».
+
+- CRON configurable EN CALIENTE: expresión en
+  `saycu_admin.pasarela_config` (clave `cron_expr`; cron estándar o
+  `every:Nm`), editable desde el admin («Datos Nodo API» → ⚙️, lista
+  cerrada de minutos/horas). El watcher la relee cada 60 s y reprograma
+  sin redespliegue; si la guardada es inválida, mantiene la anterior y
+  avisa por email. Sin mensajes nuevos, el ciclo retorna inmediato.
+
+- AVISOS (ErrorReporter del grupo): el nodo reporta como
+  `superapitrans-nodo-api` (`[PROCESS][SUPERAPITRANS-NODO]`); ControlGlobal
+  sigue registrando `pasarela-api` (catálogo de versiones, no un aviso).
+  Un fallo del cron solo se reporta si PERSISTE 2 ciclos
+  (`UMBRAL_CICLOS_FALLO`; rastreador de rachas `utils/
+  fallo-persistente.js`, estado en memoria: un reinicio da margen de 1
+  ciclo). Seis rastreadores: Satelles descarga/guardado de publicación/
+  commit; PCS listado/mensaje/ack. Al recuperarse mandan `reportRecovery`
+  con el payload del aviso original y el receptor emite «CORREJIDO:
+  <asunto>». Las llamadas en vivo (relay de maestros) devuelven 502 al
+  cliente, sin rastreador. Destinatarios: lista única del admin
+  (`security_alert_recipients.receive_error_reports`).
+
+- TESTS (node:test, sin deps): `docker exec -w /app pasarela_api npm test`
+  — el script pasa el patrón de ficheros (`node --test tests/` a secas ya
+  no vale con Node 22); los de integración necesitan BD → dentro del
+  contenedor. Datos idempotentes de `tests/setup.js`: empresa TEST, BD
+  `saycu_pasarela_test`, keys test-read/test-rw regeneradas, seed
+  `TEST-SEED-1`. REGLA OPERATIVA: endpoint nuevo o contrato cambiado =
+  tocar A LA VEZ `api/src/routes/…`, `api/tests/api.test.js` y el manual
+  `ApiDocsPasarela.jsx` de admin.saycusoft.es (regla repetida como
+  cabecera en `tests/api.test.js` y `src/app.js`). El Dockerfile copia
+  `api/tests` para poder ejecutarlos dentro.
+
+- BD: `pasarela_api` conecta como `saycutrans` (`DB_USER=saycutrans`): el
+  auto-provisioning crea los tenants con ese owner y `saycuadmin` no tiene
+  permisos en sus tablas.
+
+- GOTCHAS:
+  - `docker compose restart` NO recarga env_file: usar
+    `up -d --force-recreate api` o `_scripts/restart-with-env-reload.sh`.
+    Crítico con `PASARELA_DRY_RUN`: si crees que está activo y no lo está,
+    el sync commitea y las publicaciones desaparecen de la cola de
+    Satelles.
+  - Migración tenant lanzada con `psql -U postgres` deja las tablas con
+    owner postgres y el nodo falla con «permission denied»: toda migración
+    que cree tablas termina con `ALTER … OWNER TO saycutrans` idempotente
+    (la 0002 ya lo hace).
+  - `PASARELA_SECRETS_KEY` debe coincidir EN RUNTIME entre el admin y el
+    nodo (printenv dentro del contenedor, no solo el `.env`). Si cambia
+    después de cifrar, las credenciales quedan indescifrables: borrar y
+    volver a guardarlas desde la UI. Formato AES-GCM `[iv|tag|ciphertext]`
+    idéntico entre `utils/pasarela-secrets.js` (admin) y
+    `api/src/secrets.js`.
+
+- DOCUMENTOS (`superapitrans/documentos/`): `campos.pdf` (campos TT* que
+  espera el módulo de transporte del N1), manuales Satelles ERPSYNC
+  (vigente v1.8.0 en `satelles/`; versiones anteriores conservadas) y
+  colección Postman con cuerpos reales. Los añadidos de la v1.7+
+  (`areaCodes`, delivery-modes…) no afectan al sync actual; solo
+  importarían si se sincronizan maestros DESDE Satelles.
+
+## ESTADO (2026-08-20)
+
+- Los dos proveedores operativos EN PROD: Satelles (GFE) y PCS Valencia
+  (JSR). Cadencia vigente del cron: cada 5 min (configurable en caliente).
+- Avisos con recuperación («CORREJIDO») en dev y prod desde el 15/08;
+  tests 43/43 en verde (contenedor de dev, 15/08).
+- Migraciones aplicadas hasta la 0017 en dev y prod (tenants sin tabla
+  `pedidos` se saltan).
+- Documentos de destino de Satelles: su API los soporta y el cliente está
+  preparado, pero GFE aún no los carga.
+
+## PLAN / PENDIENTES VIGENTES
+
+- Alta real de conductores/vehículos de GFE en Satelles: la hace el ERP
+  del N1 por el relay (no se crean datos de pega en el maestro de un
+  tercero). El PUT de vehicle sigue sin probar; su obligatoriedad la
+  confirmará el primer alta real.
+- Decidir los 2 tests preexistentes de marcar-procesado (PROCESADO vs
+  TERMINADO).
+- PCS Valencia — flecos abiertos (verificados en vivo el 2026-05-13):
+  - Acknowledgementv2: la cuenta PUEDE escribir (verificado), sin
+    implementar. Falta pasar `uploadMessage` (pcs-valencia/client.js) a
+    multipart/form-data con campo `File` y conseguir el sample real del
+    mensaje (pedirlo a Arantxa Nebot; en el mapper está `_unhandled`).
+  - Política de retención de pendientes del PCS: desconocida; preguntar a
+    Arantxa Nebot. Si los caducan → priorizar el ack; si los conservan →
+    basta el sync (el ack queda como mejora).
+  - Consulta por fechas: funciona (`toDate` exclusivo; techo 1000 items
+    por respuesta, paginación sin confirmar). Antes de refactorizar el
+    sync a ventana móvil con dedup, confirmar la paginación.
+  - En comunicación al cliente sobre el PCS: el ack pendiente es deuda
+    NUESTRA (lo emitimos nosotros al PCS), no un fleco del puerto.
+
+## DECISIONES / CAMBIOS DE RUMBO (vigentes, con fecha)
+
+- 2026-08-15: los avisos del nodo se identifican como
+  `superapitrans-nodo-api` — ningún aviso se llama «pasarela» (norma del
+  usuario); los seis rastreadores de racha avisan también de la
+  recuperación («CORREJIDO»).
+- 2026-06-30: anti-ruido — un fallo del cron solo avisa si persiste 2
+  ciclos (antes era reporte inmediato o catch mudo).
+- 2026-06-27: relay de maestros conductores/vehículos para el ERP
+  (petición expresa del N1). La key `a3erp` se amplió de scopes SIN tocar
+  su secreto — OJO: no emitir una key nueva con aplicación `a3erp` (el ON
+  CONFLICT pisaría el secreto que usa NodeImport).
+- 2026-06-24: destinatarios de avisos = lista única del admin; los
+  informes diarios «todo OK» se apagaron (avisar solo en transición).
+- 2026-06-03: alcance por proveedor (decisión del N1) — Satelles SOLO
+  datos para facturación (nada más salvo petición expresa: solo podemos
+  hacer lo que Satelles deja); PCS Valencia alcance más amplio,
+  extensible cuando toque.
+- 2026-05-26: toda migración `*_tenant_*` se aplica a TODOS los tenants
+  del servicio, no solo a los del proveedor que la motivó.
+- 2026-05-19: frecuencia del cron editable desde el admin, formato
+  `every:Nm` además del cron estándar.
