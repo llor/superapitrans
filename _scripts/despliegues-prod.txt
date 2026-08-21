@@ -1,0 +1,8 @@
+# Despliegues de PRODUCCIÓN de este repo, una línea por componente:
+#   componente  alias-ssh  [rutas de git que forman el componente…]
+# Lo lee antes-de-trabajar.sh para comparar el commit desplegado con main (solo
+# cuenta los commits que tocan esas rutas); el commit lo apunta cada deploy con
+# workspace-config/scripts/registrar-despliegue.sh en
+# <alias>:/var/opt/despliegues/<componente>.txt.
+superapitrans-nodo-api  saycu  pasarela :(exclude)pasarela/panel :(exclude)pasarela/saycu-theme
+superapitrans-nodo-panel  saycu  pasarela/panel pasarela/saycu-theme

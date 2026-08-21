@@ -51,3 +51,9 @@ if [ -f "$_ebd_raiz/_scripts/reflejar-estructura-bd.sh" ]; then
   bash "$_ebd_raiz/_scripts/reflejar-estructura-bd.sh" "$_ebd_proy" || true
 fi
 # ────────────────────────────────────────────────────────────────────────
+
+# ── Registrar el commit desplegado (nunca hace fallar al deploy) ────────────
+# Para que antes-de-trabajar.sh avise cuando main vaya por delante de producción
+# (manifiesto: _scripts/despliegues-prod.txt del repo). Añadido el 2026-08-21.
+"$HOME/proyectos/workspace-config/scripts/registrar-despliegue.sh" "$REMOTE_HOST" "superapitrans-nodo-api" prod "$(cd "$(dirname "$0")" && pwd)" \
+  || echo "AVISO: no se pudo registrar el despliegue" >&2

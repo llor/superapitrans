@@ -39,3 +39,9 @@ sleep 2
 ssh "$REMOTE_HOST" "docker ps --filter name=pasarela_panel --format 'table {{.Names}}\t{{.Status}}'"
 
 log "OK. Probar:  https://panel.saycunode.saycutrans.es/pasarela/"
+
+# ── Registrar el commit desplegado (nunca hace fallar al deploy) ────────────
+# Para que antes-de-trabajar.sh avise cuando main vaya por delante de producción
+# (manifiesto: _scripts/despliegues-prod.txt del repo). Añadido el 2026-08-21.
+"$HOME/proyectos/workspace-config/scripts/registrar-despliegue.sh" "$REMOTE_HOST" "superapitrans-nodo-panel" prod "$(cd "$(dirname "$0")" && pwd)" \
+  || echo "AVISO: no se pudo registrar el despliegue" >&2
