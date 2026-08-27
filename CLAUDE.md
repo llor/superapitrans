@@ -1,120 +1,14 @@
-# DIRECTRICES — superapitrans
-Complementan las directrices globales del CLAUDE.md de /proyectos/
-y las directrices de grupo en el CLAUDE.md de /proyectos/saycu/
+# NORMAS DE SUPERAPITRANS
 
+Complementan a las personales, a las del workspace y a las del grupo Saycu, que mandan sobre estas. Estado, método y decisiones en GUION.md. Al hablar de este proyecto, el nodo de datos se llama "superapitrans"; la carpeta pasarela/ conserva su nombre propio.
 
-## NATURALEZA DEL PROYECTO
+## Normas propias
+- Todo en Docker, en dev y en prod, con detección automática por /etc/hosts y .env-dev o .env-prod, igual que saycutrans; despliegue solo con los scripts de _scripts/.
+- Base de datos con el patrón Saycu: PostgreSQL multi-tenant con saycu_admin como catálogo maestro y una base por empresa y producto (saycu_producto_CODIGO); migraciones idempotentes en db/migrations/, primero en saycudev y después en saycu.
+- Reutilizar el sistema de autenticación de saycutrans (JWT, claves de entorno, formato del payload) salvo decisión explícita en contra; compartir saycu-theme en cualquier panel o web hija, y los patrones de logger, respuesta y middleware de saycutrans cuando apliquen.
+- No tiene Caddy propio: se registra como bloque dentro del frontal único del servidor, system-caddy (saycu/saycucontrol/system-caddy): conf/Caddyfile.dev y conf/Caddyfile.prod, docker-compose.yml (red externa superapitrans_network y variable BASE_DOMAIN_SUPERAPI) y el .env del servidor. Tras tocarlo: caddy validate, rsync a saycudev y saycu y recrear el contenedor system_caddy.
+- El dominio vive en una sola variable, BASE_DOMAIN_SUPERAPI, en el .env de system-caddy (hoy saycunode.saycutrans.es): prohibido hardcodear ese dominio ni ningún otro en el código o en docker-compose, y prohibido guardar dominios en la base de datos (Caddy, DNS, frontends y APK los necesitan al compilar o arrancar, no en tiempo de ejecución). Subdominios: api.BASE_DOMAIN_SUPERAPI en prod y dev-api.BASE_DOMAIN_SUPERAPI en dev, con enrutado por ruta para cada sub-servicio (handle_path y rewrite a /api); un sub-servicio nuevo replica el bloque apuntando a su contenedor. Los DNS panel, dev-panel, www y dev-www están reservados sin cablear. Al cambiar el dominio definitivo: una línea en el .env de system-caddy en los dos servidores, los registros A del DNS, recompilar las APK y frontends que lo lleven compilado y actualizar la monitorización.
+- La red docker superapitrans_network es externa, compartida por system_caddy y los sub-servicios; se crea una sola vez por servidor (docker network create superapitrans_network) y cada sub-servicio la declara external en su docker-compose.
 
-superapitrans es un servicio API en `debian.saycusoft.es` consumido por
-varios tipos de clientes (web, app móvil, sub-servicios, terceros). Es el
-contenedor común de servicios API del grupo saycutrans.
-
-Sub-proyectos dentro de esta carpeta:
-- `pasarela/` (sistema de API con keys + tabla canónica + proveedores).
-- (chofocles fue sub-servicio hasta el 2026-07-02: apartado del grupo y
-  congelado; su repo vive ahora en `/home/llor/proyectos/chofocles`.)
-
-
-## SERVIDOR Y ENTORNO
-
-- Servidor: `debian.saycusoft.es` (mismos alias del grupo: `saycu` prod,
-  `saycudev` dev).
-- TODO en Docker, dev y prod. Si funciona en Docker local → funciona en
-  prod.
-- Detección automática dev/prod vía `/etc/hosts` y `.env-dev` / `.env-prod`,
-  igual que saycutrans.
-- Despliegue por scripts en `_scripts/` del proyecto. Nada de `scp` directo
-  ni `docker compose` manual.
-
-
-## BBDD
-
-- Patrón Saycu: PostgreSQL multi-tenant. `saycu_admin` como catálogo
-  maestro compartido; una BD por empresa por producto cuando aplique
-  (`saycu_<producto>_<CODIGO>`).
-- Migraciones obligatorias en `db/migrations/` con `IF NOT EXISTS` /
-  `IF EXISTS` (idempotentes). Aplicar primero en `saycudev` y luego en
-  `saycu`.
-
-
-## COHERENCIA CON saycutrans
-
-- Reutilizar el sistema de auth de saycutrans (JWT, claves env, formato de
-  payload) salvo decisión explícita en contra.
-- Compartir el tema CSS `saycu-theme` para cualquier panel/web hija.
-- Compartir patrones de logger, response y middleware con saycutrans
-  cuando sea aplicable.
-
-
-## FRONTAL CADDY = system-caddy GLOBAL
-
-superapitrans NO tiene Caddy propio. Se registra como bloque dentro del
-frontal único del servidor (`system-caddy`, en
-`saycu/saycucontrol/system-caddy/`).
-
-Para añadir/modificar el routing de superapitrans hay que tocar
-`saycucontrol/system-caddy/`:
-- `conf/Caddyfile.dev` y `conf/Caddyfile.prod` (bloques superapitrans).
-- `docker-compose.yml` (red externa `superapitrans_network` y variable
-  `BASE_DOMAIN_SUPERAPI`).
-- `.env` del servidor (`BASE_DOMAIN_SUPERAPI=<dominio>`).
-
-Tras tocar lo anterior: validar Caddyfile (`caddy validate`), rsync a
-saycudev/saycu y recrear el contenedor `system_caddy`.
-
-
-## DOMINIOS Y SUBDOMINIOS
-
-**Variable única `BASE_DOMAIN_SUPERAPI`** en el `.env` de system-caddy.
-Único punto de cambio cuando se asigne el dominio definitivo. Hoy
-`saycunode.saycutrans.es`; mañana, lo que sea.
-
-Subdominios cableados:
-- PROD: `api.${BASE_DOMAIN_SUPERAPI}`     → todos los sub-servicios por
-  path (`/pasarela/...`, futuros).
-- DEV : `dev-api.${BASE_DOMAIN_SUPERAPI}` → ídem.
-
-Path-routing por sub-servicio (Caddy `handle_path /<servicio>/*` +
-`rewrite * /api{path}`). Para añadir un nuevo sub-servicio basta replicar
-el bloque en los Caddyfile apuntando a su contenedor.
-
-DNS reservados pero sin cablear todavía: `panel`, `dev-panel`, `www`,
-`dev-www`. Cuando se necesiten, añadir bloques en los Caddyfile de
-system-caddy.
-
-PROHIBIDO:
-- Hardcodear `saycunode.saycutrans.es` (ni cualquier otro dominio) en el código
-  o en docker-compose. Siempre vía `${BASE_DOMAIN_SUPERAPI}` o sus
-  derivados.
-- Almacenar dominios en BBDD. Caddy/DNS/Frontends/APK los necesitan en
-  build/start time, no en runtime de aplicación.
-
-Cuando se cambie el dominio definitivo:
-- 1 línea en `system-caddy/.env` (saycu y saycudev).
-- DNS del registrar (registros A nuevos).
-- Recompilar y redistribuir cualquier APK que lo lleve compilado.
-- Recompilar cualquier frontend que lo reciba como build arg.
-- Actualizar monitorización Saycu (ACCESS_URLS, HEALTH_URLS).
-
-
-## RED DOCKER `superapitrans_network`
-
-Red externa compartida entre `system_caddy` y los sub-servicios de
-superapitrans. Debe existir antes de arrancar `system_caddy`. Crear una
-sola vez por servidor:
-
-    docker network create superapitrans_network
-
-Cada sub-servicio (pasarela, futuros) la declara como `external: true`
-en su propio `docker-compose.yml` y conecta su contenedor backend a ella.
-
-
-## REGLA DE ALCANCE
-
-Aplican íntegramente las reglas inviolables del CLAUDE.md global y del
-CLAUDE.md del grupo Saycu:
-- Coherencia de diseño (variables CSS y clases existentes).
-- Alcance exacto: ni más ni menos de lo pedido.
-- Cero fallbacks, cero hardcoding.
-- Postgres por defecto para datos persistentes.
-- Lo que sea visible al usuario debe desplegarse antes de darlo por hecho.
+## Cómo está montado (hechos)
+- Servicio API en debian.saycusoft.es (alias saycu para prod y saycudev para dev), contenedor común de servicios API del grupo saycutrans, consumido por web, app móvil, sub-servicios y terceros. Sub-proyecto pasarela/ (API con claves, tabla canónica y proveedores). chofocles fue sub-servicio hasta el 02/07; está apartado del grupo y congelado, con su repo en /home/llor/proyectos/chofocles.
