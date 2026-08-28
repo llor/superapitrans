@@ -4,6 +4,19 @@ Archivo dedicado a la resolución de errores (norma «GUION.md — UN GUION DE
 VERDAD» del CLAUDE.md global): qué falló, causa verificada y cómo se
 solventó. Creado el 2026-08-20 trasladando las entradas de error del GUION.
 
+## [2026-08-28] 500 «next is not a function» ante un JSON mal formado — EN DEV (rama hotfix/error-reporter-parche-express), VIVO EN PROD
+
+El mismo fallo que en saycutrans (hash 7fb36819daed): el parche de Express del
+avisador de errores (`api/src/utils/error-reporter-client.js`,
+`patchExpressLayer`) entregaba el error de `express.json` a los middlewares
+async normales de tres parámetros (como el limitador de peticiones), que
+reventaban con «next is not a function» y acababan en 500 con aviso. Arreglo:
+copia byte a byte del fichero arreglado de saycutrans (solo los manejadores de
+cuatro parámetros reciben el error). Comprobado en el contenedor de dev
+(`pasarela_api`) con un Express mínimo: 400 con el fichero nuevo, 500 «next is
+not a function» con el antiguo. Queda por decidir si el JSON mal formado debe
+responder 400 sin aviso, como se hizo en saycutrans (`src/index.js`).
+
 ## [2026-08-15] La recuperación de un corte no avisaba — EN DEV Y PROD
 
 El corte de Satelles del 14/08 (HTTP 522 de Cloudflare, GFE, 10 min) avisó

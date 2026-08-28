@@ -169,6 +169,12 @@ código registra `/health` (healthcheck Docker) y `/api/health` (externo).
 
 ## ESTADO (2026-08-20)
 
+- EN DEV PENDIENTE DE PROMOCIONAR (28/08): arreglo del parche de Express del
+  avisador de errores (`api/src/utils/error-reporter-client.js`, copia byte a
+  byte de saycutrans; detalle en ERRORES_SOLVENTADOS), en la rama
+  `hotfix/error-reporter-parche-express`, desplegado y comprobado en dev.
+  Checklist: fusionar en main, deploy a prod con `_scripts/deploy-prod.sh`
+  (registra el despliegue) y comprobar.
 - Los dos proveedores operativos EN PROD: Satelles (GFE) y PCS Valencia
   (JSR). Cadencia vigente del cron: cada 5 min (configurable en caliente).
 - Avisos con recuperación («CORREJIDO») en dev y prod desde el 15/08;
