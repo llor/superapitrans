@@ -113,6 +113,15 @@ function patchExpressLayer() {
       const _he = Layer.prototype.handle_error;
       Layer.prototype.handle_error = function (err, req, res, next) {
         const fn = this.handle;
+        // Solo los manejadores de ERROR (cuatro parámetros) reciben el error,
+        // como hace Express: un middleware normal async (tres parámetros, por
+        // ejemplo el limitador de peticiones) se llamaba aquí con los
+        // argumentos corridos (request = el error, next = res) y reventaba con
+        // «next is not a function» en cuanto algo fallaba antes de él (un JSON
+        // mal formado en el body). Detectado el 2026-08-28.
+        if (typeof fn === 'function' && fn.length !== 4) {
+          return next(err);
+        }
         if (typeof fn === 'function' && fn.constructor && fn.constructor.name === 'AsyncFunction') {
           Promise.resolve(fn.call(this, err, req, res, next)).catch(next);
           return;
