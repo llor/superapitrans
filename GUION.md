@@ -57,6 +57,18 @@ con SaycuImport `SS_IMP`). Clonado de `datacontrol/A3/SaycuImportV2/`.
   sin contraseña o crear usuario en a3ERP). La empresa real del N1 es
   TRANSCOLLADO (BD creada; faltan permisos del usuario Windows).
 
+## Estado
+
+- EN DEV PENDIENTE DE PROMOCIONAR (30/08, encargo del usuario): un cuerpo
+  JSON mal formado responde 400 y NO manda email de aviso — el manejador
+  global de `pasarela/api/src/app.js` respeta el status 4xx del error y solo
+  reporta los 5xx, y el mismo criterio va en `attachExpress` del cliente
+  compartido del ErrorReporter (detalle en ERRORES_SOLVENTADOS.md). En la
+  rama `hotfix/error-reporter-parche-express`, desplegado y comprobado en dev
+  (HTTP 400 y cero filas nuevas en `saycu_admin.error_reports`).
+  Checklist: fusionar en main, deploy a prod con
+  `pasarela/_scripts/deploy-prod.sh` y comprobar.
+
 ## Pendientes vigentes
 
 - NodeImport en a3win: el `config.json` real de la carpeta Publish apunta
