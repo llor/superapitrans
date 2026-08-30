@@ -60,6 +60,23 @@ function buildApp() {
     });
 
     app.use((err, req, res, _next) => {
+        // Un 4xx NO es un bug del backend: lo provoca el cliente (cuerpo JSON
+        // mal formado, validación, permiso). Se responde con SU status y NO se
+        // manda email; solo los 5xx son fallos del servidor (encargo del
+        // usuario del 2026-08-30; mismo criterio que saycutrans).
+        const status = Number(err && (err.httpStatus || err.status || err.statusCode)) || 0;
+        const esClientError = status >= 400 && status < 500;
+        if (esClientError) {
+            res.locals.errorCode = 'bad_request';
+            console.warn('[pasarela-api] %d %s %s — %s', status, req.method, req.originalUrl, err.message);
+            return res.status(status).json({
+                ok: false,
+                error: err.type === 'entity.parse.failed' ? 'bad_json' : 'bad_request',
+                detalle: err.type === 'entity.parse.failed'
+                    ? 'Cuerpo de la petición mal formado (JSON no válido)'
+                    : (err.message || 'Petición no válida'),
+            });
+        }
         res.locals.errorCode = 'internal_error';
         console.error('[pasarela-api] error no controlado:', err);
         errorReporter.reportError({

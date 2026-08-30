@@ -143,23 +143,42 @@ function attachExpress(app, opts = {}) {
   patchExpressLayer();
 
   app.use((err, req, res, _next) => {
+    // Un 4xx NO es un bug del backend: lo provoca el cliente (cuerpo JSON mal
+    // formado, validación, permiso). Se responde con SU status y NO se manda
+    // email; solo los 5xx son fallos del servidor. Sin esto, un JSON mal
+    // formado acababa en 500 y en un aviso por correo que nadie tenía que
+    // reparar (encargo del usuario del 2026-08-30, ya aplicado en
+    // saycutrans/api-desktop-pg/src/index.js el 28/08).
+    const status = Number(err && (err.httpStatus || err.status || err.statusCode)) || 0;
+    const esClientError = status >= 400 && status < 500;
     const user = extractUser(req) || {};
-    sendError({
-      source: 'backend',
-      severity: 'error',
-      message: err && err.message ? err.message : String(err),
-      stack: err && err.stack,
-      http_method: req.method,
-      http_url: req.originalUrl,
-      http_status: 500,
-      user_id: user.id,
-      user_login: user.usuario || user.login || user.email,
-      empresa_codigo: user.empresa || user.empresa_codigo,
-      user_agent: req.headers && req.headers['user-agent'],
-      client_ip: req.ip,
-      request_payload: { query: req.query, body: req.body, params: req.params },
-    });
-    if (!res.headersSent) res.status(500).json({ error: 'Error interno del servidor' });
+    if (!esClientError) {
+      sendError({
+        source: 'backend',
+        severity: 'error',
+        message: err && err.message ? err.message : String(err),
+        stack: err && err.stack,
+        http_method: req.method,
+        http_url: req.originalUrl,
+        http_status: 500,
+        user_id: user.id,
+        user_login: user.usuario || user.login || user.email,
+        empresa_codigo: user.empresa || user.empresa_codigo,
+        user_agent: req.headers && req.headers['user-agent'],
+        client_ip: req.ip,
+        request_payload: { query: req.query, body: req.body, params: req.params },
+      });
+    }
+    if (res.headersSent) return;
+    if (esClientError) {
+      res.status(status).json({
+        error: err && err.type === 'entity.parse.failed'
+          ? 'Cuerpo de la petición mal formado (JSON no válido)'
+          : ((err && err.message) || 'Petición no válida'),
+      });
+      return;
+    }
+    res.status(500).json({ error: 'Error interno del servidor' });
   });
 }
 
