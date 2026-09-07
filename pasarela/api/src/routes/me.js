@@ -48,6 +48,17 @@ async function ensureEmpresaConPasarela(empresaCodigo) {
     return emp;
 }
 
+// GET /api/me/empresa: código y nombre de la empresa del token, para mostrar
+// el nombre en la cabecera de los modales del panel.
+router.get('/empresa', async (req, res, next) => {
+    try {
+        const empresa = await ensureEmpresaConPasarela(req.user.empresa_codigo);
+        res.json({ codigo: empresa.codigo, nombre: empresa.nombre });
+    } catch (err) {
+        next(err);
+    }
+});
+
 router.get('/pedidos', async (req, res, next) => {
     try {
         const empresa = await ensureEmpresaConPasarela(req.user.empresa_codigo);

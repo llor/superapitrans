@@ -13,3 +13,21 @@ html, body, #root {
 }
 
 * { box-sizing: border-box; }
+
+/* Cabecera de empresa activa en TODOS los modales del panel (spec del usuario,
+   2026-07-12): línea pequeña y discreta arriba a la izquierda, sin separador ni
+   cambio de fondo, rellenada por la variable global --empresa-actual (la fija
+   AuthContext con el nombre de la empresa). Sin empresa, la variable no está
+   definida, content queda inválido y el pseudo-elemento no se genera. Cubre las
+   clases contenedoras de los modales. Tamaño ajustable con --sc-modal-empresa-size. */
+.modal::before,
+.ecm-modal::before,
+.paradas-modal::before {
+  content: var(--empresa-actual);
+  display: block;
+  font-size: var(--sc-modal-empresa-size, 0.5em);
+  line-height: 1.25;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+}

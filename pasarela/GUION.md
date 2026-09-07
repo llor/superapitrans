@@ -33,6 +33,14 @@ código registra `/health` (healthcheck Docker) y `/api/health` (externo).
   (deploy-dev/prod, deploy-panel-dev/prod, restart-with-env-reload.sh,
   bootstrap-env.sh).
 
+- Panel del nodo: el cliente (`panel/src/api.js`) pide rutas LIMPIAS
+  (`/auth/login`, `/me/…`, `/vista-prefs/…`); el `/api` lo antepone el
+  rewrite de Caddy en dev y prod, y el proxy de `vite.config.js` en local.
+  Todo endpoint nuevo del panel: ruta limpia en el cliente y router en
+  `/api/<x>` en el backend (y el prefijo nuevo en el proxy de vite). Los
+  modales de modificación muestran el nombre de la empresa (variable CSS
+  `--empresa-actual`, fijada por AuthContext con `GET /me/empresa`).
+
 - KEYS, dos dimensiones:
   - INBOUND, por empresa+aplicación: `saycu_admin.pasarela_clientes_keys`
     (hash bcrypt, formato `pas_live_<32hex>`). Emitir: `docker exec
