@@ -175,14 +175,13 @@ código registra `/health` (healthcheck Docker) y `/api/health` (externo).
   (`areaCodes`, delivery-modes…) no afectan al sync actual; solo
   importarían si se sincronizan maestros DESDE Satelles.
 
-## ESTADO (2026-08-20)
+## ESTADO (2026-09-07)
 
-- EN DEV PENDIENTE DE PROMOCIONAR (28/08): arreglo del parche de Express del
-  avisador de errores (`api/src/utils/error-reporter-client.js`, copia byte a
-  byte de saycutrans; detalle en ERRORES_SOLVENTADOS), en la rama
-  `hotfix/error-reporter-parche-express`, desplegado y comprobado en dev.
-  Checklist: fusionar en main, deploy a prod con `_scripts/deploy-prod.sh`
-  (registra el despliegue) y comprobar.
+- EN PROD desde el 2026-09-07: el parche de Express del avisador de errores
+  (`api/src/utils/error-reporter-client.js`), las rutas limpias del panel
+  (hasta entonces el panel en prod pedía `/pasarela/api/…` y el login
+  devolvía 404; detalle en ERRORES_SOLVENTADOS) y el nombre de la empresa
+  en los modales de modificación.
 - Los dos proveedores operativos EN PROD: Satelles (GFE) y PCS Valencia
   (JSR). Cadencia vigente del cron: cada 5 min (configurable en caliente).
 - Avisos con recuperación («CORREJIDO») en dev y prod desde el 15/08;

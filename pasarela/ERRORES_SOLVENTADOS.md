@@ -4,7 +4,18 @@ Archivo dedicado a la resolución de errores (norma «GUION.md — UN GUION DE
 VERDAD» del CLAUDE.md global): qué falló, causa verificada y cómo se
 solventó. Creado el 2026-08-20 trasladando las entradas de error del GUION.
 
-## [2026-08-28] 500 «next is not a function» ante un JSON mal formado — EN DEV (rama hotfix/error-reporter-parche-express), VIVO EN PROD
+## [2026-09-07] El panel del nodo pedía `/pasarela/api/…` y el login devolvía 404 — EN PROD
+
+Qué falló: en prod (y dev) el panel no podía entrar: `POST /pasarela/api/auth/login`
+llegaba al backend como `/api/api/auth/login` (404). Causa verificada: el
+cliente `panel/src/api.js` anteponía `/api` a todas las rutas y Caddy ya lo
+hace con `rewrite * /api{path}`; solo funcionaba en el dev-server local de
+vite. Cambio: rutas limpias en `api.js` y proxy con rewrite en
+`vite.config.js` (rama `feature/empresa-nombre-modales`, de julio, fusionada
+el 2026-09-07); comprobado en prod: `/pasarela/auth/login` responde 400 con
+`usuario_y_password_requeridos` y el bundle ya no contiene `/api/auth/login`.
+
+## [2026-08-28] 500 «next is not a function» ante un JSON mal formado — EN PROD desde el 2026-09-07
 
 El mismo fallo que en saycutrans (hash 7fb36819daed): el parche de Express del
 avisador de errores (`api/src/utils/error-reporter-client.js`,
