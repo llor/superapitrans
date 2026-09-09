@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
+source "$HOME/proyectos/_scripts/deploy-cronometro.sh"
 
 # deploy-panel-dev.sh — Despliega pasarela/panel a saycudev.
 #

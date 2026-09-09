@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
+source "$HOME/proyectos/_scripts/deploy-cronometro.sh"
 
 # deploy-prod.sh — Despliega pasarela/api a saycu (prod).
 
