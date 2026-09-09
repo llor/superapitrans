@@ -17,6 +17,8 @@ services:
       context: .
       dockerfile: api/Dockerfile
     container_name: pasarela_api
+    # Pico medido el 2026-09-09: 65 MB.
+    mem_limit: 384m
     env_file:
       - .env
     ports:
@@ -38,6 +40,8 @@ services:
         # prod → https://api.saycunode.saycutrans.es/pasarela.
         VITE_API_BASE: "${VITE_API_BASE:?VITE_API_BASE requerido (ej: https://dev-api.saycunode.saycutrans.es/pasarela)}"
     container_name: pasarela_panel
+    # Pico medido el 2026-09-09: 18 MB.
+    mem_limit: 256m
     networks:
       - superapitrans_net
     restart: unless-stopped
