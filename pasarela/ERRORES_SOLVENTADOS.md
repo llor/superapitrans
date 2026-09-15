@@ -4,6 +4,21 @@ Archivo dedicado a la resolución de errores (norma «GUION.md — UN GUION DE
 VERDAD» del CLAUDE.md global): qué falló, causa verificada y cómo se
 solventó. Creado el 2026-08-20 trasladando las entradas de error del GUION.
 
+## [2026-09-15] La matrícula del tractor del PCS desbordaba y atascaba mensajes — EN DEV Y PROD
+
+Qué falló: en prod (JSR) tres `ReleaseConfirmationv2` del PCS de Valencia
+(VPRT6194731464, 490 y 547) fallaban ciclo tras ciclo con «value too long for
+type character varying(20)» en `upsertPedido`: sin guardar y sin ack, volvían
+a la cola cada 5 minutos. Causa verificada descargando los tres mensajes del
+portal: APM Terminals Valencia (TTCV) manda en `<TruckPlateNumber>` su código
+de cita, `2609150800CTTCVNRTZESCXQ` (24 caracteres), y
+`pedidos.matricula_tractor` era VARCHAR(20). Cambio: migración
+`db/migrations/0018_tenant_matricula_tractor_50.sql` a VARCHAR(50) en todas
+las BDs tenant. Verificado en dev con el XML real (se guarda con sus 24
+caracteres) y `npm test` 43/43; aplicada en prod a las 10:33 y en el ciclo de
+las 10:35 los tres mensajes entraron, se ackearon y avisaron «RECUPERADO tras
+17 ciclos fallando».
+
 ## [2026-09-07] El panel del nodo pedía `/pasarela/api/…` y el login devolvía 404 — EN PROD
 
 Qué falló: en prod (y dev) el panel no podía entrar: `POST /pasarela/api/auth/login`
