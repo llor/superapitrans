@@ -13,11 +13,10 @@ para que el proyecto funcione (una fila de configuración, un catálogo hecho a
 mano, un registro semilla). Si esta lista está vacía, es que no hay ninguno.
 
 - (ninguno declarado)
-
 <!-- ESTRUCTURA AUTOMÁTICA — de aquí abajo lo regenera el deploy, no editar a mano -->
 ## ESTRUCTURA
 
-_Volcada de la base de datos real el 2026-08-07._
+_Volcada de la base de datos real el 2026-09-15._
 
 ```sql
 -- ============================================================
@@ -199,7 +198,7 @@ CREATE TABLE public.pedidos (
     chofer_secundario_cif character varying(20),
     tercero_codigo character varying(50),
     tercero_cif character varying(20),
-    matricula_tractor character varying(20),
+    matricula_tractor character varying(50),
     matricula_remolque character varying(20),
     numero_pedido character varying(500),
     albaranes_concatenados character varying(500),
@@ -228,6 +227,10 @@ CREATE TABLE public.pedidos (
     CONSTRAINT pedidos_origen_check CHECK (((origen)::text = ANY ((ARRAY['cliente_externo'::character varying, 'proveedor_externo'::character varying, 'chofocles_email'::character varying, 'manual_admin'::character varying, 'desconocido'::character varying])::text[]))),
     CONSTRAINT pedidos_tipo_check CHECK (((tipo)::text = ANY ((ARRAY['PEDIDO'::character varying, 'ALBARAN'::character varying])::text[])))
 );
+--
+-- Name: COLUMN pedidos.matricula_tractor; Type: COMMENT; Schema: public; Owner: -
+--
+COMMENT ON COLUMN public.pedidos.matricula_tractor IS 'TTCABE · matrícula del tractor. En PCS Valencia llega de <TruckPlateNumber>, que algunas terminales usan para su código de cita. VARCHAR(50) desde la 0018.';
 --
 -- Name: COLUMN pedidos.numero_pedido; Type: COMMENT; Schema: public; Owner: -
 --
