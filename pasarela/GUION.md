@@ -186,8 +186,8 @@ código registra `/health` (healthcheck Docker) y `/api/health` (externo).
   (JSR). Cadencia vigente del cron: cada 5 min (configurable en caliente).
 - Avisos con recuperación («CORREJIDO») en dev y prod desde el 15/08;
   tests 43/43 en verde (contenedor de dev, 15/08).
-- Migraciones aplicadas hasta la 0017 en dev y prod, y la 0018 en dev
-  (15/09), pendiente de prod (tenants sin tabla `pedidos` se saltan).
+- Migraciones aplicadas hasta la 0018 en dev y prod (tenants sin tabla
+  `pedidos` se saltan).
 - Documentos de destino de Satelles: su API los soporta y el cliente está
   preparado, pero GFE aún no los carga.
 
