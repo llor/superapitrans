@@ -4,6 +4,12 @@ Errores reales con causa verificada y arreglo (norma del 2026-08-20): qué
 falló, causa verificada, qué se cambió y en qué fichero, y la limitación si
 la hay. Lo anterior a este fichero vive en el historial git y en el GUION.
 
+## [2026-09-25] El API de dev arrancaba como producción — DEV (pasarela/.env-dev del servidor)
+
+Qué falló: pasarela_api en saycudev corría con NODE_ENV=production, así que sus avisos de error y su registro en ControlGlobal salían marcados como producción. No manda correos, así que no hubo correos sin «[PRUEBAS]».
+Causa verificada: el Dockerfile (pasarela/api/Dockerfile) fija NODE_ENV=production y el .env-dev del servidor no lo sobrescribía.
+Qué se cambió: NODE_ENV=development en saycudev:/var/opt/superapitrans/pasarela/.env-dev (y .env), contenedor recreado; las plantillas .env-dev.example y .env-prod.example lo llevan explícito (main 2f70b4e, en producción el 25/09). Lo vigila saycu/_scripts/audit-correo-pruebas.sh.
+
 ## [2026-08-30] Un JSON mal formado acababa en 500 y en un email de aviso — EN DEV (hotfix/error-reporter-parche-express), VIVO EN PROD
 
 Qué falló: un cuerpo de petición con JSON no válido —un cliente que envía mal
