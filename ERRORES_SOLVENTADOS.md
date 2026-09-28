@@ -4,6 +4,12 @@ Errores reales con causa verificada y arreglo (norma del 2026-08-20): qué
 falló, causa verificada, qué se cambió y en qué fichero, y la limitación si
 la hay. Lo anterior a este fichero vive en el historial git y en el GUION.
 
+## [2026-09-28] A la base de la empresa TEST de la pasarela le faltaban las columnas de la migración 0014 — DEV (saycu_pasarela_test)
+
+Qué falló: saycu/_scripts/audit-tenant-schema.sh dev encontró que pedidos_pcs_extra de saycu_pasarela_test no tenía las 7 columnas terminal_devolucion_* que las otras tres empresas de dev sí tienen; la tabla no tenía filas.
+Causa: la cabecera de 0014_tenant_pcs_acceptance_company.sql la dirige a las empresas «con servicio pasarela y PCS Valencia activo»; no está comprobado si TEST tenía PCS Valencia al aplicarla.
+Qué se cambió: aplicada en dev la migración canónica (idempotente) a saycu_pasarela_test con el rol dueño de la tabla (saycutrans); la auditoría de dev da 0/4 empresas con drift. saycu_pasarela_test solo existe en dev.
+
 ## [2026-09-25] El API de dev arrancaba como producción — DEV (pasarela/.env-dev del servidor)
 
 Qué falló: pasarela_api en saycudev corría con NODE_ENV=production, así que sus avisos de error y su registro en ControlGlobal salían marcados como producción. No manda correos, así que no hubo correos sin «[PRUEBAS]».
