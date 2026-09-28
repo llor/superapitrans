@@ -131,7 +131,7 @@ código registra `/health` (healthcheck Docker) y `/api/health` (externo).
   fallo-persistente.js`, estado en memoria: un reinicio da margen de 1
   ciclo). Seis rastreadores: Satelles descarga/guardado de publicación/
   commit; PCS listado/mensaje/ack. Al recuperarse mandan `reportRecovery`
-  con el payload del aviso original y el receptor emite «CORREJIDO:
+  con el payload del aviso original y el receptor emite «CORREGIDO:
   <asunto>». Las llamadas en vivo (relay de maestros) devuelven 502 al
   cliente, sin rastreador. Destinatarios: lista única del admin
   (`security_alert_recipients.receive_error_reports`).
@@ -184,7 +184,7 @@ código registra `/health` (healthcheck Docker) y `/api/health` (externo).
   en los modales de modificación.
 - Los dos proveedores operativos EN PROD: Satelles (GFE) y PCS Valencia
   (JSR). Cadencia vigente del cron: cada 5 min (configurable en caliente).
-- Avisos con recuperación («CORREJIDO») en dev y prod desde el 15/08;
+- Avisos con recuperación («CORREGIDO») en dev y prod desde el 15/08;
   tests 43/43 en verde (contenedor de dev, 15/08).
 - Migraciones aplicadas hasta la 0018 en dev y prod (tenants sin tabla
   `pedidos` se saltan).
@@ -218,7 +218,7 @@ código registra `/health` (healthcheck Docker) y `/api/health` (externo).
 - 2026-08-15: los avisos del nodo se identifican como
   `superapitrans-nodo-api` — ningún aviso se llama «pasarela» (norma del
   usuario); los seis rastreadores de racha avisan también de la
-  recuperación («CORREJIDO»).
+  recuperación («CORREGIDO»).
 - 2026-06-30: anti-ruido — un fallo del cron solo avisa si persiste 2
   ciclos (antes era reporte inmediato o catch mudo).
 - 2026-06-27: relay de maestros conductores/vehículos para el ERP

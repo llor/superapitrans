@@ -49,7 +49,7 @@ El corte de Satelles del 14/08 (HTTP 522 de Cloudflare, GFE, 10 min) avisó
 por email pero su curación solo fue al log: incumplía la norma de avisar
 del arreglo por la misma vía. Los seis rastreadores de racha mandan ahora
 `reportRecovery` con el payload guardado (`utils/fallo-persistente.js`) y el
-receptor emite «CORREJIDO: <asunto original>». Probado E2E en dev y prod.
+receptor emite «CORREGIDO: <asunto original>». Probado E2E en dev y prod.
 De paso: `npm test` no arrancaba con Node 22 (`node --test tests/` ya no
 acepta directorio); el script pasa el patrón de ficheros.
 

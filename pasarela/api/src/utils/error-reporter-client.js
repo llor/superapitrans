@@ -188,7 +188,7 @@ async function reportError(input) {
 
 /**
  * Avisa de que un error del que YA se informó ha dejado de ocurrir. El receptor
- * lo manda como «CORREJIDO: <asunto del email de error>».
+ * lo manda como «CORREGIDO: <asunto del email de error>».
  *
  * Hay que pasarle el MISMO payload con el que se reportó el error (message y
  * stack incluidos): el receptor calcula la firma con esos datos para localizar
