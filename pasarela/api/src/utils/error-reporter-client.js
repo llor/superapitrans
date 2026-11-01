@@ -274,6 +274,11 @@ async function sendError(input) {
       user_login: input.user_login,
       empresa_codigo: input.empresa_codigo,
       user_agent: input.user_agent,
+      // La IP del cliente de la llamada que falló (la de attachExpress o la
+      // que pase quien avisa): el receptor la apunta como «IP cliente» de los
+      // avisos de nuestros servidores (25/10/2026). Hasta entonces no se
+      // mandaba y se perdía.
+      client_ip: input.client_ip,
       request_payload: input.request_payload,
       extra: input.extra,
       // true solo en los avisos de reportRecovery (el error ya no ocurre).
