@@ -174,6 +174,11 @@ código registra `/health` (healthcheck Docker) y `/api/health` (externo).
   colección Postman con cuerpos reales. Los añadidos de la v1.7+
   (`areaCodes`, delivery-modes…) no afectan al sync actual; solo
   importarían si se sincronizan maestros DESDE Satelles.
+- La subida a dev compara antes con el servidor (09/10): si quitaría algo que
+  la rama no lleva (lo subido a dev desde otra rama), se para antes de tocar
+  nada y dice qué rama lo lleva, para fusionarla y volver a subir. Herramienta
+  común: workspace-config/scripts/comparar-antes-de-subir.py; norma en
+  docs/rules/coordinacion-sesiones.md.
 
 ## ESTADO (2026-09-07)
 

@@ -11,12 +11,23 @@ REMOTE_DIR="/var/opt/superapitrans/pasarela"
 log()  { printf '[deploy-pasarela-dev] %s\n' "$*"; }
 fail() { printf '[deploy-pasarela-dev][ERROR] %s\n' "$*" >&2; exit 1; }
 
+# Comparar antes de subir (norma del usuario, 2026-10-09): si la subida quitaría
+# del servidor algo que esta rama no lleva (lo subido a dev desde otra rama), se
+# para y dice qué rama lo lleva para fusionarla; tras subir, se apunta en el
+# servidor lo subido sin commit. Override solo con autorización del
+# responsable: PERMITIR_QUITAR_DE_DEV=1.
+OPCIONES_SUBIDA=(--delete
+  --exclude=node_modules --exclude=.git
+  --exclude=.env --exclude=.env-dev --exclude=.env-prod
+  --exclude=.DS_Store)
+COMPARAR="$HOME/proyectos/workspace-config/scripts/comparar-antes-de-subir.py"
+log "0) comparar con lo que hay en $REMOTE_HOST:$REMOTE_DIR/"
+python3 "$COMPARAR" comparar superapitrans "${OPCIONES_SUBIDA[@]}" "$ROOT_DIR/" "$REMOTE_HOST:$REMOTE_DIR/" \
+  || fail "subida parada antes de tocar el servidor: la comparación de arriba dice qué se perdería y qué rama lo lleva"
+
 log "1) rsync pasarela → $REMOTE_HOST:$REMOTE_DIR/"
-rsync -az --delete \
-  --exclude=node_modules --exclude=.git \
-  --exclude=.env --exclude=.env-dev --exclude=.env-prod \
-  --exclude=.DS_Store \
-  "$ROOT_DIR/" "$REMOTE_HOST:$REMOTE_DIR/"
+rsync -az "${OPCIONES_SUBIDA[@]}" "$ROOT_DIR/" "$REMOTE_HOST:$REMOTE_DIR/"
+python3 "$COMPARAR" apuntar superapitrans "${OPCIONES_SUBIDA[@]}" "$ROOT_DIR/" "$REMOTE_HOST:$REMOTE_DIR/"
 
 log "2) bootstrap-env.sh (auto-selecciona .env-dev / .env-prod → .env)"
 ssh "$REMOTE_HOST" "cd $REMOTE_DIR && _scripts/bootstrap-env.sh"
