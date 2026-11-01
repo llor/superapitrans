@@ -188,7 +188,7 @@ async function reportError(input) {
 
 /**
  * Avisa de que un error del que YA se informó ha dejado de ocurrir. El receptor
- * lo manda como «CORREJIDO: <asunto del email de error>».
+ * lo manda como «CORREGIDO: <asunto del email de error>».
  *
  * Hay que pasarle el MISMO payload con el que se reportó el error (message y
  * stack incluidos): el receptor calcula la firma con esos datos para localizar
@@ -274,6 +274,11 @@ async function sendError(input) {
       user_login: input.user_login,
       empresa_codigo: input.empresa_codigo,
       user_agent: input.user_agent,
+      // La IP del cliente de la llamada que falló (la de attachExpress o la
+      // que pase quien avisa): el receptor la apunta como «IP cliente» de los
+      // avisos de nuestros servidores (25/10/2026). Hasta entonces no se
+      // mandaba y se perdía.
+      client_ip: input.client_ip,
       request_payload: input.request_payload,
       extra: input.extra,
       // true solo en los avisos de reportRecovery (el error ya no ocurre).
